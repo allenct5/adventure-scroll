@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ADVENTURE SCROLL</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="class-select">
+  <h1>⚔ ADVENTURE SCROLL ⚔</h1>
+  <h2>CHOOSE YOUR PATH</h2>
+  <p>Your choice shapes your arsenal. Choose wisely.</p>
+  <div id="class-cards">
+    <div class="class-card" id="card-warrior">
+      <span class="class-icon">⚔️</span>
+      <span class="class-name">WARRIOR</span>
+      <div class="class-desc">Melee fighter. <br>Close the distance and cut them down.</br></div>
+      <span class="class-stat">Starts with Common Sword and Shield</span>
+    </div>
+    <div class="class-card" id="card-archer">
+      <span class="class-icon">🏹</span>
+      <span class="class-name">ARCHER</span>
+      <div class="class-desc">Ranged precision. <br>Strike from a distance with deadly accuracy.</br></div>
+      <span class="class-stat">Starts with Common Bow · 50 Arrows</span>
+    </div>
+    <div class="class-card" id="card-mage">
+      <span class="class-icon">🔮</span>
+      <span class="class-name">MAGE</span>
+      <div class="class-desc">Arcane power. <br>Potent spells to decimate your foes.</br></div>
+      <span class="class-stat">Starts with Common Staff · 25 Mana</span>
+    </div>
+  </div>
+</div>
+<div id="game-title">⚔ ADVENTURE SCROLL ⚔</div>
+<div id="hud">
+  <div style="display:flex; flex-direction:column; gap:0;">
+    <span id="soul-bind-label">✦ SOUL BIND ACTIVE ✦</span>
+    <div id="health-bar-wrap">
+      <span id="health-label">HP</span>
+      <div id="health-bar-bg">
+        <div id="health-bar"></div>
+        <span id="health-bar-text">100/100</span>
+      </div>
+    </div>
+  </div>
+  <div id="mana-bar-wrap">
+    <span id="mana-label">MANA</span>
+    <div id="mana-bar-bg">
+      <div id="mana-bar"></div>
+      <span id="mana-bar-text">25/25</span>
+    </div>
+  </div>
+  <div id="weapon-display">WEAPON: <span id="weapon-name">SWORD</span> <span id="weapon-rarity" style="font-size:0.65rem;letter-spacing:0.08em;"></span></div>
+  <div id="ammo-display">ARROWS: <span id="ammo-count">∞</span></div>
+  <div id="bomb-display" style="display:none;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:#ff8800;text-shadow:0 0 8px #ff660088;">💣 <span id="bomb-count">3</span></div>
+  <div id="score-display">DIFFICULTY: <span id="difficulty-value">1</span></div>
+  <div id="coin-display" style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#ffdd00;text-shadow:0 0 8px #ffaa00;">🪙 <span id="coin-count">0</span></div>
+</div>
+
+<div id="shop-overlay">
+  <div id="shop-panel">
+    <div id="shop-title">✨ Magnificent Merlin's Shop ✨</div>
+    <div id="shop-header-bar">
+      <div style="display:flex;align-items:center;gap:20px;">
+        <span id="shop-coins-display">🪙 <span id="shop-coin-count">0</span> coins</span>
+        <span id="shop-hp-display" style="font-family:'Orbitron',sans-serif;font-size:0.8rem;color:#ff6666;text-shadow:0 0 8px #ff2222;">❤️ <span id="shop-hp-count">100</span> / <span id="shop-hp-max">100</span></span>
+      </div>
+      <button id="shop-close">✕</button>
+    </div>
+    <div id="shop-grid"></div>
+    <div id="shop-msg"></div>
+  </div>
+</div>
+<div id="pause-overlay">
+  <div id="pause-title">GAME PAUSED</div>
+  <div id="pause-sub">PRESS ESC TO RESUME</div>
+  <button class="go-btn go-btn-alt" id="pause-cheat-toggle" style="margin-top:20px;border-color:#00aa33;color:#00ff44;text-shadow:0 0 6px #00ff44;">⌨ Cheat Menu</button>
+  <div id="cheat-menu">
+    <div id="cheat-menu-title">— CHEAT MENU —</div>
+    <div style="display:flex;gap:8px;">
+      <button class="cheat-btn" id="cheat-godmode">☠ GODMODE</button>
+      <button class="cheat-btn" id="cheat-weapon-upgrade">⚔ WEAPON UPGRADE</button>
+    </div>
+    <div id="cheat-diff-row">
+      <button class="cheat-btn cheat-diff" data-diff="1">DIFF 1</button>
+      <button class="cheat-btn cheat-diff" data-diff="2">DIFF 2</button>
+      <button class="cheat-btn cheat-diff" data-diff="3">DIFF 3</button>
+      <button class="cheat-btn cheat-diff" data-diff="4">DIFF 4</button>
+      <button class="cheat-btn cheat-diff" data-diff="5">DIFF 5</button>
+    </div>
+  </div>
+  <button class="go-btn go-btn-alt" id="pause-menu" style="margin-top:16px;">⚔ Main Menu</button>
+</div>
+<div id="game-over">
+  <div id="game-over-title">GAME OVER</div>
+  <div id="game-over-sub" class="go-sub"></div>
+  <button class="go-btn" id="go-retry">↺ Try Again</button>
+  <button class="go-btn go-btn-alt" id="go-menu">⚔ Main Menu</button>
+</div>
+  <canvas id="gameCanvas" width="900" height="480"></canvas>
+  <div id="message-overlay">
+    <div id="message-text"></div>
+    <div id="message-sub"></div>
+  </div>
+</div>
+<div id="controls">A/D — MOVE &nbsp;|&nbsp; SPACE — JUMP &nbsp;|&nbsp; S — DROP DOWN &nbsp;|&nbsp; LEFT CLICK — ATTACK &nbsp;|&nbsp; RIGHT CLICK — ALT FIRE &nbsp;|&nbsp; ESC — PAUSE</div>
+
+<script type="module" src="src/core/main.js"></script>
+</body>
+</html>
