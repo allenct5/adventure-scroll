@@ -13,7 +13,7 @@ export const SWORD_RANGE       = 60;
 export const SWORD_COOLDOWN    = 720;
 export const ARROW_SPEED       = 10;
 export const ARROW_COOLDOWN    = 720;
-export const FIREBALL_SPEED    = 4.16;
+export const FIREBALL_SPEED    = 5.408;
 export const FIREBALL_COOLDOWN = 1100;
 export const STAFF_ORB_COOLDOWN = 417;
 
