@@ -47,6 +47,7 @@ export function updateArrows(dt) {
 export function updatePlayerOrbs(dt) {
   for (let i = playerOrbs.length - 1; i >= 0; i--) {
     const o = playerOrbs[i];
+    if (o.portalLife !== undefined) o.portalLife = Math.max(0, o.portalLife - dt);
     o.x += o.vx * dt; o.y += o.vy * dt; o.vy += 0.05 * dt; o.life -= dt;
     if (o.life <= 0) { playerOrbs.splice(i, 1); continue; }
     const oRect = {x: o.x - o.r, y: o.y - o.r, w: o.r * 2, h: o.r * 2};
@@ -145,6 +146,18 @@ export function drawProjectiles() {
   // Player staff orbs
   for (const o of playerOrbs) {
     const sx = o.x - cameraX;
+    // Draw portal effect if recently spawned
+    if (o.portalLife !== undefined && o.portalLife > 0) {
+      const portalAlpha = o.portalLife / 25;
+      ctx.strokeStyle = `rgba(170, 0, 255, ${portalAlpha * 0.6})`;
+      ctx.lineWidth = 3;
+      for (let ring = 0; ring < 2; ring++) {
+        const ringRadius = 15 + ring * 8;
+        ctx.beginPath();
+        ctx.arc(sx, o.y, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
     ctx.beginPath(); ctx.arc(sx, o.y, o.r, 0, Math.PI * 2);
     const ograd = ctx.createRadialGradient(sx, o.y, 0, sx, o.y, o.r);
     ograd.addColorStop(0, '#ffffff'); ograd.addColorStop(0.4, '#ff88ff'); ograd.addColorStop(1, 'rgba(180,0,255,0)');

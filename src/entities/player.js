@@ -224,8 +224,12 @@ export function shootStaffOrb() {
   const cy    = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
   const speed = 6.5;
-  playerOrbs.push({ x: cx + Math.cos(angle) * 18, y: cy + Math.sin(angle) * 18, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: 7, life: 100, maxLife: 100 });
-  spawnParticles(cx, cy, '#ff88ff', 4);
+  const staffTipDist = 28;
+  const portalX = cx + Math.cos(angle) * staffTipDist;
+  const portalY = cy + Math.sin(angle) * staffTipDist;
+  playerOrbs.push({ x: portalX, y: portalY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: 7, life: 100, maxLife: 100, portalLife: 25 });
+  spawnParticles(portalX, portalY, '#aa00ff', 8);
+  spawnParticles(portalX, portalY, '#ff00ff', 5);
 }
 
 export function shootFireball() {
