@@ -1,5 +1,0 @@
-WIN+R
-"cmd"
-cd C:\Users\Tyler\Desktop\Stuff\Adventure Scroll
-python -m http.server
-browser -> http://localhost:8000/
