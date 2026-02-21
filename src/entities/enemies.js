@@ -237,7 +237,9 @@ export function updateEnemies(dt) {
     const pRect = {x: p.x - p.r, y: p.y - p.r, w: p.r * 2, h: p.r * 2};
     let hitTerrain = false;
     for (const plat of platforms) { if (rectOverlap(pRect, plat)) { hitTerrain = true; break; } }
-    if (hitTerrain) { p.vx = 0; p.vy = 0; p.life = Math.min(p.life, 12); spawnParticles(p.x, p.y, '#ff44ff', 4); continue; }
+    // Get projectile color based on mage type
+    const projectileColor = p.killerType === 'evilMage' ? '#ff6600' : p.killerType === 'castleMage' ? '#4488ff' : '#ff88ff';
+    if (hitTerrain) { p.vx = 0; p.vy = 0; p.life = Math.min(p.life, 12); spawnParticles(p.x, p.y, projectileColor, 4); continue; }
 
     // Warrior block / reflect
     if (player.blocking && !player.dead && playerClass === 'warrior') {
@@ -253,7 +255,7 @@ export function updateEnemies(dt) {
       }
     }
     if (player.blocking && !player.dead && playerClass === 'warrior' && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, player)) {
-      spawnParticles(p.x, p.y, '#88ccff', 6); enemyProjectiles.splice(i, 1); continue;
+      spawnParticles(p.x, p.y, projectileColor, 6); enemyProjectiles.splice(i, 1); continue;
     }
     if (p.reflected) {
       for (let j = enemies.length - 1; j >= 0; j--) {
@@ -268,7 +270,7 @@ export function updateEnemies(dt) {
     }
     if (!player.dead && player.invincible === 0 && rectOverlap({x:p.x-3,y:p.y-3,w:6,h:6}, player)) {
       damagePlayer(Math.round(18 * Math.pow(1.2, difficultyLevel - 1)), p.killerType || null);
-      spawnParticles(p.x, p.y, '#ff44ff', 8); enemyProjectiles.splice(i, 1);
+      spawnParticles(p.x, p.y, projectileColor, 8); enemyProjectiles.splice(i, 1);
     }
   }
 }
