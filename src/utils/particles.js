@@ -1,7 +1,7 @@
 // particles.js — Particle spawning, update, and draw.
 
-import { particles, cameraX } from './state.js';
-import { ctx } from './canvas.js';
+import { particles, cameraX } from '../core/state.js';
+import { ctx } from '../scenes/canvas.js';
 
 const MAX_PARTICLES = 600;
 

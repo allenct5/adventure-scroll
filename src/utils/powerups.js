@@ -1,15 +1,15 @@
 // powerups.js — Powerup spawning, update, draw; coin drop and draw.
 
-import { POWERUP_DROP_COOLDOWN, W } from './constants.js';
+import { POWERUP_DROP_COOLDOWN, W } from '../core/constants.js';
 import {
   player, playerClass, cameraX,
   powerups, lastDropTime,
-} from './state.js';
+} from '../core/state.js';
 import { rectOverlap } from './collision.js';
 import { spawnParticles } from './particles.js';
 import { updateHUD } from './hud.js';
 
-import { ctx } from './canvas.js';
+import { ctx } from '../scenes/canvas.js';
 
 // --- POWERUPS ---
 export function tryDropPowerup(x, y) {

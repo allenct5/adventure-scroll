@@ -6,23 +6,23 @@ import {
   STAFF_ORB_COOLDOWN, BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE,
   BASE_FIREBALL_DAMAGE, BASE_ORB_DAMAGE, BOMB_GRAVITY, BOMB_EXPLODE_RADIUS,
   RARITY, rarityDamage, W, H, LEVEL_WIDTH,
-} from './constants.js';
-import { platforms, spikes, lavaZones, checkpoint } from './level.js';
+} from '../core/constants.js';
+import { platforms, spikes, lavaZones, checkpoint } from '../scenes/level.js';
 import {
   player, setPlayer, playerClass, cameraX, setCameraX,
   keys, mouseDown, mouseRightDown, mousePos,
   arrows, fireballsPlayer, playerOrbs, playerBombs, enemies,
   playerGroundHistory, clearGroundHistory, godMode, difficultyLevel,
   setGameState, setMouseRightDown,
-} from './state.js';
-import { rectOverlap, resolvePlayerPlatforms } from './collision.js';
-import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from './particles.js';
-import { updateHUD, showGameOver } from './hud.js';
-import { tryDropPowerup } from './powerups.js';
-import { dropCoin } from './coins.js';
+} from '../core/state.js';
+import { rectOverlap, resolvePlayerPlatforms } from '../utils/collision.js';
+import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from '../utils/particles.js';
+import { updateHUD, showGameOver } from '../utils/hud.js';
+import { tryDropPowerup } from '../utils/powerups.js';
+import { dropCoin } from '../utils/coins.js';
 import { ENEMY_DISPLAY_NAMES } from './enemies.js';
 
-import { ctx } from './canvas.js';
+import { ctx } from '../scenes/canvas.js';
 
 export function createPlayer() {
   const p = {

@@ -1,10 +1,10 @@
 // renderer.js — Environment drawing: background, platforms, hazards, checkpoint, merchant.
 
 import { W, H, LEVEL_WIDTH } from './constants.js';
-import { platforms, spikes, lavaZones, checkpoint, merchant } from './level.js';
+import { platforms, spikes, lavaZones, checkpoint, merchant } from '../scenes/level.js';
 import { cameraX, difficultyLevel } from './state.js';
 
-import { ctx } from './canvas.js';
+import { ctx } from '../scenes/canvas.js';
 
 export function drawBackground() {
   const t = Date.now() * 0.001;

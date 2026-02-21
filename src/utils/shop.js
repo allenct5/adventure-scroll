@@ -1,7 +1,7 @@
 // shop.js — Shop data, open/close, render, and purchase logic.
 
-import { RARITY, BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_ORB_DAMAGE, rarityDamage } from './constants.js';
-import { player, playerClass, setShopOpen, setGameState, setMouseDown, setLastTime } from './state.js';
+import { RARITY, BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_ORB_DAMAGE, rarityDamage } from '../core/constants.js';
+import { player, playerClass, setShopOpen, setGameState, setMouseDown, setLastTime } from '../core/state.js';
 import { updateHUD } from './hud.js';
 
 export const WIP_ITEMS = new Set(['phoenix', 'legendSword', 'legendBow', 'legendStaff', 'godMode']);

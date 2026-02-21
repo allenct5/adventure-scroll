@@ -1,7 +1,7 @@
 // main.js — Game loop, input handling, game-state transitions, UI wiring.
 
 import { W, H } from './constants.js';
-import { merchant } from './level.js';
+import { merchant } from '../scenes/level.js';
 import {
   gameState, setGameState, godMode, setGodMode,
   player, setPlayer, playerClass, setPlayerClass,
@@ -10,18 +10,18 @@ import {
   keys, setMouseDown, setMouseRightDown, mousePos,
   shopOpen, clearCombatArrays, clearGroundHistory, resetDropTimes,
 } from './state.js';
-import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn } from './player.js';
-import { populateEnemies, updateEnemies, drawEnemies } from './enemies.js';
-import { updateArrows, updatePlayerOrbs, updateFireballs, updateBombs, drawProjectiles } from './projectiles.js';
-import { updatePowerups, drawPowerups } from './powerups.js';
-import { updateCoins, drawCoins } from './coins.js';
-import { updateParticles, drawParticles } from './particles.js';
-import { updateHUD, showMessage, hideMessage, showGameOver, hideGameOver } from './hud.js';
-import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } from './shop.js';
+import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn } from '../entities/player.js';
+import { populateEnemies, updateEnemies, drawEnemies } from '../entities/enemies.js';
+import { updateArrows, updatePlayerOrbs, updateFireballs, updateBombs, drawProjectiles } from '../utils/projectiles.js';
+import { updatePowerups, drawPowerups } from '../utils/powerups.js';
+import { updateCoins, drawCoins } from '../utils/coins.js';
+import { updateParticles, drawParticles } from '../utils/particles.js';
+import { updateHUD, showMessage, hideMessage, showGameOver, hideGameOver } from '../utils/hud.js';
+import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } from '../utils/shop.js';
 import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant } from './renderer.js';
 
 
-import { canvas, ctx } from './canvas.js';
+import { canvas, ctx } from '../scenes/canvas.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
 registerGameLoop(gameLoop);

@@ -1,18 +1,18 @@
 // enemies.js — Enemy spawn, AI update, and drawing.
 
-import { GRAVITY, JUMP_FORCE, ENEMY_SPEED_BASE, W, H } from './constants.js';
-import { platforms, ENEMY_SPAWN_POINTS, SKULL_SPAWN_POINTS, PLAYER_START_PLATFORM } from './level.js';
+import { GRAVITY, JUMP_FORCE, ENEMY_SPEED_BASE, W, H } from '../core/constants.js';
+import { platforms, ENEMY_SPAWN_POINTS, SKULL_SPAWN_POINTS, PLAYER_START_PLATFORM } from '../scenes/level.js';
 import {
   player, playerClass, cameraX,
   enemies, enemyProjectiles, difficultyLevel,
-} from './state.js';
-import { rectOverlap, resolvePlayerPlatforms, hazardAhead, deadlyHazardAhead, measurePitAhead } from './collision.js';
-import { spawnParticles, spawnBloodParticles } from './particles.js';
-import { tryDropPowerup } from './powerups.js';
-import { dropCoin } from './coins.js';
+} from '../core/state.js';
+import { rectOverlap, resolvePlayerPlatforms, hazardAhead, deadlyHazardAhead, measurePitAhead } from '../utils/collision.js';
+import { spawnParticles, spawnBloodParticles } from '../utils/particles.js';
+import { tryDropPowerup } from '../utils/powerups.js';
+import { dropCoin } from '../utils/coins.js';
 import { damagePlayer } from './player.js';
 
-import { ctx } from './canvas.js';
+import { ctx } from '../scenes/canvas.js';
 
 // --- ENEMY TYPE SYSTEM ---
 // Code name → player-facing display name

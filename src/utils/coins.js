@@ -1,14 +1,14 @@
 // coins.js — Coin drops, physics, collection, and drawing.
 
-import { W } from './constants.js';
-import { player, cameraX, coins, lastJackpotTime, setLastJackpotTime } from './state.js';
+import { W } from '../core/constants.js';
+import { player, cameraX, coins, lastJackpotTime, setLastJackpotTime } from '../core/state.js';
 import { rectOverlap } from './collision.js';
 import { spawnParticles } from './particles.js';
 import { spawnJackpotSparkles } from './particles.js';
 import { updateHUD } from './hud.js';
-import { platforms } from './level.js';
+import { platforms } from '../scenes/level.js';
 
-import { ctx } from './canvas.js';
+import { ctx } from '../scenes/canvas.js';
 
 export function dropCoin(x, y) {
   const roll = Math.random();

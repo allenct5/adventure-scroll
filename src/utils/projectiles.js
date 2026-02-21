@@ -3,20 +3,20 @@
 import {
   BASE_ARROW_DAMAGE, BASE_ORB_DAMAGE, BASE_FIREBALL_DAMAGE,
   BOMB_GRAVITY, BOMB_EXPLODE_RADIUS, rarityDamage, W,
-} from './constants.js';
-import { platforms } from './level.js';
+} from '../core/constants.js';
+import { platforms } from '../scenes/level.js';
 import {
   player, playerClass, cameraX,
   arrows, fireballsPlayer, playerOrbs, playerBombs, enemyProjectiles, enemies,
-} from './state.js';
+} from '../core/state.js';
 import { rectOverlap } from './collision.js';
 import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from './particles.js';
 import { tryDropPowerup } from './powerups.js';
 import { dropCoin } from './coins.js';
-import { damagePlayer } from './player.js';
+import { damagePlayer } from '../entities/player.js';
 import { updateHUD } from './hud.js';
 
-import { ctx } from './canvas.js';
+import { ctx } from '../scenes/canvas.js';
 
 // --- ARROWS ---
 export function updateArrows(dt) {

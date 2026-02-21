@@ -1,6 +1,6 @@
 // collision.js — Collision detection and platform resolution helpers.
 
-import { platforms, spikes, lavaZones } from './level.js';
+import { platforms, spikes, lavaZones } from '../scenes/level.js';
 
 export function rectOverlap(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x &&

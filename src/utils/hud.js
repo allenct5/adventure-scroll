@@ -1,7 +1,7 @@
 // hud.js — All DOM/HUD updates and message display.
 
-import { RARITY } from './constants.js';
-import { player, playerClass } from './state.js';
+import { RARITY } from '../core/constants.js';
+import { player, playerClass } from '../core/state.js';
 
 export function updateHUD() {
   const hpPct = Math.max(0, player.hp / player.maxHp) * 100;
