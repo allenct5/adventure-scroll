@@ -115,16 +115,43 @@ export function drawBackground() {
     }
     for (let i = 0; i < windowXs.length - 1; i++) {
       const tx = (windowXs[i] + windowXs[i+1]) / 2 + 11, ty = 230;
-      const flicker = 0.75 + Math.sin(t * 7 + i * 2.3) * 0.25;
+      // Multi-frequency flickering for more organic movement
+      const flicker1 = Math.sin(t * 4.3 + i * 2.1) * 0.3;
+      const flicker2 = Math.sin(t * 6.7 + i * 1.4) * 0.25;
+      const flicker3 = Math.sin(t * 2.1 + i * 0.8) * 0.2;
+      const flicker = 0.75 + flicker1 + flicker2 + flicker3;
+      
+      // Glow with layered colors for realism
       const glow = ctx.createRadialGradient(tx, ty, 0, tx, ty, 70 * flicker);
-      glow.addColorStop(0, `rgba(255,160,40,${0.22*flicker})`); glow.addColorStop(1, 'rgba(255,100,0,0)');
+      glow.addColorStop(0, `rgba(255,180,60,${0.25*flicker})`);
+      glow.addColorStop(0.5, `rgba(255,100,20,${0.12*flicker})`);
+      glow.addColorStop(1, 'rgba(255,50,0,0)');
       ctx.fillStyle = glow; ctx.fillRect(tx-70, ty-70, 140, 140);
+      
+      // Torch holder
       ctx.fillStyle = '#5a4020'; ctx.fillRect(tx-4, ty+8, 8, 20);
       ctx.fillStyle = '#3a2810'; ctx.fillRect(tx-7, ty+6, 14, 6);
-      ctx.fillStyle = `rgba(255,${120+Math.sin(t*9+i*1.7)*40|0},0,0.9)`;
-      ctx.beginPath(); ctx.ellipse(tx, ty-4*flicker, 5, 12*flicker, Math.sin(t*4+i)*0.3, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(255,240,100,0.8)';
-      ctx.beginPath(); ctx.ellipse(tx, ty, 3, 6*flicker, 0, 0, Math.PI*2); ctx.fill();
+      
+      // Multiple flame layers for depth
+      for (let layer = 0; layer < 2; layer++) {
+        const layerPhase = layer * 0.5;
+        const layerWave = Math.sin(t*5+i*1.2+layerPhase)*0.2 + Math.sin(t*3.1+i*0.7+layerPhase)*0.15;
+        const layerIntensity = 1.0 - layer * 0.4;
+        const baseHue = 120 + Math.sin(t*8+i*1.7+layerPhase)*50;
+        const flameHeight = 12*flicker + 4*layerWave;
+        const flameWidth = 5 + Math.sin(t*3.3+i+layerPhase)*2.5;
+        
+        ctx.fillStyle = `rgba(255,${Math.max(60,baseHue|0)},0,${0.7*layerIntensity})`;
+        ctx.beginPath();
+        ctx.ellipse(tx, ty-flameHeight, flameWidth, flameHeight, Math.sin(t*4+i+layerPhase)*0.4, 0, Math.PI*2);
+        ctx.fill();
+      }
+      
+      // Bright core
+      ctx.fillStyle = 'rgba(255,240,120,0.9)';
+      ctx.beginPath();
+      ctx.ellipse(tx, ty-2, 2.5, 5*flicker, 0, 0, Math.PI*2);
+      ctx.fill();
     }
 
   } else {

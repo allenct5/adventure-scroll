@@ -232,7 +232,10 @@ canvas {
 }
 #class-select {
   position: fixed; inset: 0;
-  background: #000000;
+  background: 
+    repeating-linear-gradient(90deg, rgba(80,60,40,0.15) 0px, rgba(80,60,40,0.15) 40px, rgba(60,45,30,0.15) 40px, rgba(60,45,30,0.15) 80px),
+    repeating-linear-gradient(0deg, rgba(100,80,50,0.1) 0px, rgba(100,80,50,0.1) 30px, rgba(70,55,35,0.1) 30px, rgba(70,55,35,0.1) 60px),
+    radial-gradient(ellipse at center, #1a0f08 0%, #0a0a0f 60%, #000000 100%);
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -243,11 +246,8 @@ canvas {
 #class-select h1 {
   font-family: 'Georgia', serif;
   font-size: 3rem;
-  background: linear-gradient(90deg, #0f0502 0%, #7d2610 60%, #c43c1a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
+  color: #c43c1a;
+  text-shadow: 0 0 30px #ff4444, 0 0 60px #cc2200, 0 0 90px #990000;
   margin: 0;
   letter-spacing: 0.06em;
 }

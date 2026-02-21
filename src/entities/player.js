@@ -41,6 +41,7 @@ export function createPlayer() {
     dead: false, respawnTimer: 0,
     jumpCooldown: 0, jumpHeld: false,
     attackSpeedTimer: 0,
+    speedBoostTimer: 0,
     swordRarity: 1, bowRarity: 1, staffRarity: 1,
     droppingThrough: false,
     coins: 0,
@@ -72,8 +73,10 @@ export function updatePlayer(dt) {
   else player.swingActive = false;
 
   // Movement
-  if (keys['a'] || keys['arrowleft'])       { player.vx = -PLAYER_SPEED; player.facingRight = false; }
-  else if (keys['d'] || keys['arrowright']) { player.vx =  PLAYER_SPEED; player.facingRight = true;  }
+  player.speedBoostTimer = Math.max(0, player.speedBoostTimer - dt);
+  const speedMult = player.speedBoostTimer > 0 ? 1.25 : 1;
+  if (keys['a'] || keys['arrowleft'])       { player.vx = -PLAYER_SPEED * speedMult; player.facingRight = false; }
+  else if (keys['d'] || keys['arrowright']) { player.vx =  PLAYER_SPEED * speedMult; player.facingRight = true;  }
   else { player.vx *= Math.pow(0.75, dt); }
 
   if ((keys[' '] || keys['space']) && player.onGround && player.jumpCooldown === 0 && !player.jumpHeld) {
@@ -113,23 +116,23 @@ export function updatePlayer(dt) {
     if (player.weapon === 'sword' && player.swordTimer <= 0) {
       const handX   = (player.x + player.w / 2) - cameraX;
       player.facingRight = (mousePos.x - handX) >= 0;
-      const cooldown = player.attackSpeedTimer > 0 ? SWORD_COOLDOWN * 0.5 : SWORD_COOLDOWN;
+      const cooldown = player.attackSpeedTimer > 0 ? SWORD_COOLDOWN * 0.8 : SWORD_COOLDOWN;
       player.swordTimer  = cooldown;
       player.swingActive = true;
       player.swingTimer  = 700;
       player.swingDuration = 700;
       swordAttack();
     } else if (player.weapon === 'bow' && player.arrowTimer <= 0) {
-      player.arrowTimer = player.attackSpeedTimer > 0 ? ARROW_COOLDOWN * 0.5 : ARROW_COOLDOWN;
+      player.arrowTimer = player.attackSpeedTimer > 0 ? ARROW_COOLDOWN * 0.8 : ARROW_COOLDOWN;
       shootArrow();
     } else if (player.weapon === 'staff' && player.staffOrbTimer <= 0) {
-      player.staffOrbTimer = player.attackSpeedTimer > 0 ? STAFF_ORB_COOLDOWN * 0.5 : STAFF_ORB_COOLDOWN;
+      player.staffOrbTimer = player.attackSpeedTimer > 0 ? STAFF_ORB_COOLDOWN * 0.8 : STAFF_ORB_COOLDOWN;
       shootStaffOrb();
     }
   }
 
   if (player.weapon === 'staff' && mouseRightDown && player.staffTimer <= 0 && player.mana >= 5) {
-    player.staffTimer = player.attackSpeedTimer > 0 ? FIREBALL_COOLDOWN * 0.5 : FIREBALL_COOLDOWN;
+    player.staffTimer = player.attackSpeedTimer > 0 ? FIREBALL_COOLDOWN * 0.8 : FIREBALL_COOLDOWN;
     shootFireball(); player.mana -= 5; updateHUD();
   }
   if (player.weapon === 'bow' && mouseRightDown && player.bombs > 0) {
