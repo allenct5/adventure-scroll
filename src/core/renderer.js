@@ -478,16 +478,16 @@ export function drawBuffIcons() {
       ctx.globalAlpha = 0.22;
       ctx.beginPath();
       ctx.moveTo(cx, cy - 13); ctx.lineTo(cx + 10, cy - 7); ctx.lineTo(cx + 10, cy + 3);
-      ctx.bezierCurveTo(cx + 10, cy + 11, cx, cy + 15, cx, cy + 15);
-      ctx.bezierCurveTo(cx - 10, cy + 15, cx - 10, cy + 11, cx - 10, cy + 3);
+      ctx.bezierCurveTo(cx + 10, cy + 9, cx, cy + 12, cx, cy + 16);
+      ctx.bezierCurveTo(cx, cy + 12, cx - 10, cy + 9, cx - 10, cy + 3);
       ctx.lineTo(cx - 10, cy - 7); ctx.closePath(); ctx.fill();
       ctx.globalAlpha = 1;
       // Shield outline
       ctx.strokeStyle = color;
       ctx.beginPath();
       ctx.moveTo(cx, cy - 13); ctx.lineTo(cx + 10, cy - 7); ctx.lineTo(cx + 10, cy + 3);
-      ctx.bezierCurveTo(cx + 10, cy + 11, cx, cy + 15, cx, cy + 15);
-      ctx.bezierCurveTo(cx - 10, cy + 15, cx - 10, cy + 11, cx - 10, cy + 3);
+      ctx.bezierCurveTo(cx + 10, cy + 9, cx, cy + 12, cx, cy + 16);
+      ctx.bezierCurveTo(cx, cy + 12, cx - 10, cy + 9, cx - 10, cy + 3);
       ctx.lineTo(cx - 10, cy - 7); ctx.closePath(); ctx.stroke();
       ctx.shadowBlur  = 0;
       // Cross emblem

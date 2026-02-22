@@ -114,7 +114,7 @@ export function buyItem(item) {
     case 'swordUp1':  player.swordRarity = Math.min(5, player.swordRarity + 1); msg.textContent = `Blade sharpened to ${RARITY[player.swordRarity].name}!`; break;
     case 'bowUp1':    player.bowRarity   = Math.min(5, player.bowRarity   + 1); msg.textContent = `Bow upgraded to ${RARITY[player.bowRarity].name}!`;       break;
     case 'staffUp1':  player.staffRarity = Math.min(5, player.staffRarity + 1); msg.textContent = `Staff focused to ${RARITY[player.staffRarity].name}!`;     break;
-    case 'fortify':   player.fortified   = true; msg.textContent = 'Iron Skin — 25% less damage this level!'; break;
+    case 'fortify':   player.fortified = true; msg.textContent = 'Iron Skin — 30% less damage this level!'; break;
     case 'maxHp1':    player.maxHp += 10; player.hp = Math.min(player.maxHp, player.hp + 20); msg.textContent = '+10 Max HP, +20 HP healed!'; break;
     case 'fullHeal':  player.hp = player.maxHp; msg.textContent = 'Fully healed!'; break;
     case 'soulBind':  player.revive = true; msg.textContent = 'Soul Bound — you will rise once!'; break;
