@@ -382,7 +382,7 @@ export function drawBuffIcons() {
     atkspeed: '#ffcc00',
     fortify:  '#4488ff',
     berserk:  '#ff3322',
-    revive:   '#cc88ff',
+    revive:   '#ffff00',
   };
 
   ctx.save();
@@ -555,29 +555,54 @@ export function drawBuffIcons() {
       ctx.fillRect(cx + 1, faceY + 6, 3, 2);
 
     } else if (type === 'revive') {
-      // Floating soul: halo above + glowing orb + wispy tail
+      // White skull with yellow glowing halo above
+      // Halo above head
       ctx.strokeStyle = color;
       ctx.lineWidth   = 2;
       ctx.shadowColor = color;
       ctx.shadowBlur  = 8;
       ctx.beginPath();
-      ctx.ellipse(cx, cy - 10, 7, 2.5, 0, 0, Math.PI * 2); // halo
+      ctx.ellipse(cx, cy - 12, 8, 3, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.shadowBlur  = 0;
+
+      // Skull
       ctx.fillStyle   = '#ffffff';
       ctx.shadowColor = color;
-      ctx.shadowBlur  = 10;
-      ctx.beginPath(); ctx.arc(cx, cy - 1, 6, 0, Math.PI * 2); ctx.fill(); // orb
-      ctx.shadowBlur  = 0;
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth   = 2.5;
-      ctx.lineCap     = 'round';
-      ctx.globalAlpha = 0.35;
+      ctx.shadowBlur  = 8;
+      // Main skull dome
       ctx.beginPath();
-      ctx.moveTo(cx, cy + 5);
-      ctx.bezierCurveTo(cx - 4, cy + 9, cx + 4, cy + 12, cx, cy + 15); // wispy tail
-      ctx.stroke();
-      ctx.globalAlpha = 1;
+      ctx.arc(cx, cy - 2, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur  = 0;
+
+      // Jaw
+      ctx.fillStyle   = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(cx - 6, cy + 6);
+      ctx.lineTo(cx + 6, cy + 6);
+      ctx.lineTo(cx + 5, cy + 10);
+      ctx.lineTo(cx - 5, cy + 10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Eye sockets (yellow glow)
+      ctx.fillStyle   = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 6;
+      ctx.beginPath();
+      ctx.arc(cx - 4, cy - 3, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx + 4, cy - 3, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur  = 0;
+
+      // Nose hole
+      ctx.fillStyle   = '#000000';
+      ctx.beginPath();
+      ctx.arc(cx, cy + 2, 1.5, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     ctx.restore(); // end clip

@@ -18,6 +18,7 @@ import {
 import { rectOverlap, resolvePlayerPlatforms } from '../utils/collision.js';
 import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from '../utils/particles.js';
 import { updateHUD, showGameOver } from '../utils/hud.js';
+import { playDeathMusic } from '../utils/audio.js';
 import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
 import { ENEMY_DISPLAY_NAMES } from './enemies.js';
@@ -319,6 +320,7 @@ export function killPlayer(cause) {
     sub = killerDisplay ? `YOU HAVE BEEN SLAIN BY ${killerDisplay}` : 'YOU HAVE BEEN SLAIN';
   }
 
+  playDeathMusic();
   setTimeout(() => { setGameState('dead'); showGameOver(sub); }, 900);
 }
 
