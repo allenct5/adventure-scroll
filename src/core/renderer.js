@@ -495,15 +495,64 @@ export function drawBuffIcons() {
       ctx.fillRect(cx - 5, cy - 1, 10, 2);
 
     } else if (type === 'berserk') {
-      // Two crossed slash lines
-      ctx.strokeStyle = color;
-      ctx.lineWidth   = 3;
-      ctx.lineCap     = 'round';
+      // Angry face on fire
+      const faceY = cy + 3;
+      const faceR = 9;
+
+      // Flames above head (orange outer, yellow inner)
+      ctx.shadowColor = '#ff6600';
+      ctx.shadowBlur  = 6;
+      ctx.fillStyle   = '#ff5500';
+      ctx.globalAlpha = 0.92;
+      ctx.beginPath();
+      ctx.moveTo(cx - 7, faceY - faceR + 2);
+      ctx.bezierCurveTo(cx - 11, faceY - faceR - 4, cx - 6, faceY - faceR - 9, cx - 2, faceY - faceR - 3);
+      ctx.bezierCurveTo(cx - 2, faceY - faceR - 10, cx + 2, faceY - faceR - 10, cx + 2, faceY - faceR - 3);
+      ctx.bezierCurveTo(cx + 6, faceY - faceR - 9, cx + 11, faceY - faceR - 4, cx + 7, faceY - faceR + 2);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle   = '#ffcc00';
+      ctx.globalAlpha = 0.88;
+      ctx.beginPath();
+      ctx.moveTo(cx - 3, faceY - faceR + 1);
+      ctx.bezierCurveTo(cx - 5, faceY - faceR - 4, cx - 1, faceY - faceR - 7, cx, faceY - faceR - 4);
+      ctx.bezierCurveTo(cx + 1, faceY - faceR - 7, cx + 5, faceY - faceR - 4, cx + 3, faceY - faceR + 1);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur  = 0;
+
+      // Face circle
+      ctx.fillStyle   = '#bb1100';
       ctx.shadowColor = color;
-      ctx.shadowBlur  = 8;
-      ctx.beginPath(); ctx.moveTo(cx - 11, cy - 11); ctx.lineTo(cx + 11, cy + 11); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx + 11, cy - 11); ctx.lineTo(cx - 11, cy + 11); ctx.stroke();
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur  = 7;
+      ctx.beginPath(); ctx.arc(cx, faceY, faceR, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur  = 0;
+
+      // Angry brows (angled sharply inward)
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 2.5;
+      ctx.lineCap     = 'round';
+      ctx.beginPath(); ctx.moveTo(cx - 8, faceY - 5); ctx.lineTo(cx - 2, faceY - 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx + 8, faceY - 5); ctx.lineTo(cx + 2, faceY - 2); ctx.stroke();
+
+      // Eyes (glowing)
+      ctx.fillStyle   = '#ffee88';
+      ctx.shadowColor = '#ffaa00';
+      ctx.shadowBlur  = 5;
+      ctx.beginPath(); ctx.arc(cx - 5, faceY + 1, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + 5, faceY + 1, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur  = 0;
+
+      // Grimace mouth with teeth
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 1.5;
+      ctx.lineCap     = 'square';
+      ctx.beginPath();
+      ctx.moveTo(cx - 5, faceY + 6); ctx.lineTo(cx - 5, faceY + 8);
+      ctx.lineTo(cx + 5, faceY + 8); ctx.lineTo(cx + 5, faceY + 6);
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - 4, faceY + 6, 3, 2);
+      ctx.fillRect(cx + 1, faceY + 6, 3, 2);
 
     } else if (type === 'revive') {
       // Floating soul: halo above + glowing orb + wispy tail

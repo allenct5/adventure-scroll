@@ -672,21 +672,23 @@ export function drawPlayer() {
     ctx.restore();
 
     ctx.save();
-    ctx.globalAlpha = 0.7 * pulse;
-    ctx.strokeStyle = '#aaddff';
-    ctx.shadowColor = '#88bbff';
-    ctx.shadowBlur  = 14;
-    ctx.lineWidth   = 3;
-    ctx.lineCap     = 'round';
-    ctx.beginPath();
-    ctx.arc(cx, cy, RADIUS, aimAngle - SPAN / 2, aimAngle + SPAN / 2);
-    ctx.stroke();
-    ctx.fillStyle = '#cceeff';
-    ctx.shadowBlur = 8;
-    for (const edgeAngle of [aimAngle - SPAN / 2, aimAngle + SPAN / 2]) {
+    ctx.lineCap = 'round';
+    // Soft layered glow arcs — outer wide/faint to inner narrow/bright
+    const layers = [
+      { width: 22, alpha: 0.04, color: '#6699ff' },
+      { width: 13, alpha: 0.08, color: '#88aaff' },
+      { width:  7, alpha: 0.16, color: '#aaccff' },
+      { width:  3, alpha: 0.38, color: '#cce8ff' },
+    ];
+    for (const layer of layers) {
+      ctx.globalAlpha = layer.alpha * pulse;
+      ctx.strokeStyle = layer.color;
+      ctx.shadowColor = '#88bbff';
+      ctx.shadowBlur  = 18;
+      ctx.lineWidth   = layer.width;
       ctx.beginPath();
-      ctx.arc(cx + Math.cos(edgeAngle) * RADIUS, cy + Math.sin(edgeAngle) * RADIUS, 3, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(cx, cy, RADIUS, aimAngle - SPAN / 2, aimAngle + SPAN / 2);
+      ctx.stroke();
     }
     ctx.shadowBlur  = 0;
     ctx.globalAlpha = 1;

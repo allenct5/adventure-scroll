@@ -21,6 +21,7 @@ import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } fr
 import { applyZoneBuffs } from '../utils/powerups.js';
 import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
+import { updateMusicForDifficulty, stopMusic } from '../utils/audio.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
 registerGameLoop(gameLoop);
@@ -60,7 +61,7 @@ function resetLevel() {
     hp: player.hp, maxHp: player.maxHp, ammo: player.ammo, coins: player.coins,
     weapon: player.weapon, swordRarity: player.swordRarity, bowRarity: player.bowRarity,
     staffRarity: player.staffRarity, mana: player.mana,
-    fortified: player.fortified, damageMult: player.damageMult,
+    fortified: player.fortified,
     revive: player.revive || false, regenActive: player.regenActive || false,
     attackSpeedTimer: player.attackSpeedTimer, attackSpeedTimerMax: player.attackSpeedTimerMax || 0,
     bombs: player.bombs,
@@ -77,6 +78,7 @@ function resetLevel() {
   document.getElementById('difficulty-value').textContent = difficultyLevel;
   updateHUD();
   hideMessage();
+  updateMusicForDifficulty(difficultyLevel);
 }
 
 function respawnPlayer() {
@@ -91,6 +93,7 @@ function respawnPlayer() {
   updateHUD();
   hideMessage();
   setGameState('playing');
+  updateMusicForDifficulty(1);
 }
 
 // --- CLASS SELECT ---
@@ -101,6 +104,7 @@ function selectClass(cls) {
   populateEnemies();
   setGameState('playing');
   updateHUD();
+  updateMusicForDifficulty(difficultyLevel);
 }
 
 // --- GAME LOOP ---
@@ -227,6 +231,7 @@ function returnToMenu() {
   statsActive = false;
   document.getElementById('cheat-menu').classList.remove('open');
   updateHUD();
+  stopMusic();
   document.getElementById('class-select').style.display = 'flex';
   setLastTime(0); requestAnimationFrame(gameLoop);
 }
@@ -262,6 +267,7 @@ document.querySelectorAll('.cheat-diff').forEach(btn => {
     setDifficultyLevel(level); setZoneCount((level - 1) * 3);
     document.getElementById('difficulty-value').textContent = level;
     populateEnemies();
+    updateMusicForDifficulty(level);
     btn.style.boxShadow = '0 0 18px #00ff44';
     setTimeout(() => btn.style.boxShadow = '', 400);
   });
