@@ -244,13 +244,7 @@ canvas {
 }
 #class-select {
   position: fixed; inset: 0;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(200,160,100,0.18) 0%, transparent 35%),
-    radial-gradient(circle at 85% 15%, rgba(160,120,80,0.14) 0%, transparent 30%),
-    radial-gradient(circle at 25% 75%, rgba(150,100,60,0.15) 0%, transparent 40%),
-    radial-gradient(circle at 70% 85%, rgba(120,90,60,0.12) 0%, transparent 35%),
-    linear-gradient(135deg, #3a2a1e 0%, #4a3828 25%, #3a2a1e 50%, #2e2018 75%, #443428 100%),
-    radial-gradient(ellipse at 50% 120%, rgba(180,80,30,0.25) 0%, transparent 70%);
+  background: linear-gradient(180deg, #3a3a3a 0%, #000000 100%);
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -262,7 +256,7 @@ canvas {
   font-family: 'Georgia', serif;
   font-size: 3rem;
   color: #c43c1a;
-  text-shadow: 0 0 8px #ff444488, 0 0 18px #cc220055;
+  text-shadow: 0 0 8px #ff444488, 0 0 18px #cc220055, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000;
   margin: 0;
   letter-spacing: 0.06em;
 }
