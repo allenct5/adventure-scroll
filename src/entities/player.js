@@ -445,16 +445,16 @@ export function drawPlayer() {
 
     // Eyebrows
     ctx.fillStyle = '#664422';
-    ctx.fillRect(8, 5, 4, 1);
-    ctx.fillRect(16, 5, 4, 1);
+    ctx.fillRect(9, 5, 4, 1);
+    ctx.fillRect(15, 5, 4, 1);
 
     // Eyes (white + pupil)
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(8, 7, 4, 3);
-    ctx.fillRect(16, 7, 4, 3);
+    ctx.fillRect(9, 7, 4, 3);
+    ctx.fillRect(15, 7, 4, 3);
     ctx.fillStyle = '#223388';
-    ctx.fillRect(9, 7, 2, 3);
-    ctx.fillRect(17, 7, 2, 3);
+    ctx.fillRect(10, 7, 2, 3);
+    ctx.fillRect(16, 7, 2, 3);
 
     // Nose
     ctx.fillStyle = '#cc9966';
