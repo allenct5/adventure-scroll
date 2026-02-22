@@ -92,6 +92,7 @@ function respawnPlayer() {
   setZoneCount(0); setDifficultyLevel(1);
   document.getElementById('difficulty-value').textContent = '1';
   clearCombatArrays();
+  clearParticles();
   populateEnemies();
   resetDropTimes();
   clearShopPurchased();
@@ -168,7 +169,6 @@ document.addEventListener('keydown', e => {
       setGameState('playing');
       document.getElementById('pause-overlay').classList.remove('visible');
       setLastTime(0);
-      requestAnimationFrame(gameLoop);
     }
     return;
   }
@@ -228,7 +228,7 @@ document.getElementById('pause-menu').addEventListener('click', () => {
 
 function returnToMenu() {
   setGameState('classSelect'); setPlayerClass(null); setPlayer(createPlayer());
-  clearCombatArrays(); resetDropTimes(); clearGroundHistory(); clearShopPurchased();
+  clearCombatArrays(); clearParticles(); resetDropTimes(); clearGroundHistory(); clearShopPurchased();
   setZoneCount(0); setDifficultyLevel(1); setGodMode(false);
   document.getElementById('difficulty-value').textContent = '1';
   document.getElementById('cheat-godmode').classList.remove('active');
@@ -239,7 +239,7 @@ function returnToMenu() {
   updateHUD();
   stopMusic();
   document.getElementById('class-select').style.display = 'flex';
-  setLastTime(0); requestAnimationFrame(gameLoop);
+  setLastTime(0);
 }
 
 // --- PAUSE VOLUME SLIDERS ---

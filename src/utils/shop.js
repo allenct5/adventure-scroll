@@ -40,7 +40,6 @@ export function closeShop() {
   document.getElementById('shop-overlay').classList.remove('open');
   setGameState('playing');
   setLastTime(0);
-  if (_gameLoop) requestAnimationFrame(_gameLoop);
 }
 
 export function renderShopGrid() {
