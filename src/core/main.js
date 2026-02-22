@@ -18,6 +18,7 @@ import { updateCoins, drawCoins } from '../utils/coins.js';
 import { updateParticles, drawParticles } from '../utils/particles.js';
 import { updateHUD, showMessage, hideMessage, showGameOver, hideGameOver } from '../utils/hud.js';
 import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } from '../utils/shop.js';
+import { applyZoneBuffs } from '../utils/powerups.js';
 import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
 
@@ -51,6 +52,7 @@ function resetLevel() {
   setGameState('playing');
   setZoneCount(zoneCount + 1);
   setDifficultyLevel(Math.min(5, 1 + Math.floor((zoneCount + 1) / 3)));
+  applyZoneBuffs();
 
   const carry = {
     hp: player.hp, maxHp: player.maxHp, ammo: player.ammo, coins: player.coins,

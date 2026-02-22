@@ -1,15 +1,64 @@
-// powerups.js — Powerup spawning, update, draw.
+// powerups.js — Player powerup drops, buff timers, and zone modifier system.
+//
+// ZONE BUFF SYSTEM
+// ─────────────────
+// `zoneBuffs` is the single source of truth for all active zone modifiers.
+// enemies.js and player.js read from it directly — nothing else needs changing
+// when new modifier types are added here.
+//
+// To add a new modifier type:
+//   1. Add a field to zoneBuffs below (default 1.0 = no effect)
+//   2. Wire it into applyZoneBuffs() with your difficulty logic
+//   3. Read it in the relevant update function (enemies.js / player.js)
 
 import { POWERUP_DROP_COOLDOWN, W } from '../core/constants.js';
 import {
   player, playerClass, cameraX,
-  powerups, lastDropTime,
+  powerups, lastDropTime, difficultyLevel,
 } from '../core/state.js';
 import { rectOverlap } from './collision.js';
 import { spawnParticles } from './particles.js';
 import { updateHUD } from './hud.js';
 
 import { ctx } from '../canvas.js';
+
+// ---------------------------------------------------------------------------
+// ZONE BUFFS
+// ---------------------------------------------------------------------------
+
+export const zoneBuffs = {
+  // Enemy modifiers
+  enemyDamageMult:      1.0,  // multiplies orc melee hit damage
+  enemySpeedMult:       1.0,  // multiplies all enemy base speed
+  enemyAttackSpeedMult: 1.0,  // multiplies attack cooldown (lower = faster)
+
+  // Player modifiers — stubs, uncomment when designed
+  // playerDamageMult: 1.0,
+  // playerSpeedMult:  1.0,
+};
+
+/**
+ * Called on every zone transition from main.js resetLevel().
+ * Resets zoneBuffs to baseline then applies difficulty-driven modifiers.
+ *
+ * NOTE: buffs are replaced each zone (not accumulated) until a stacking
+ * strategy is decided. Change the reset block below to switch behaviour.
+ */
+export function applyZoneBuffs() {
+  // Reset to baseline
+  zoneBuffs.enemyDamageMult      = 1.0;
+  zoneBuffs.enemySpeedMult       = 1.0;
+  zoneBuffs.enemyAttackSpeedMult = 1.0;
+
+  // Populate once zone modifier values are finalised. Example:
+  // if (difficultyLevel >= 3) zoneBuffs.enemySpeedMult       = 1.15;
+  // if (difficultyLevel >= 4) zoneBuffs.enemyDamageMult      = 1.20;
+  // if (difficultyLevel >= 5) zoneBuffs.enemyAttackSpeedMult = 0.80;
+}
+
+// ---------------------------------------------------------------------------
+// PLAYER POWERUP DROPS
+// ---------------------------------------------------------------------------
 
 export function tryDropPowerup(x, y) {
   const roll = Math.random();
@@ -44,6 +93,10 @@ export function updatePowerups(dt) {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// DRAW
+// ---------------------------------------------------------------------------
 
 export function drawPowerups() {
   const t = Date.now() * 0.003;
@@ -87,11 +140,9 @@ export function drawPowerups() {
       ctx.fillStyle = '#00ff88'; ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 10;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(-4, -6); ctx.lineTo(4, 0); ctx.lineTo(-4, 6);
-      ctx.stroke();
+      ctx.moveTo(-4, -6); ctx.lineTo(4, 0); ctx.lineTo(-4, 6); ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(0, -6); ctx.lineTo(8, 0); ctx.lineTo(0, 6);
-      ctx.stroke();
+      ctx.moveTo(0, -6); ctx.lineTo(8, 0); ctx.lineTo(0, 6); ctx.stroke();
     } else if (p.type === 'attackSpeed') {
       ctx.strokeStyle = '#ffcc00'; ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 10;
       ctx.lineWidth = 2; ctx.lineCap = 'round';

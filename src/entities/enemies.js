@@ -8,11 +8,15 @@ import {
 } from '../core/state.js';
 import { rectOverlap, resolvePlayerPlatforms, hazardAhead, deadlyHazardAhead, measurePitAhead } from '../utils/collision.js';
 import { spawnParticles, spawnBloodParticles } from '../utils/particles.js';
-import { tryDropPowerup } from '../utils/powerups.js';
+import { tryDropPowerup, zoneBuffs } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
 import { damagePlayer } from './player.js';
 
 import { ctx } from '../canvas.js';
+
+const ENRAGE_HP_THRESHOLD  = 0.30; // fraction of maxHp below which orcs enrage
+const ENRAGE_SPEED_MULT     = 1.50; // +50% move speed when enraged
+const ENRAGE_COOLDOWN_MULT  = 0.70; // -30% attack cooldown when enraged (faster attacks)
 
 // --- ENEMY TYPE SYSTEM ---
 export const ENEMY_DISPLAY_NAMES = {
@@ -172,6 +176,14 @@ export function updateEnemies(dt) {
         if (!player.dead) {
           const moveDir = dx > 0 ? 1 : -1;
           if (isOrc(e.type)) {
+            // Enrage below threshold — set once and never unset
+            if (!e.enraged && e.hp / e.maxHp <= ENRAGE_HP_THRESHOLD) {
+              e.enraged = true;
+            }
+            const speedMult   = (e.enraged ? ENRAGE_SPEED_MULT : 1) * zoneBuffs.enemySpeedMult;
+            const cooldownMult = (e.enraged ? ENRAGE_COOLDOWN_MULT : 1) * zoneBuffs.enemyAttackSpeedMult;
+            const effectiveSpeed = e.speed * speedMult;
+
             e.jumpCooldown = Math.max(0, e.jumpCooldown - dt);
             const deadlyWallAhead = deadlyHazardAhead(e, moveDir);
             const onGroundPlatform = platforms.some(p => p.type === 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
@@ -180,15 +192,16 @@ export function updateEnemies(dt) {
             if (pitAhead && e.onGround && e.jumpCooldown <= 0) {
               const jumpVy = JUMP_FORCE * 0.9, g = GRAVITY * 1.7, airTime = (-2 * jumpVy) / g;
               const requiredVx = (pitWidth * 1.2) / airTime;
-              e.vy = jumpVy; e.vx = moveDir * Math.max(requiredVx, e.speed * 1.2); e.jumpCooldown = 70;
+              e.vy = jumpVy; e.vx = moveDir * Math.max(requiredVx, effectiveSpeed * 1.2); e.jumpCooldown = 70;
             } else if (dist > 38 && !deadlyWallAhead && !pitAhead) {
-              e.vx = moveDir * e.speed;
+              e.vx = moveDir * effectiveSpeed;
             } else if (deadlyWallAhead) { e.vx *= 0.8; }
             const playerFeetY = player.y + player.h;
             const sameLevel   = playerFeetY > e.y - 10 && player.y < e.y + e.h + 10;
             if (dist < 42 && e.attackTimer <= 0 && sameLevel) {
-              e.attackTimer = 112;
-              if (player.invincible === 0) damagePlayer(Math.round(12 * Math.pow(1.2, difficultyLevel - 1)), e.type);
+              e.attackTimer = Math.round(112 * cooldownMult);
+              const baseDmg = Math.round(12 * Math.pow(1.2, difficultyLevel - 1) * zoneBuffs.enemyDamageMult);
+              if (player.invincible === 0) damagePlayer(baseDmg, e.type);
             }
           } else {
             // Mage
@@ -344,11 +357,32 @@ export function drawEnemies() {
       ctx.fillStyle = c.legs;
       ctx.fillRect(3, e.h-14, 9, 14+legOff); ctx.fillRect(e.w-12, e.h-14, 9, 14-legOff);
       ctx.fillStyle = c.head; ctx.fillRect(5, 0, e.w-10, 14);
-      ctx.fillStyle = '#ff2222'; ctx.fillRect(e.w/2-3, 5, 4, 4);
+      // Eyes — red and glowing when enraged, plain otherwise
+      const eyeCol = e.enraged ? '#ff2200' : '#ff2222';
+      ctx.fillStyle = eyeCol;
+      ctx.shadowColor = eyeCol;
+      ctx.shadowBlur  = e.enraged ? 12 + Math.sin(Date.now() * 0.02) * 5 : 0;
+      ctx.fillRect(e.w/2-3, 5, 4, 4);
+      ctx.shadowBlur = 0;
       ctx.fillStyle = '#888888'; ctx.fillRect(e.w-4, 12, 4, 20);
       ctx.fillStyle = '#aaaaaa';
       ctx.beginPath(); ctx.moveTo(e.w, 10); ctx.lineTo(e.w+14, 18); ctx.lineTo(e.w, 26); ctx.closePath(); ctx.fill();
       ctx.restore();
+
+      // Enrage pulse overlay — drawn outside the saved transform so it aligns with world coords
+      if (e.enraged) {
+        const pulse = 0.18 + Math.sin(Date.now() * 0.018) * 0.10;
+        ctx.save();
+        ctx.globalAlpha = pulse;
+        const enrageGrad = ctx.createLinearGradient(sx, e.y, sx, e.y + e.h);
+        enrageGrad.addColorStop(0, '#ff4400');
+        enrageGrad.addColorStop(0.5, '#cc1100');
+        enrageGrad.addColorStop(1, '#440000');
+        ctx.fillStyle = enrageGrad;
+        ctx.fillRect(sx, e.y, e.w, e.h);
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
     } else {
       // Mage variants
       ctx.save(); ctx.translate(sx, e.y);
