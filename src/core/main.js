@@ -21,7 +21,7 @@ import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } fr
 import { applyZoneBuffs } from '../utils/powerups.js';
 import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
-import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume } from '../utils/audio.js';
+import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume, playSfx } from '../utils/audio.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
 registerGameLoop(gameLoop);
@@ -47,12 +47,14 @@ function drawScene() {
 function triggerCheckpoint() {
   if (gameState === 'checkpoint') return;
   setGameState('checkpoint');
+  playSfx('checkpoint_continue');
   showMessage('ONWARD!', 'Level Complete — Journey Forth...', '#44ff88');
   levelResetTimer = 180;
 }
 
 function resetLevel() {
   setGameState('playing');
+  playSfx('levelup');
   setZoneCount(zoneCount + 1);
   setDifficultyLevel(Math.min(5, 1 + Math.floor((zoneCount + 1) / 3)));
   applyZoneBuffs();
@@ -207,18 +209,19 @@ canvas.addEventListener('mousemove', e => {
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 // --- UI BUTTONS ---
-document.getElementById('card-warrior').addEventListener('click', () => selectClass('warrior'));
-document.getElementById('card-archer').addEventListener('click',  () => selectClass('archer'));
-document.getElementById('card-mage').addEventListener('click',    () => selectClass('mage'));
+document.getElementById('card-warrior').addEventListener('click', () => { playSfx('button_press'); selectClass('warrior'); });
+document.getElementById('card-archer').addEventListener('click',  () => { playSfx('button_press'); selectClass('archer'); });
+document.getElementById('card-mage').addEventListener('click',    () => { playSfx('button_press'); selectClass('mage'); });
 document.getElementById('shop-close').addEventListener('click',   closeShop);
 
 document.getElementById('go-retry').addEventListener('click', () => {
-  hideGameOver(); respawnPlayer();
+  playSfx('button_press'); hideGameOver(); respawnPlayer();
 });
 document.getElementById('go-menu').addEventListener('click', () => {
-  hideGameOver(); returnToMenu();
+  playSfx('button_press'); hideGameOver(); returnToMenu();
 });
 document.getElementById('pause-menu').addEventListener('click', () => {
+  playSfx('button_press');
   document.getElementById('pause-overlay').classList.remove('visible');
   returnToMenu();
 });

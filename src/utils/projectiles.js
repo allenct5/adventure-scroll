@@ -15,6 +15,7 @@ import { tryDropPowerup } from './powerups.js';
 import { dropCoin } from './coins.js';
 import { damagePlayer } from '../entities/player.js';
 import { updateHUD } from './hud.js';
+import { playSfx } from './audio.js';
 
 import { ctx } from '../canvas.js';
 
@@ -87,13 +88,13 @@ export function updateFireballs(dt) {
     const fRect = {x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: f.r * 2};
     let hitTerrain = false;
     for (const p of platforms) { if (rectOverlap(fRect, p)) { hitTerrain = true; break; } }
-    if (hitTerrain) { f.vx = 0; f.vy = 0; f.dissipating = true; f.dissipateTimer = 30; f.trail = []; spawnParticles(f.x, f.y, '#ff4400', 10); continue; }
+    if (hitTerrain) { f.vx = 0; f.vy = 0; f.dissipating = true; f.dissipateTimer = 30; f.trail = []; spawnParticles(f.x, f.y, '#ff4400', 10); playSfx('fireball_explode'); continue; }
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
       if (rectOverlap({x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: f.r * 2}, e)) {
         e.hp -= rarityDamage(BASE_FIREBALL_DAMAGE, player.staffRarity) * player.damageMult;
         e.burnTimer = 300; e.burnDps = 20 / 300;
-        spawnParticles(f.x, f.y, '#ff4400', 10); f.dissipating = true; f.dissipateTimer = 20; f.trail = [];
+        spawnParticles(f.x, f.y, '#ff4400', 10); f.dissipating = true; f.dissipateTimer = 20; f.trail = []; playSfx('fireball_explode');
         if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
         break;
       }
@@ -129,6 +130,7 @@ function explodeBomb(b) {
   }
   for (let k = 0; k < 3; k++) spawnParticles(b.x, b.y, '#ff6600', 8);
   spawnParticles(b.x, b.y, '#ffcc00', 10); spawnParticles(b.x, b.y, '#ffffff', 5);
+  playSfx('bomb_explode');
 }
 
 // --- DRAW ALL PROJECTILES ---

@@ -3,6 +3,7 @@
 import { RARITY, BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_ORB_DAMAGE, rarityDamage } from '../core/constants.js';
 import { player, playerClass, setShopOpen, setGameState, setMouseDown, setLastTime } from '../core/state.js';
 import { updateHUD } from './hud.js';
+import { playSfx } from './audio.js';
 
 export const SHOP_ITEMS = [
   { id: 'pu_speed',    name: 'Swift Draught',      cost: 2,   icon: '⚡', limit: 1, tooltip: 'Doubles your attack speed for 10 seconds.' },
@@ -24,6 +25,7 @@ let _gameLoop = null;
 export function registerGameLoop(fn) { _gameLoop = fn; }
 
 export function openShop() {
+  playSfx('shop_open');
   setShopOpen(true);
   setMouseDown(false);
   document.getElementById('gameCanvas').classList.remove('merchant-hover');
@@ -120,6 +122,7 @@ export function buyItem(item) {
     case 'pu_speed':  player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 10); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 10); msg.textContent = 'Attack speed doubled for 10s!'; break;
     case 'berserker': player.damageMult = (player.damageMult || 1) * 1.3; msg.textContent = 'Berserker Rage — +30% damage this level!'; break;
   }
+  playSfx('shop_purchase');
   updateHUD();
   renderShopGrid();
 }

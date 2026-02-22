@@ -5,6 +5,7 @@ import { player, cameraX, coins, lastJackpotTime, setLastJackpotTime } from '../
 import { rectOverlap } from './collision.js';
 import { spawnParticles, spawnJackpotSparkles } from './particles.js';
 import { updateHUD } from './hud.js';
+import { playSfx } from './audio.js';
 import { platforms } from '../scenes/level.js';
 
 import { ctx } from '../canvas.js';
@@ -27,7 +28,7 @@ export function dropCoin(x, y) {
     const spread = (i - (count - 1) / 2) * 14;
     coins.push({ x: x - 6 + spread, y: y - 8, w: 12, h: 12, vy: -4 - Math.random() * 2, bobOffset: Math.random() * Math.PI * 2, landed: false });
   }
-  if (count === 3) spawnJackpotSparkles(player.x + player.w / 2, player.y - 10);
+  if (count === 3) { spawnJackpotSparkles(player.x + player.w / 2, player.y - 10); playSfx('coindrop_jackpot'); }
 }
 
 export function updateCoins(dt) {

@@ -18,7 +18,7 @@ import {
 import { rectOverlap, resolvePlayerPlatforms } from '../utils/collision.js';
 import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from '../utils/particles.js';
 import { updateHUD, showGameOver } from '../utils/hud.js';
-import { playDeathMusic } from '../utils/audio.js';
+import { playDeathMusic, playSfx } from '../utils/audio.js';
 import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
 import { ENEMY_DISPLAY_NAMES } from './enemies.js';
@@ -166,6 +166,7 @@ export function updatePlayer(dt) {
 
 // --- SWORD ---
 export function swordAttack() {
+  playSfx('sword_attack');
   const REACH = 6;
   const swordHandX = player.facingRight ? player.x + player.w + REACH : player.x - REACH;
   const swordHandY = player.y + player.h * 0.35;
@@ -218,6 +219,7 @@ export const getBowAimAngle   = getAimAngle;
 export const getStaffAimAngle = getAimAngle;
 
 export function shootArrow() {
+  playSfx('axe_attack');
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
@@ -227,6 +229,7 @@ export function shootArrow() {
 
 // --- STAFF ---
 export function shootStaffOrb() {
+  playSfx('orb_spell');
   const cx    = player.x + player.w / 2;
   const cy    = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
@@ -240,6 +243,7 @@ export function shootStaffOrb() {
 }
 
 export function shootFireball() {
+  playSfx('fireball_spell');
   const cx    = player.x + player.w / 2;
   const cy    = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
@@ -251,6 +255,7 @@ export function shootFireball() {
 // --- BOMB ---
 export function throwBomb() {
   if (player.bombs <= 0) return;
+  playSfx('bomb_throw');
   player.bombs--;
   updateHUD();
   const cx = player.x + player.w / 2;
@@ -583,12 +588,12 @@ export function drawPlayer() {
 
   } else {
     // --- WARRIOR ---
-    // Blue tunic — legs
-    ctx.fillStyle = '#2255aa';
+    // Legs
+    ctx.fillStyle = '#888e96';
     ctx.fillRect(4, player.h - 16, 10, 16 + legAnim);
     ctx.fillRect(player.w - 14, player.h - 16, 10, 16 - legAnim);
     // Boot cuffs
-    ctx.fillStyle = '#1a3d7a';
+    ctx.fillStyle = '#666c74';
     ctx.fillRect(4, player.h - 4, 10, 4);
     ctx.fillRect(player.w - 14, player.h - 4, 10, 4);
 
