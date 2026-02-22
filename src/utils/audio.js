@@ -66,7 +66,7 @@ const SFX_MIN_INTERVAL = {
   bow_attack:          450,   // fastest arrow cooldown ~600ms real
   bomb_throw:          500,
   shield_block:          0,
-  shield_reflect:        0,
+  shield_reflect:      300,   // multiple orbs can enter range in same frame; debounce collapses them
   jump_sound:          150,   // allows player + nearby enemy jumps to both sound
   bomb_explode:        150,   // explosions can briefly stack
   fireball_spell:      700,   // fastest fireball cooldown ~917ms real

@@ -15,9 +15,9 @@ export function drawNpcMerlin() {
   const nw = npcMerlin.w, nh = npcMerlin.h;
   const msx = merchant.x - cameraX;
   if (msx > W + 60 || msx < -60) return;
-  // Centered horizontally behind the stall; feet aligned to the counter top
+  // Centered horizontally behind the stall; feet aligned to the platform surface
   const sx = msx + (merchant.w - nw) / 2;
-  const sy = merchant.y - nh;
+  const sy = merchant.y + merchant.h - nh;
 
   ctx.save();
   ctx.translate(sx, sy);
