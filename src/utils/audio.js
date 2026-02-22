@@ -62,7 +62,7 @@ export function playDeathMusic() {
 // Attack sounds are set to ~70-75% of the fastest possible cooldown for that weapon.
 const SFX_MIN_INTERVAL = {
   sword_attack:        450,   // fastest sword cooldown ~600ms real
-  axe_attack:          450,   // fastest arrow cooldown ~600ms real
+  axe_attack:          450,   // fastest orc attack cooldown ~1870ms real; per-slot so two orcs can overlap
   bow_attack:          450,   // fastest arrow cooldown ~600ms real
   bomb_throw:          500,
   shield_block:          0,
@@ -98,22 +98,45 @@ const SFX_FILES = {
   shop_purchase:      'assets/audio/sfx/ui/shop_purchase.mp3',
 };
 
+// Sounds that need more than one simultaneous instance (e.g. multiple enemies attacking at once).
+// Player attack sounds are single-instance (only one player); enemy sounds are pooled at 2.
+const SFX_POOL_SIZES = {
+  axe_attack:  2,
+  orb_spell:   2,
+  jump_sound:  2,
+};
+
 const sfxPool = {};
 const sfxLastPlayed = {};
 
 for (const [name, path] of Object.entries(SFX_FILES)) {
-  const audio = new Audio(path);
-  audio.volume = 0.4;
-  sfxPool[name] = audio;
+  const size = SFX_POOL_SIZES[name] ?? 1;
+  sfxPool[name] = Array.from({ length: size }, () => {
+    const a = new Audio(path);
+    a.volume = 0.4;
+    return a;
+  });
 }
 
 export function playSfx(name) {
-  const sound = sfxPool[name];
-  if (!sound) return;
+  const pool = sfxPool[name];
+  if (!pool) return;
   const now = performance.now();
   const minInterval = SFX_MIN_INTERVAL[name] ?? 0;
-  if (minInterval > 0 && now - (sfxLastPlayed[name] ?? -Infinity) < minInterval) return;
-  sfxLastPlayed[name] = now;
+
+  // Pick the slot that is out of debounce and was played longest ago.
+  // For single-instance sounds the pool has one entry so behaviour is identical to before.
+  let bestIdx = -1, bestAge = -1;
+  for (let i = 0; i < pool.length; i++) {
+    const key = pool.length > 1 ? `${name}_${i}` : name;
+    const age = now - (sfxLastPlayed[key] ?? -Infinity);
+    if (age >= minInterval && age > bestAge) { bestIdx = i; bestAge = age; }
+  }
+  if (bestIdx === -1) return;
+
+  const key = pool.length > 1 ? `${name}_${bestIdx}` : name;
+  sfxLastPlayed[key] = now;
+  const sound = pool[bestIdx];
   sound.volume = 0.4 * gameVolume;
   sound.currentTime = 0;
   sound.play().catch(() => {});
