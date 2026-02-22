@@ -14,6 +14,7 @@ import { damagePlayer } from './player.js';
 import { playSfx } from '../utils/audio.js';
 
 import { ctx } from '../canvas.js';
+import { getSprite } from '../utils/sprites.js';
 
 const ENRAGE_HP_THRESHOLD  = 0.30; // fraction of maxHp below which orcs enrage
 const ENRAGE_SPEED_MULT     = 1.50; // +50% move speed when enraged
@@ -294,7 +295,17 @@ export function drawEnemies() {
     const sx = e.x - cameraX;
     if (sx > W + 80 || sx < -80) continue;
 
-    if (isSkull(e.type)) {
+    const _eSprite = getSprite('enemy_' + e.type);
+    if (_eSprite) {
+      ctx.save();
+      if (!isSkull(e.type) && !e.facingRight) {
+        ctx.translate(sx + e.w, e.y); ctx.scale(-1, 1);
+      } else {
+        ctx.translate(sx, e.y);
+      }
+      ctx.drawImage(_eSprite, 0, 0, e.w, e.h);
+      ctx.restore();
+    } else if (isSkull(e.type)) {
       ctx.save(); ctx.translate(sx + e.w / 2, e.y + e.h / 2);
 
       const flapAngle  = Math.sin(e.sineTime * 2.2 + e.sineOffset) * 0.45;

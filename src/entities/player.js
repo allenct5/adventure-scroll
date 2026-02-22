@@ -24,6 +24,7 @@ import { dropCoin } from '../utils/coins.js';
 import { ENEMY_DISPLAY_NAMES } from './enemies.js';
 
 import { ctx } from '../canvas.js';
+import { getSprite } from '../utils/sprites.js';
 
 // Helper: apply attack speed cooldown reduction
 function applyCooldown(base) {
@@ -382,6 +383,11 @@ export function drawPlayer() {
     ctx.translate(sx, player.y);
   }
 
+  // If a sprite is loaded for this player class, draw it and skip procedural rendering
+  const _playerSprite = getSprite('player_' + playerClass);
+  if (_playerSprite) {
+    ctx.drawImage(_playerSprite, 0, 0, player.w, player.h);
+  } else {
   // Leg animation: use game-time-independent value so it pauses correctly
   const legAnim = player.vx !== 0 && player.onGround ? Math.sin(player.x * 0.15) * 4 : 0;
 
@@ -634,6 +640,7 @@ export function drawPlayer() {
     ctx.fillStyle = '#888e96';
     ctx.fillRect(3, 10, player.w - 6, 2);
   }
+  } // end sprite else
   ctx.restore();
 
   // Stamina bar (warrior)

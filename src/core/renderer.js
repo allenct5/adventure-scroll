@@ -359,7 +359,7 @@ export function drawMerchant() {
   const pulse = 0.7 + Math.sin(t * 3) * 0.3;
   ctx.fillStyle = `rgba(255,220,80,${pulse})`; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 12 * pulse;
   ctx.font = 'bold 9px Share Tech Mono'; ctx.textAlign = 'center';
-  ctx.fillText('[ SHOP ]', sx + merchant.w / 2, merchant.y - 24); ctx.textAlign = 'left'; ctx.shadowBlur = 0;
+  ctx.fillText("[ MAGNIFICENT MERLIN'S SHOP ]", sx + merchant.w / 2, merchant.y - 24); ctx.textAlign = 'left'; ctx.shadowBlur = 0;
 }
 
 export function drawBuffIcons() {

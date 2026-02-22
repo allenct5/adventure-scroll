@@ -23,6 +23,7 @@ import { applyZoneBuffs } from '../utils/powerups.js';
 import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
 import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume, playSfx } from '../utils/audio.js';
+import { loadSprites } from '../utils/sprites.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
 registerGameLoop(gameLoop);
@@ -299,5 +300,8 @@ window.closeShop   = closeShop;
 window.openShop    = openShop;
 window.buyItem     = buyItem;
 
-// Start
-gameLoop();
+// Start — load sprites first, then begin the render loop
+(async () => {
+  await loadSprites();
+  gameLoop();
+})();

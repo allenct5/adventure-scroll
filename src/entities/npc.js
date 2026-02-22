@@ -4,8 +4,9 @@ import { W } from '../core/constants.js';
 import { merchant } from '../scenes/level.js';
 import { cameraX } from '../core/state.js';
 import { ctx } from '../canvas.js';
+import { getSprite } from '../utils/sprites.js';
 
-export const npcMerlin = {w: 28, h: 44};
+export const npcMerlin = {w: 28, h: 44, showName: false};
 
 export const NPC_DISPLAY_NAMES = {
   npcMerlin: 'Magnificent Merlin',
@@ -22,6 +23,10 @@ export function drawNpcMerlin() {
   ctx.save();
   ctx.translate(sx, sy);
 
+  const _merlinSprite = getSprite('npc_merlin');
+  if (_merlinSprite) {
+    ctx.drawImage(_merlinSprite, 0, 0, nw, nh);
+  } else {
   // --- ROBE ---
   const robeGrad = ctx.createLinearGradient(0, 10, 0, nh);
   robeGrad.addColorStop(0, '#2244aa'); robeGrad.addColorStop(0.5, '#1a3388'); robeGrad.addColorStop(1, '#0d1f55');
@@ -110,13 +115,16 @@ export function drawNpcMerlin() {
   }
   ctx.closePath(); ctx.fill();
   ctx.shadowBlur = 0;
+  } // end sprite else
 
   ctx.restore();
 
   // Name label
-  const namePulse = 0.75 + Math.sin(Date.now() * 0.004) * 0.25;
-  ctx.fillStyle = `rgba(255,220,80,${namePulse})`; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 8 * namePulse;
-  ctx.font = 'bold 9px Share Tech Mono'; ctx.textAlign = 'center';
-  ctx.fillText(NPC_DISPLAY_NAMES.npcMerlin, sx + nw / 2, sy - 38);
-  ctx.textAlign = 'left'; ctx.shadowBlur = 0;
+  if (npcMerlin.showName) {
+    const namePulse = 0.75 + Math.sin(Date.now() * 0.004) * 0.25;
+    ctx.fillStyle = `rgba(255,220,80,${namePulse})`; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 8 * namePulse;
+    ctx.font = 'bold 9px Share Tech Mono'; ctx.textAlign = 'center';
+    ctx.fillText(NPC_DISPLAY_NAMES.npcMerlin, sx + nw / 2, sy - 38);
+    ctx.textAlign = 'left'; ctx.shadowBlur = 0;
+  }
 }
