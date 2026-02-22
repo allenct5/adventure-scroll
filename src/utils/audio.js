@@ -66,11 +66,13 @@ const SFX_MIN_INTERVAL = {
   bow_attack:          450,   // fastest arrow cooldown ~600ms real
   bomb_throw:          500,
   shield_block:          0,
+  shield_reflect:        0,
   jump_sound:          150,   // allows player + nearby enemy jumps to both sound
   bomb_explode:        150,   // explosions can briefly stack
   fireball_spell:      700,   // fastest fireball cooldown ~917ms real
   fireball_explode:    150,
   orb_spell:           250,   // fastest orb cooldown ~347ms real
+  orb_hit:             150,   // can briefly overlap if player and enemy orbs hit simultaneously
   button_press:          0,
   checkpoint_continue:   0,
   coindrop_jackpot:      0,
@@ -87,11 +89,13 @@ const SFX_FILES = {
   bow_attack:         'assets/audio/sfx/attacks/bow_attack.mp3',
   bomb_throw:         'assets/audio/sfx/attacks/bomb_throw.mp3',
   shield_block:       'assets/audio/sfx/attacks/shield_block.mp3',
+  shield_reflect:     'assets/audio/sfx/attacks/shield_reflect.mp3',
   jump_sound:         'assets/audio/sfx/attacks/jump_sound.mp3',
   bomb_explode:       'assets/audio/sfx/attacks/bomb_explode.mp3',
   fireball_spell:     'assets/audio/sfx/spells/fireball_spell.mp3',
   fireball_explode:   'assets/audio/sfx/spells/fireball_explode.mp3',
   orb_spell:          'assets/audio/sfx/spells/orb_spell.mp3',
+  orb_hit:            'assets/audio/sfx/spells/orb_hit.mp3',
   button_press:       'assets/audio/sfx/ui/button_press.mp3',
   checkpoint_continue:'assets/audio/sfx/ui/checkpoint_continue.mp3',
   coindrop_jackpot:   'assets/audio/sfx/ui/coindrop_jackpot.mp3',

@@ -59,7 +59,7 @@ export function updatePlayerOrbs(dt) {
       const e = enemies[j];
       if (rectOverlap({x: o.x - o.r, y: o.y - o.r, w: o.r * 2, h: o.r * 2}, e)) {
         e.hp -= rarityDamage(BASE_ORB_DAMAGE, player.staffRarity) * player.damageMult;
-        spawnParticles(o.x, o.y, '#ff44ff', 8); playerOrbs.splice(i, 1);
+        playSfx('orb_hit'); spawnParticles(o.x, o.y, '#ff44ff', 8); playerOrbs.splice(i, 1);
         if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
         break;
       }

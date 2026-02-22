@@ -12,6 +12,7 @@ import {
 } from './state.js';
 import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn } from '../entities/player.js';
 import { populateEnemies, updateEnemies, drawEnemies } from '../entities/enemies.js';
+import { drawNpcMerlin } from '../entities/npc.js';
 import { updateArrows, updatePlayerOrbs, updateFireballs, updateBombs, drawProjectiles } from '../utils/projectiles.js';
 import { updatePowerups, drawPowerups } from '../utils/powerups.js';
 import { updateCoins, drawCoins } from '../utils/coins.js';
@@ -36,7 +37,7 @@ let levelResetTimer = 0;
 
 function drawScene() {
   ctx.clearRect(0, 0, W, H);
-  drawBackground(); drawPlatforms(); drawHazards(); drawCheckpoint(); drawMerchant();
+  drawBackground(); drawPlatforms(); drawHazards(); drawCheckpoint(); drawNpcMerlin(); drawMerchant();
   drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
   drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
   applyVignette();

@@ -258,7 +258,7 @@ export function updateEnemies(dt) {
         const REFLECT_SPEED = 7;
         if (target) { const tx = target.x+target.w/2, ty = target.y+target.h/2, mag = Math.hypot(tx-p.x, ty-p.y)||1; p.vx = (tx-p.x)/mag*REFLECT_SPEED; p.vy = (ty-p.y)/mag*REFLECT_SPEED; }
         else { p.vx = -p.vx * 1.5; p.vy = -p.vy * 1.5; }
-        p.reflected = true; p.life = 120; spawnParticles(p.x, p.y, '#aaddff', 10); continue;
+        p.reflected = true; p.life = 120; playSfx('shield_reflect'); spawnParticles(p.x, p.y, '#aaddff', 10); continue;
       }
     }
     if (player.blocking && !player.dead && playerClass === 'warrior' && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, player)) {
@@ -277,7 +277,7 @@ export function updateEnemies(dt) {
     }
     if (!player.dead && player.invincible === 0 && rectOverlap({x:p.x-3,y:p.y-3,w:6,h:6}, player)) {
       damagePlayer(Math.round(18 * Math.pow(1.2, difficultyLevel - 1)), p.killerType || null);
-      spawnParticles(p.x, p.y, projectileColor, 8); enemyProjectiles.splice(i, 1);
+      playSfx('orb_hit'); spawnParticles(p.x, p.y, projectileColor, 8); enemyProjectiles.splice(i, 1);
     }
   }
 }
