@@ -272,7 +272,7 @@ export function damagePlayer(amount, killerType = null) {
   if (godMode || player.invincible > 0 || player.dead) return;
   let dmg = player.fortified ? Math.round(amount * 0.75) : amount;
   if (player.blocking && playerClass === 'warrior') {
-    dmg = Math.round(dmg * 0.15);
+    dmg = Math.round(dmg * 0.70);
     spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#88ccff', 8);
   }
   player.hp -= dmg;

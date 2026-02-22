@@ -555,8 +555,9 @@ export function drawBuffIcons() {
       ctx.fillRect(cx + 1, faceY + 6, 3, 2);
 
     } else if (type === 'revive') {
-      // White skull with yellow glowing halo above
-      // Halo above head
+      // Angel: halo, head, wings, robe
+
+      // Halo
       ctx.strokeStyle = color;
       ctx.lineWidth   = 2;
       ctx.shadowColor = color;
@@ -566,42 +567,45 @@ export function drawBuffIcons() {
       ctx.stroke();
       ctx.shadowBlur  = 0;
 
-      // Skull
+      // Wings (white with golden glow)
       ctx.fillStyle   = '#ffffff';
       ctx.shadowColor = color;
-      ctx.shadowBlur  = 8;
-      // Main skull dome
-      ctx.beginPath();
-      ctx.arc(cx, cy - 2, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur  = 0;
+      ctx.shadowBlur  = 5;
 
-      // Jaw
-      ctx.fillStyle   = '#ffffff';
+      // Left wing
       ctx.beginPath();
-      ctx.moveTo(cx - 6, cy + 6);
-      ctx.lineTo(cx + 6, cy + 6);
-      ctx.lineTo(cx + 5, cy + 10);
-      ctx.lineTo(cx - 5, cy + 10);
+      ctx.moveTo(cx - 3, cy - 2);
+      ctx.bezierCurveTo(cx - 9, cy - 9, cx - 15, cy - 3, cx - 13, cy + 5);
+      ctx.bezierCurveTo(cx - 9, cy + 3, cx - 5, cy + 5, cx - 3, cy + 7);
       ctx.closePath();
       ctx.fill();
 
-      // Eye sockets (yellow glow)
-      ctx.fillStyle   = color;
-      ctx.shadowColor = color;
-      ctx.shadowBlur  = 6;
+      // Right wing (mirrored)
       ctx.beginPath();
-      ctx.arc(cx - 4, cy - 3, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx + 4, cy - 3, 2.5, 0, Math.PI * 2);
+      ctx.moveTo(cx + 3, cy - 2);
+      ctx.bezierCurveTo(cx + 9, cy - 9, cx + 15, cy - 3, cx + 13, cy + 5);
+      ctx.bezierCurveTo(cx + 9, cy + 3, cx + 5, cy + 5, cx + 3, cy + 7);
+      ctx.closePath();
       ctx.fill();
       ctx.shadowBlur  = 0;
 
-      // Nose hole
-      ctx.fillStyle   = '#000000';
+      // Head
+      ctx.fillStyle   = '#ffffff';
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 8;
       ctx.beginPath();
-      ctx.arc(cx, cy + 2, 1.5, 0, Math.PI * 2);
+      ctx.arc(cx, cy - 5, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur  = 0;
+
+      // Robe (body)
+      ctx.fillStyle   = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, cy);
+      ctx.lineTo(cx - 6, cy + 10);
+      ctx.lineTo(cx + 6, cy + 10);
+      ctx.lineTo(cx + 4, cy);
+      ctx.closePath();
       ctx.fill();
     }
 
