@@ -22,7 +22,12 @@ import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
 import { ENEMY_DISPLAY_NAMES } from './enemies.js';
 
-import { ctx } from '../scenes/canvas.js';
+import { ctx } from '../canvas.js';
+
+// Helper: apply attack speed cooldown reduction
+function applyCooldown(base) {
+  return player.attackSpeedTimer > 0 ? base * 0.8 : base;
+}
 
 export function createPlayer() {
   const p = {
@@ -59,7 +64,7 @@ export function createPlayer() {
 export function updatePlayer(dt) {
   if (player.dead) {
     player.respawnTimer = Math.max(0, player.respawnTimer - dt);
-    if (player.respawnTimer === 0) respawnPlayer();
+    if (player.respawnTimer <= 0) respawnPlayer();
     return;
   }
   player.invincible    = Math.max(0, player.invincible - dt);
@@ -114,30 +119,28 @@ export function updatePlayer(dt) {
   // Attack
   if (mouseDown) {
     if (player.weapon === 'sword' && player.swordTimer <= 0) {
-      const handX   = (player.x + player.w / 2) - cameraX;
+      const handX = (player.x + player.w / 2) - cameraX;
       player.facingRight = (mousePos.x - handX) >= 0;
-      const cooldown = player.attackSpeedTimer > 0 ? SWORD_COOLDOWN * 0.8 : SWORD_COOLDOWN;
-      player.swordTimer  = cooldown;
+      player.swordTimer  = applyCooldown(SWORD_COOLDOWN);
       player.swingActive = true;
       player.swingTimer  = 700;
       player.swingDuration = 700;
       swordAttack();
     } else if (player.weapon === 'bow' && player.arrowTimer <= 0) {
-      player.arrowTimer = player.attackSpeedTimer > 0 ? ARROW_COOLDOWN * 0.8 : ARROW_COOLDOWN;
+      player.arrowTimer = applyCooldown(ARROW_COOLDOWN);
       shootArrow();
     } else if (player.weapon === 'staff' && player.staffOrbTimer <= 0) {
-      player.staffOrbTimer = player.attackSpeedTimer > 0 ? STAFF_ORB_COOLDOWN * 0.8 : STAFF_ORB_COOLDOWN;
+      player.staffOrbTimer = applyCooldown(STAFF_ORB_COOLDOWN);
       shootStaffOrb();
     }
   }
 
   if (player.weapon === 'staff' && mouseRightDown && player.staffTimer <= 0 && player.mana >= 5) {
-    player.staffTimer = player.attackSpeedTimer > 0 ? FIREBALL_COOLDOWN * 0.8 : FIREBALL_COOLDOWN;
+    player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
     shootFireball(); player.mana -= 5; updateHUD();
   }
   if (player.weapon === 'bow' && mouseRightDown && player.bombs > 0) {
     throwBomb();
-    // consume so it doesn't repeat each frame
     setMouseRightDown(false);
   }
 
@@ -370,6 +373,9 @@ export function drawPlayer() {
     ctx.translate(sx, player.y);
   }
 
+  // Leg animation: use game-time-independent value so it pauses correctly
+  const legAnim = player.vx !== 0 && player.onGround ? Math.sin(player.x * 0.15) * 4 : 0;
+
   // Body
   if (playerClass === 'mage') {
     // --- ROBE ---
@@ -430,7 +436,6 @@ export function drawPlayer() {
 
     // --- BEARD ---
     ctx.fillStyle = '#f0f0f0';
-    // Main beard shape — widens as it descends
     ctx.beginPath();
     ctx.moveTo(6,  13);
     ctx.lineTo(player.w - 6, 13);
@@ -488,18 +493,17 @@ export function drawPlayer() {
 
   } else if (playerClass === 'archer') {
     // --- GREEN TIGHTS ---
-    const legOffset = player.vx !== 0 && player.onGround ? Math.sin(Date.now() * 0.015) * 4 : 0;
     ctx.fillStyle = '#2e7d32';
-    ctx.fillRect(4,  player.h - 22, 10, 22 + legOffset);
-    ctx.fillRect(player.w - 14, player.h - 22, 10, 22 - legOffset);
+    ctx.fillRect(4,  player.h - 22, 10, 22 + legAnim);
+    ctx.fillRect(player.w - 14, player.h - 22, 10, 22 - legAnim);
     // Tights highlight
     ctx.fillStyle = '#4caf50';
-    ctx.fillRect(6,  player.h - 22, 3, 18 + legOffset);
-    ctx.fillRect(player.w - 12, player.h - 22, 3, 18 - legOffset);
+    ctx.fillRect(6,  player.h - 22, 3, 18 + legAnim);
+    ctx.fillRect(player.w - 12, player.h - 22, 3, 18 - legAnim);
     // Brown boots
     ctx.fillStyle = '#5d3a1a';
-    ctx.fillRect(3,  player.h - 7, 12, 7 + legOffset);
-    ctx.fillRect(player.w - 15, player.h - 7, 12, 7 - legOffset);
+    ctx.fillRect(3,  player.h - 7, 12, 7 + legAnim);
+    ctx.fillRect(player.w - 15, player.h - 7, 12, 7 - legAnim);
     ctx.fillStyle = '#7a4f2a';
     ctx.fillRect(3,  player.h - 7, 12, 3);
     ctx.fillRect(player.w - 15, player.h - 7, 12, 3);
@@ -548,13 +552,11 @@ export function drawPlayer() {
     ctx.fillRect(player.w / 2 + 1, 5, 4, 1);
 
     // --- GREEN ROBIN HOOD HAT ---
-    // Brim — uniform, flat
     ctx.fillStyle = '#2e7d32';
     ctx.fillRect(2, -2, player.w - 4, 4);
-    // Hat crown — straight up, symmetric
-    const hatGrad = ctx.createLinearGradient(4, -16, player.w - 4, -2);
-    hatGrad.addColorStop(0, '#1b5e20'); hatGrad.addColorStop(1, '#388e3c');
-    ctx.fillStyle = hatGrad;
+    const archerHatGrad = ctx.createLinearGradient(4, -16, player.w - 4, -2);
+    archerHatGrad.addColorStop(0, '#1b5e20'); archerHatGrad.addColorStop(1, '#388e3c');
+    ctx.fillStyle = archerHatGrad;
     ctx.beginPath();
     ctx.moveTo(4,           -2);
     ctx.lineTo(player.w - 4, -2);
@@ -562,7 +564,7 @@ export function drawPlayer() {
     ctx.lineTo(6,            -15);
     ctx.closePath();
     ctx.fill();
-    // Feather — swept left from the left side of the hat
+    // Feather
     ctx.strokeStyle = '#f5f5dc'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(5, -4);
@@ -579,18 +581,16 @@ export function drawPlayer() {
 
   } else {
     // --- WARRIOR ---
-    const legOffset = player.vx !== 0 && player.onGround ? Math.sin(Date.now() * 0.015) * 4 : 0;
-
     // Blue tunic — legs
     ctx.fillStyle = '#2255aa';
-    ctx.fillRect(4, player.h - 16, 10, 16 + legOffset);
-    ctx.fillRect(player.w - 14, player.h - 16, 10, 16 - legOffset);
+    ctx.fillRect(4, player.h - 16, 10, 16 + legAnim);
+    ctx.fillRect(player.w - 14, player.h - 16, 10, 16 - legAnim);
     // Boot cuffs
     ctx.fillStyle = '#1a3d7a';
     ctx.fillRect(4, player.h - 4, 10, 4);
     ctx.fillRect(player.w - 14, player.h - 4, 10, 4);
 
-    // Blue tunic body (behind breastplate, visible at sides/bottom)
+    // Blue tunic body
     ctx.fillStyle = '#2255aa';
     ctx.fillRect(4, 12, player.w - 8, player.h - 28);
 
@@ -602,10 +602,8 @@ export function drawPlayer() {
     ctx.fillRect(6, 15, 5, player.h - 36);
 
     // --- HELMET ---
-    // Neck/cheek base
     ctx.fillStyle = '#888e96';
     ctx.fillRect(4, 8, player.w - 8, 8);
-    // Helmet bowl
     ctx.fillStyle = '#a0a8b0';
     ctx.beginPath();
     ctx.moveTo(3, 12);
@@ -657,10 +655,9 @@ export function drawPlayer() {
     const cy = player.y + player.h * 0.4;
     const aimAngle = Math.atan2(mousePos.y - cy, mousePos.x - cx);
     const RADIUS = 38;
-    const SPAN   = Math.PI * 0.9; // half-circle spread
+    const SPAN   = Math.PI * 0.9;
     const pulse  = 0.55 + Math.sin(Date.now() * 0.012) * 0.2;
 
-    // Outer glow fill
     ctx.save();
     ctx.globalAlpha = 0.18 * pulse;
     const glowGrad = ctx.createRadialGradient(cx, cy, RADIUS * 0.4, cx, cy, RADIUS * 1.3);
@@ -674,7 +671,6 @@ export function drawPlayer() {
     ctx.fill();
     ctx.restore();
 
-    // Crescent arc stroke
     ctx.save();
     ctx.globalAlpha = 0.7 * pulse;
     ctx.strokeStyle = '#aaddff';
@@ -685,8 +681,6 @@ export function drawPlayer() {
     ctx.beginPath();
     ctx.arc(cx, cy, RADIUS, aimAngle - SPAN / 2, aimAngle + SPAN / 2);
     ctx.stroke();
-
-    // Edge dots
     ctx.fillStyle = '#cceeff';
     ctx.shadowBlur = 8;
     for (const edgeAngle of [aimAngle - SPAN / 2, aimAngle + SPAN / 2]) {
@@ -714,11 +708,9 @@ function drawSword(sx) {
   let swordAngle;
   if (player.swingActive && player.swingDuration > 0) {
     const progress = 1 - (player.swingTimer / player.swingDuration);
-    // Asymmetric curve: slow deliberate wind-up, snap through on strike, gentle settle
-    // Uses a cubic that accelerates hard through the middle and eases only at the very end
     const eased = progress < 0.35
-      ? (progress / 0.35) * (progress / 0.35) * 0.18               // slow wind-up
-      : 0.18 + (1 - Math.pow(1 - (progress - 0.35) / 0.65, 2.2)) * 0.82; // fast strike + soft settle
+      ? (progress / 0.35) * (progress / 0.35) * 0.18
+      : 0.18 + (1 - Math.pow(1 - (progress - 0.35) / 0.65, 2.2)) * 0.82;
     const arcSpan = Math.PI * 0.85;
     const windUp        = cursorAngle + (facingRight ? -arcSpan * 0.55 : arcSpan * 0.55);
     const followThrough = cursorAngle + (facingRight ?  arcSpan * 0.45 : -arcSpan * 0.45);

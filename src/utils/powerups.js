@@ -1,4 +1,4 @@
-// powerups.js — Powerup spawning, update, draw; coin drop and draw.
+// powerups.js — Powerup spawning, update, draw.
 
 import { POWERUP_DROP_COOLDOWN, W } from '../core/constants.js';
 import {
@@ -9,9 +9,8 @@ import { rectOverlap } from './collision.js';
 import { spawnParticles } from './particles.js';
 import { updateHUD } from './hud.js';
 
-import { ctx } from '../scenes/canvas.js';
+import { ctx } from '../canvas.js';
 
-// --- POWERUPS ---
 export function tryDropPowerup(x, y) {
   const roll = Math.random();
   let type = null;
@@ -29,13 +28,13 @@ export function tryDropPowerup(x, y) {
 }
 
 export function updatePowerups(dt) {
-  player.speedBoostTimer = Math.max(0, player.speedBoostTimer - dt);
+  player.speedBoostTimer  = Math.max(0, player.speedBoostTimer  - dt);
   player.attackSpeedTimer = Math.max(0, player.attackSpeedTimer - dt);
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     if (rectOverlap(player, p)) {
       if      (p.type === 'health')      { player.hp = Math.min(player.maxHp, player.hp + 20); updateHUD(); }
-      else if (p.type === 'speedBoost')  { player.speedBoostTimer = Math.max(player.speedBoostTimer, 60 * 7); }
+      else if (p.type === 'speedBoost')  { player.speedBoostTimer  = Math.max(player.speedBoostTimer,  60 * 7); }
       else if (p.type === 'attackSpeed') { player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 7); }
       else if (p.type === 'mana')        { player.mana += 5; updateHUD(); }
       else if (p.type === 'bomb')        { player.bombs = Math.min(5, player.bombs + 2); updateHUD(); }
@@ -87,57 +86,31 @@ export function drawPowerups() {
     } else if (p.type === 'speedBoost') {
       ctx.fillStyle = '#00ff88'; ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 10;
       ctx.lineWidth = 2;
-      // Draw forward-pointing chevron/arrow shape
       ctx.beginPath();
-      ctx.moveTo(-4, -6);
-      ctx.lineTo(4, 0);
-      ctx.lineTo(-4, 6);
+      ctx.moveTo(-4, -6); ctx.lineTo(4, 0); ctx.lineTo(-4, 6);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(0, -6);
-      ctx.lineTo(8, 0);
-      ctx.lineTo(0, 6);
+      ctx.moveTo(0, -6); ctx.lineTo(8, 0); ctx.lineTo(0, 6);
       ctx.stroke();
     } else if (p.type === 'attackSpeed') {
       ctx.strokeStyle = '#ffcc00'; ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 10;
       ctx.lineWidth = 2; ctx.lineCap = 'round';
-      // Draw a swinging sword
       ctx.save();
-      ctx.translate(0, 0);
       const swingAngle = Math.sin(t * 4 + p.bobOffset) * 0.45;
       ctx.rotate(swingAngle);
-      // Sword blade
-      ctx.beginPath();
-      ctx.moveTo(0, -10);
-      ctx.lineTo(0, 8);
-      ctx.stroke();
-      // Sword hilt/crossguard
-      ctx.beginPath();
-      ctx.moveTo(-4, 6);
-      ctx.lineTo(4, 6);
-      ctx.stroke();
-      // Sword pommel
+      ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(0, 8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-4, 6); ctx.lineTo(4, 6); ctx.stroke();
       ctx.fillStyle = '#ffcc00';
-      ctx.beginPath();
-      ctx.arc(0, 10, 2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 10, 2, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
-      // Motion lines behind the sword
       ctx.strokeStyle = 'rgba(255, 204, 0, 0.5)';
       ctx.lineWidth = 1.5;
       for (let m = 1; m <= 3; m++) {
-        ctx.beginPath();
-        ctx.moveTo(-8 - m * 2, -2);
-        ctx.lineTo(-12 - m * 3, -4);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(-8 - m * 2, 2);
-        ctx.lineTo(-12 - m * 3, 4);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-8 - m * 2, -2); ctx.lineTo(-12 - m * 3, -4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-8 - m * 2,  2); ctx.lineTo(-12 - m * 3,  4); ctx.stroke();
       }
     }
     ctx.shadowBlur = 0;
     ctx.restore();
   }
 }
-

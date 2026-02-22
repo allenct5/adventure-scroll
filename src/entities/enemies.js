@@ -12,10 +12,9 @@ import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
 import { damagePlayer } from './player.js';
 
-import { ctx } from '../scenes/canvas.js';
+import { ctx } from '../canvas.js';
 
 // --- ENEMY TYPE SYSTEM ---
-// Code name → player-facing display name
 export const ENEMY_DISPLAY_NAMES = {
   outdoorOrc:  'Wandering Orc',
   castleOrc:   'Veteran Orc',
@@ -23,41 +22,34 @@ export const ENEMY_DISPLAY_NAMES = {
   outdoorMage: 'Crazed Apprentice',
   castleMage:  'Court Wizard',
   evilMage:    'Mad Sorcerer',
-  // Skulls only appear at difficulty 3+, so there is no outdoorSkull
   castleSkull: 'Raised Skull',
   evilSkull:   'Blazing Skull',
 };
 
-// Returns the correct orc type code name for the current difficulty
 function resolveOrcType() {
   if (difficultyLevel <= 2) return 'outdoorOrc';
   if (difficultyLevel <= 4) return 'castleOrc';
   return 'evilOrc';
 }
 
-// Returns the correct mage type code name for the current difficulty
 function resolveMageType() {
   if (difficultyLevel <= 2) return 'outdoorMage';
   if (difficultyLevel <= 4) return 'castleMage';
   return 'evilMage';
 }
 
-// Returns the correct skull type code name for the current difficulty (skulls start at diff 3)
 function resolveSkullType() {
   return difficultyLevel >= 5 ? 'evilSkull' : 'castleSkull';
 }
 
-// Returns true for any melee orc variant
 export function isOrc(type) {
   return type === 'outdoorOrc' || type === 'castleOrc' || type === 'evilOrc';
 }
 
-// Returns true for any ranged mage variant
 export function isMage(type) {
   return type === 'outdoorMage' || type === 'castleMage' || type === 'evilMage';
 }
 
-// Returns true for any skull variant
 export function isSkull(type) {
   return type === 'castleSkull' || type === 'evilSkull';
 }
@@ -200,10 +192,10 @@ export function updateEnemies(dt) {
             }
           } else {
             // Mage
-            const blocked       = e.onGround && hazardAhead(e, moveDir);
-            const retreatDir    = -moveDir;
+            const blocked        = e.onGround && hazardAhead(e, moveDir);
+            const retreatDir     = -moveDir;
             const retreatBlocked = e.onGround && hazardAhead(e, retreatDir);
-            if (dist > 300 && !blocked)            e.vx = moveDir * e.speed * 0.7;
+            if (dist > 300 && !blocked)             e.vx = moveDir * e.speed * 0.7;
             else if (dist < 150 && !retreatBlocked) e.vx = retreatDir * e.speed * 0.5;
             else e.vx *= 0.8;
             e.fireTimer -= dt;
@@ -237,7 +229,6 @@ export function updateEnemies(dt) {
     const pRect = {x: p.x - p.r, y: p.y - p.r, w: p.r * 2, h: p.r * 2};
     let hitTerrain = false;
     for (const plat of platforms) { if (rectOverlap(pRect, plat)) { hitTerrain = true; break; } }
-    // Get projectile color based on mage type
     const projectileColor = p.killerType === 'evilMage' ? '#ff6600' : p.killerType === 'castleMage' ? '#4488ff' : '#ff88ff';
     if (hitTerrain) { p.vx = 0; p.vy = 0; p.life = Math.min(p.life, 12); spawnParticles(p.x, p.y, projectileColor, 4); continue; }
 
@@ -275,6 +266,13 @@ export function updateEnemies(dt) {
   }
 }
 
+// Shared HP bar helper — used by both skull and ground enemy draw paths
+function drawEnemyHpBar(sx, e) {
+  const hpPct = e.hp / e.maxHp;
+  ctx.fillStyle = '#440000'; ctx.fillRect(sx, e.y - 8, e.w, 5);
+  ctx.fillStyle = hpPct > 0.5 ? '#44ff44' : '#ff4444'; ctx.fillRect(sx, e.y - 8, e.w * hpPct, 5);
+}
+
 export function drawEnemies() {
   for (const e of enemies) {
     const sx = e.x - cameraX;
@@ -283,18 +281,15 @@ export function drawEnemies() {
     if (isSkull(e.type)) {
       ctx.save(); ctx.translate(sx + e.w / 2, e.y + e.h / 2);
 
-      // Flap animation driven by sineTime (same value that drives flight movement)
-      // so wings are naturally in sync with the skull's bobbing motion
       const flapAngle  = Math.sin(e.sineTime * 2.2 + e.sineOffset) * 0.45;
       const wingColor0 = e.type === 'evilSkull' ? 'rgba(220,80,0,0.75)'  : 'rgba(150,0,220,0.75)';
       const wingColor1 = e.type === 'evilSkull' ? 'rgba(80,20,0,0)'       : 'rgba(80,0,120,0)';
       const veinColor  = e.type === 'evilSkull' ? 'rgba(180,60,0,0.5)'    : 'rgba(100,0,180,0.5)';
 
-      // Draw both wings — rotate in opposite directions per side so they beat together
       for (const side of [1, -1]) {
         ctx.save();
         ctx.scale(side, 1);
-        ctx.rotate(flapAngle); // same angle for both; scale(-1,1) already mirrors shape correctly
+        ctx.rotate(flapAngle);
         const wingGrad = ctx.createRadialGradient(14, -6, 1, 14, -6, 20);
         wingGrad.addColorStop(0, wingColor0); wingGrad.addColorStop(1, wingColor1);
         ctx.fillStyle = wingGrad;
@@ -310,11 +305,10 @@ export function drawEnemies() {
         }
         ctx.restore();
       }
-      // Skull dome — flip to face direction of travel
       if (!e.facingRight) ctx.scale(-1, 1);
       const skullGrad = ctx.createRadialGradient(-3, -5, 1, 0, 0, 13);
       skullGrad.addColorStop(0, '#f0eeea'); skullGrad.addColorStop(0.6, '#c8c4b8'); skullGrad.addColorStop(1, '#88857a');
-      ctx.fillStyle = skullGrad; 
+      ctx.fillStyle = skullGrad;
       ctx.shadowColor = e.type === 'evilSkull' ? '#ff4400' : '#cc44ff';
       ctx.shadowBlur = e.state === 'aggro' ? 14 : 6;
       ctx.beginPath(); ctx.arc(0, -2, 11, Math.PI, 0); ctx.bezierCurveTo(11, 6, 7, 10, 0, 10); ctx.bezierCurveTo(-7, 10, -11, 6, -11, 0); ctx.closePath(); ctx.fill();
@@ -331,10 +325,7 @@ export function drawEnemies() {
       ctx.strokeStyle = '#555047'; ctx.lineWidth = 0.8;
       ctx.beginPath(); ctx.arc(0, -2, 11, Math.PI, 0); ctx.bezierCurveTo(11, 6, 7, 10, 0, 10); ctx.bezierCurveTo(-7, 10, -11, 6, -11, 0); ctx.closePath(); ctx.stroke();
       ctx.restore();
-      // HP bar
-      const hpPct = e.hp / e.maxHp;
-      ctx.fillStyle = '#440000'; ctx.fillRect(sx, e.y - 8, e.w, 5);
-      ctx.fillStyle = hpPct > 0.5 ? '#44ff44' : '#ff4444'; ctx.fillRect(sx, e.y - 8, e.w * hpPct, 5);
+
     } else if (isOrc(e.type)) {
       ctx.save(); ctx.translate(sx, e.y);
       if (!e.facingRight) { ctx.translate(e.w, 0); ctx.scale(-1, 1); }
@@ -348,7 +339,8 @@ export function drawEnemies() {
       ctx.fillStyle = ebody; ctx.fillRect(3, 12, e.w-6, e.h-12);
       ctx.fillStyle = c.armor; ctx.fillRect(3, 12, e.w-6, 12);
       ctx.fillStyle = c.highlight; ctx.fillRect(3, 12, e.w-6, 5);
-      const legOff = e.vx !== 0 ? Math.sin(Date.now() * 0.015) * 4 : 0;
+      // Position-based leg animation so it pauses correctly with the game
+      const legOff = e.vx !== 0 ? Math.sin(e.x * 0.15) * 4 : 0;
       ctx.fillStyle = c.legs;
       ctx.fillRect(3, e.h-14, 9, 14+legOff); ctx.fillRect(e.w-12, e.h-14, 9, 14-legOff);
       ctx.fillStyle = c.head; ctx.fillRect(5, 0, e.w-10, 14);
@@ -393,11 +385,6 @@ export function drawEnemies() {
       ctx.restore();
     }
 
-    // HP bar (non-skull)
-    if (!isSkull(e.type)) {
-      const hpPct = e.hp / e.maxHp;
-      ctx.fillStyle = '#440000'; ctx.fillRect(sx, e.y - 8, e.w, 5);
-      ctx.fillStyle = hpPct > 0.5 ? '#44ff44' : '#ff4444'; ctx.fillRect(sx, e.y - 8, e.w * hpPct, 5);
-    }
+    drawEnemyHpBar(sx, e);
   }
 }

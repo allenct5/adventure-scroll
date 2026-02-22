@@ -19,9 +19,7 @@ import { updateParticles, drawParticles } from '../utils/particles.js';
 import { updateHUD, showMessage, hideMessage, showGameOver, hideGameOver } from '../utils/hud.js';
 import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } from '../utils/shop.js';
 import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant } from './renderer.js';
-
-
-import { canvas, ctx } from '../scenes/canvas.js';
+import { canvas, ctx } from '../canvas.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
 registerGameLoop(gameLoop);
@@ -33,6 +31,14 @@ registerRespawnFn(respawnPlayer);
 
 // --- LEVEL RESET ---
 let levelResetTimer = 0;
+
+function drawScene() {
+  ctx.clearRect(0, 0, W, H);
+  drawBackground(); drawPlatforms(); drawHazards(); drawCheckpoint(); drawMerchant();
+  drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
+  drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
+  applyVignette();
+}
 
 function triggerCheckpoint() {
   if (gameState === 'checkpoint') return;
@@ -100,19 +106,13 @@ function gameLoop(timestamp = 0) {
   if (gameState === 'classSelect') { requestAnimationFrame(gameLoop); return; }
 
   if (gameState === 'dead') {
-    ctx.clearRect(0, 0, W, H);
-    drawBackground(); drawPlatforms(); drawHazards(); drawCheckpoint(); drawMerchant();
-    drawPowerups(); drawCoins(); drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
-    applyVignette();
+    drawScene();
     requestAnimationFrame(gameLoop); return;
   }
 
   if (gameState === 'paused') {
-    ctx.clearRect(0, 0, W, H);
-    drawBackground(); drawPlatforms(); drawHazards(); drawCheckpoint(); drawMerchant();
-    drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
-    drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
-    applyVignette(); return;
+    drawScene();
+    requestAnimationFrame(gameLoop); return;
   }
 
   if (gameState === 'checkpoint') {
@@ -133,11 +133,7 @@ function gameLoop(timestamp = 0) {
   }
   updateParticles(dt);
 
-  ctx.clearRect(0, 0, W, H);
-  drawBackground(); drawPlatforms(); drawHazards(); drawCheckpoint(); drawMerchant();
-  drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
-  drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
-  applyVignette();
+  drawScene();
 
   requestAnimationFrame(gameLoop);
 }
@@ -154,7 +150,6 @@ document.addEventListener('keydown', e => {
     if (gameState === 'playing' || gameState === 'checkpoint') {
       setGameState('paused');
       document.getElementById('pause-overlay').classList.add('visible');
-      gameLoop();
     } else if (gameState === 'paused') {
       setGameState('playing');
       document.getElementById('pause-overlay').classList.remove('visible');
@@ -175,7 +170,7 @@ canvas.addEventListener('mousedown', e => {
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
   const msx = merchant.x - cameraX;
   if (mx >= msx && mx <= msx + merchant.w && my >= merchant.y && my <= merchant.y + merchant.h) {
-    const playerCx  = player.x + player.w / 2;
+    const playerCx   = player.x + player.w / 2;
     const merchantCx = merchant.x + merchant.w / 2;
     const playerFeetY = player.y + player.h;
     const proximityX = Math.abs(playerCx - merchantCx) < 120;
@@ -254,7 +249,7 @@ document.querySelectorAll('.cheat-diff').forEach(btn => {
     const level = parseInt(btn.dataset.diff);
     setDifficultyLevel(level); setZoneCount((level - 1) * 3);
     document.getElementById('difficulty-value').textContent = level;
-    populateEnemies(); requestAnimationFrame(gameLoop);
+    populateEnemies();
     btn.style.boxShadow = '0 0 18px #00ff44';
     setTimeout(() => btn.style.boxShadow = '', 400);
   });

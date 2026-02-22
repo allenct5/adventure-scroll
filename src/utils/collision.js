@@ -85,7 +85,7 @@ export function measurePitAhead(entity, dir) {
     for (const p of platforms) {
       if (rectOverlap(groundProbe, p)) { groundFound = true; break; }
     }
-    if (!inPit && !groundFound)   { inPit = true; pitStart = offset; }
+    if (!inPit && !groundFound)    { inPit = true; pitStart = offset; }
     else if (inPit && groundFound) { return offset - pitStart; }
   }
   return inPit ? MAX_SCAN : 0;

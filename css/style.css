@@ -1,4 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --font-display: 'Orbitron', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   background: #0a0a0f;
@@ -8,11 +14,11 @@ body {
   justify-content: center;
   height: 100vh;
   overflow: hidden;
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   color: #e0e0ff;
 }
 #game-title {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-display);
   font-weight: 900;
   font-size: 2rem;
   letter-spacing: 0.3em;
@@ -30,23 +36,24 @@ body {
   letter-spacing: 0.1em;
 }
 #health-bar-wrap { display: flex; align-items: center; gap: 8px; }
-#health-label { color: #ff6666; font-family: 'Orbitron', sans-serif; font-size: 0.7rem; }
+#health-label { color: #ff6666; font-family: var(--font-display); font-size: 0.7rem; }
 #health-bar-bg { position: relative; width: 140px; height: 16px; background: #1a1a2e; border: 1px solid #ff444488; border-radius: 2px; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
 #health-bar-bg.soul-bind-active { border-color: #ffdd00; box-shadow: 0 0 8px #ffdd0088; }
 #health-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff2222, #ff6666); border-radius: 2px; }
-#health-bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: #fff; text-shadow: 0 0 4px #000, 0 0 8px #000; letter-spacing: 0.05em; pointer-events: none; }
-#soul-bind-label { display: none; font-family: 'Orbitron', sans-serif; font-size: 0.55rem; color: #ffdd00; text-shadow: 0 0 6px #ffaa00; letter-spacing: 0.12em; margin-bottom: 2px; width: 140px; text-align: center; align-self: flex-end; }
+#health-bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 0.6rem; color: #fff; text-shadow: 0 0 4px #000, 0 0 8px #000; letter-spacing: 0.05em; pointer-events: none; }
+#soul-bind-label { display: none; font-family: var(--font-display); font-size: 0.55rem; color: #ffdd00; text-shadow: 0 0 6px #ffaa00; letter-spacing: 0.12em; margin-bottom: 2px; width: 140px; text-align: center; align-self: flex-end; }
 #mana-bar-wrap { display: none; align-items: center; gap: 8px; }
-#mana-label { color: #44aaff; font-family: 'Orbitron', sans-serif; font-size: 0.7rem; }
+#mana-label { color: #44aaff; font-family: var(--font-display); font-size: 0.7rem; }
 #mana-bar-bg { position: relative; width: 140px; height: 16px; background: #0a0a2e; border: 1px solid #2244aa88; border-radius: 2px; overflow: hidden; }
 #mana-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #1144cc, #44aaff); border-radius: 2px; }
-#mana-bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: #fff; text-shadow: 0 0 4px #000, 0 0 8px #000; letter-spacing: 0.05em; pointer-events: none; }
+#mana-bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 0.6rem; color: #fff; text-shadow: 0 0 4px #000, 0 0 8px #000; letter-spacing: 0.05em; pointer-events: none; }
 #ammo-display { color: #ffcc44; font-size: 0.75rem; }
-#score-display { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: #88ff88; }
+#score-display { font-family: var(--font-display); font-size: 0.75rem; color: #88ff88; }
+#bomb-display { font-family: var(--font-mono); font-size: 0.75rem; color: #ff8800; text-shadow: 0 0 8px #ff660088; }
+#coin-display { font-family: var(--font-display); font-size: 0.7rem; color: #ffdd00; text-shadow: 0 0 8px #ffaa00; }
 canvas {
   border: 2px solid #222244;
   box-shadow: 0 0 40px #000, 0 0 80px #000055;
-  cursor: crosshair;
   display: block;
 }
 #controls {
@@ -55,8 +62,9 @@ canvas {
   color: #555577;
   letter-spacing: 0.05em;
 }
+/* Fixed positioning so it always centers over the canvas regardless of layout */
 #message-overlay {
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -65,7 +73,7 @@ canvas {
   z-index: 10;
 }
 #message-text {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-display);
   font-size: 2.5rem;
   font-weight: 900;
   color: #ff4444;
@@ -128,11 +136,12 @@ canvas {
   border-top: 1px solid #5533aa55;
 }
 #shop-coins-display {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.8rem;
   color: #ffdd00;
   text-shadow: 0 0 10px #ffaa00;
 }
+#shop-hp-display { font-family: var(--font-display); font-size: 0.8rem; color: #ff6666; text-shadow: 0 0 8px #ff2222; }
 #shop-close {
   background: none;
   border: 1.5px solid #7744cc;
@@ -173,7 +182,7 @@ canvas {
 .shop-cell.cant-afford:hover, .shop-cell.sold-out:hover { transform: none; box-shadow: none; }
 .shop-icon { font-size: 1.6rem; display: block; margin-bottom: 6px; }
 .shop-name {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.55rem;
   color: #dd99ff;
   letter-spacing: 0.04em;
@@ -182,14 +191,14 @@ canvas {
   line-height: 1.3;
 }
 .shop-cost {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.55rem;
   color: #ffdd00;
   text-shadow: 0 0 6px #ffaa00;
   display: block;
 }
 .sold-out-label {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.45rem;
   color: #ff4444;
   display: block;
@@ -206,7 +215,7 @@ canvas {
   border-radius: 6px;
   padding: 8px 10px;
   width: 160px;
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   color: #ffffff;
   line-height: 1.5;
@@ -226,23 +235,22 @@ canvas {
   min-height: 20px;
   text-shadow: 0 0 10px #44ff88;
 }
-#gameCanvas { display: block; cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cline x1='2' y1='2' x2='10' y2='10' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='10' y1='2' x2='2' y2='10' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='2' y1='2' x2='10' y2='10' stroke='%23333' stroke-width='0.5' stroke-linecap='round'/%3E%3Cline x1='10' y1='2' x2='2' y2='10' stroke='%23333' stroke-width='0.5' stroke-linecap='round'/%3E%3C/svg%3E") 6 6, crosshair; }
+#gameCanvas {
+  display: block;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cline x1='2' y1='2' x2='10' y2='10' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='10' y1='2' x2='2' y2='10' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='2' y1='2' x2='10' y2='10' stroke='%23333' stroke-width='0.5' stroke-linecap='round'/%3E%3Cline x1='10' y1='2' x2='2' y2='10' stroke='%23333' stroke-width='0.5' stroke-linecap='round'/%3E%3C/svg%3E") 6 6, crosshair;
+}
 #gameCanvas.merchant-hover {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23ffdd00' stroke='%23aa8800' stroke-width='2'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='20' fill='%23664400'%3E%24%3C/text%3E%3C/svg%3E") 16 16, pointer;
 }
 #class-select {
   position: fixed; inset: 0;
-  background: 
-    /* Subtle noise texture overlay */
+  background:
     radial-gradient(circle at 15% 20%, rgba(200,160,100,0.08) 0%, transparent 25%),
     radial-gradient(circle at 85% 15%, rgba(100,80,60,0.06) 0%, transparent 20%),
     radial-gradient(circle at 25% 75%, rgba(150,100,60,0.07) 0%, transparent 30%),
     radial-gradient(circle at 70% 85%, rgba(80,60,40,0.05) 0%, transparent 25%),
-    /* Main gradient with warm candlelight from bottom */
     linear-gradient(135deg, #1a1410 0%, #242018 25%, #1a1410 50%, #0f0d0a 75%, #252015 100%),
-    /* Warm orange glow from torches at bottom */
     radial-gradient(ellipse at 50% 120%, rgba(180,80,30,0.15) 0%, transparent 70%),
-    /* Dark vignette */
     radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
   z-index: 200;
   display: flex;
@@ -259,8 +267,16 @@ canvas {
   margin: 0;
   letter-spacing: 0.06em;
 }
+#class-select h2 {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: #888866;
+  letter-spacing: 0.2em;
+  margin: 0;
+  text-transform: uppercase;
+}
 #class-select p {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   color: #c7c7c7;
   font-size: 0.8rem;
   margin: 0;
@@ -284,7 +300,7 @@ canvas {
 .class-card:hover { border-color: #bfbcbb; box-shadow: 0 0 30px #8833ff66; transform: translateY(-4px); }
 .class-card .class-icon { font-size: 2.8rem; display: block; margin-bottom: 10px; }
 .class-card .class-name {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   color: #c7c7c7;
   letter-spacing: 0.1em;
@@ -292,32 +308,22 @@ canvas {
   margin-bottom: 8px;
 }
 .class-card .class-desc {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.58rem;
   color: #9977cc;
   line-height: 1.6;
 }
 .class-card .class-stat {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.58rem;
   color: #c7c7c7;
   margin-top: 10px;
   display: block;
 }
-#game-over {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.78);
-  z-index: 300;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-}
-#game-over.visible { display: flex; }
-#game-over-title {
+
+/* Shared title style for game-over and pause — only font-size differs */
+.flicker-title {
   font-family: 'Georgia', serif;
-  font-size: 4.2rem;
   color: #cc1111;
   text-shadow:
     0 0 12px #ff0000,
@@ -336,14 +342,27 @@ canvas {
   97%      { opacity:0.85; }
   98%      { opacity:1; }
 }
+
+#game-over {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.78);
+  z-index: 300;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+#game-over.visible { display: flex; }
+#game-over-title { font-size: 4.2rem; }
 .go-sub {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   color: #884444;
   letter-spacing: 0.1em;
 }
 .go-btn {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   letter-spacing: 0.12em;
   padding: 12px 38px;
@@ -382,21 +401,9 @@ canvas {
   justify-content: center;
 }
 #pause-overlay.visible { display: flex; }
-#pause-title {
-  font-family: 'Georgia', serif;
-  font-size: 3.8rem;
-  color: #cc1111;
-  text-shadow:
-    0 0 12px #ff0000,
-    0 0 40px #880000,
-    2px 3px 0 #1a0000,
-    4px 6px 0 #0a0000;
-  letter-spacing: 0.12em;
-  filter: contrast(1.2) saturate(1.3);
-  animation: goFlicker 3s infinite;
-}
+#pause-title { font-size: 3.8rem; }
 #pause-sub {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.78rem;
   color: #884444;
   letter-spacing: 0.12em;
@@ -416,7 +423,7 @@ canvas {
 }
 #cheat-menu.open { display: flex; }
 #cheat-menu-title {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.65rem;
   color: #00ff44;
   letter-spacing: 0.2em;
@@ -428,7 +435,7 @@ canvas {
   gap: 8px;
 }
 .cheat-btn {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   padding: 7px 14px;

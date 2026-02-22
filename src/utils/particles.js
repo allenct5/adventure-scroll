@@ -1,17 +1,18 @@
 // particles.js — Particle spawning, update, and draw.
 
 import { particles, cameraX } from '../core/state.js';
-import { ctx } from '../scenes/canvas.js';
+import { ctx } from '../canvas.js';
 
 const MAX_PARTICLES = 600;
 
 export function spawnParticles(x, y, color, count = 8) {
-  // Drop oldest particles to stay within the cap
-  const overflow = (particles.length + count) - MAX_PARTICLES;
-  if (overflow > 0) particles.splice(0, overflow);
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
     const spd   = 1 + Math.random() * 4;
+    // If at cap, overwrite the oldest slot instead of splicing
+    if (particles.length >= MAX_PARTICLES) {
+      particles.shift();
+    }
     particles.push({
       x, y,
       vx: Math.cos(angle) * spd,
@@ -61,7 +62,7 @@ export function spawnJackpotSparkles(x, y) {
       rotSpeed: (Math.random() - 0.5) * 0.15,
     });
   }
-  // Apply cap for the entire jackpot burst at once
+  // Trim to cap before bulk push
   const overflow = (particles.length + sparkles.length) - MAX_PARTICLES;
   if (overflow > 0) particles.splice(0, overflow);
   particles.push(...sparkles);

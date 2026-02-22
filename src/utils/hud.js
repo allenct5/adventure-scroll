@@ -3,6 +3,8 @@
 import { RARITY } from '../core/constants.js';
 import { player, playerClass } from '../core/state.js';
 
+const MAX_MANA = 25;
+
 export function updateHUD() {
   const hpPct = Math.max(0, player.hp / player.maxHp) * 100;
   document.getElementById('health-bar').style.width       = `${hpPct}%`;
@@ -17,14 +19,12 @@ export function updateHUD() {
   const isStaff = w === 'staff';
   document.getElementById('weapon-name').textContent = isSword ? 'SWORD' : isStaff ? 'STAFF' : 'BOW';
 
-
   const manaWrap = document.getElementById('mana-bar-wrap');
   if (playerClass === 'mage') {
     manaWrap.style.display = 'flex';
-    const maxMana = 25;
-    const manaPct = Math.max(0, player.mana / maxMana) * 100;
+    const manaPct = Math.max(0, player.mana / MAX_MANA) * 100;
     document.getElementById('mana-bar').style.width      = `${manaPct}%`;
-    document.getElementById('mana-bar-text').textContent = `${Math.max(0, Math.ceil(player.mana))}/${maxMana}`;
+    document.getElementById('mana-bar-text').textContent = `${Math.max(0, Math.ceil(player.mana))}/${MAX_MANA}`;
   } else {
     manaWrap.style.display = 'none';
   }

@@ -16,7 +16,7 @@ import { dropCoin } from './coins.js';
 import { damagePlayer } from '../entities/player.js';
 import { updateHUD } from './hud.js';
 
-import { ctx } from '../scenes/canvas.js';
+import { ctx } from '../canvas.js';
 
 // --- ARROWS ---
 export function updateArrows(dt) {
@@ -81,7 +81,8 @@ export function updateFireballs(dt) {
     if (f.trail) {
       f.trail.push({x: f.x, y: f.y, age: 0});
       for (const t of f.trail) t.age += dt;
-      if (f.trail.length > 18) f.trail.shift();
+      // Guard against spikes: keep trail bounded
+      while (f.trail.length > 18) f.trail.shift();
     }
     const fRect = {x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: f.r * 2};
     let hitTerrain = false;
@@ -109,7 +110,7 @@ export function updateBombs(dt) {
     b.x  += b.vx * dt; b.y  += b.vy * dt; b.life -= dt;
     b.trail.push({x: b.x, y: b.y, age: 0});
     for (const t of b.trail) t.age++;
-    if (b.trail.length > 14) b.trail.shift();
+    while (b.trail.length > 14) b.trail.shift();
     const bRect = {x: b.x - b.r, y: b.y - b.r, w: b.r * 2, h: b.r * 2};
     let hitTerrain = false;
     for (const p of platforms) { if (rectOverlap(bRect, p)) { hitTerrain = true; break; } }
@@ -146,7 +147,6 @@ export function drawProjectiles() {
   // Player staff orbs
   for (const o of playerOrbs) {
     const sx = o.x - cameraX;
-    // Draw portal effect if recently spawned
     if (o.portalLife !== undefined && o.portalLife > 0) {
       const portalAlpha = o.portalLife / 25;
       ctx.strokeStyle = `rgba(170, 0, 255, ${portalAlpha * 0.6})`;

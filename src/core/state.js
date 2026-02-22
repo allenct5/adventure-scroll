@@ -41,7 +41,6 @@ export function setFrameCount(v)      { frameCount = v; }
 export function setLastTime(v)        { lastTime = v; }
 export function setZoneCount(v)       { zoneCount = v; }
 export function setDifficultyLevel(v) { difficultyLevel = v; }
-export function setLevelResetTimer(v) { levelResetTimer = v; }
 export function setShopOpen(v)        { shopOpen = v; }
 export function setPlayer(v)          { player = v; }
 export function setMouseDown(v)       { mouseDown = v; }

@@ -3,12 +3,11 @@
 import { W } from '../core/constants.js';
 import { player, cameraX, coins, lastJackpotTime, setLastJackpotTime } from '../core/state.js';
 import { rectOverlap } from './collision.js';
-import { spawnParticles } from './particles.js';
-import { spawnJackpotSparkles } from './particles.js';
+import { spawnParticles, spawnJackpotSparkles } from './particles.js';
 import { updateHUD } from './hud.js';
 import { platforms } from '../scenes/level.js';
 
-import { ctx } from '../scenes/canvas.js';
+import { ctx } from '../canvas.js';
 
 export function dropCoin(x, y) {
   const roll = Math.random();
