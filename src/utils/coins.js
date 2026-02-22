@@ -24,11 +24,12 @@ export function dropCoin(x, y) {
       count = 1;
     }
   }
+  const jackpot = count === 3;
   for (let i = 0; i < count; i++) {
     const spread = (i - (count - 1) / 2) * 14;
-    coins.push({ x: x - 6 + spread, y: y - 8, w: 12, h: 12, vy: -4 - Math.random() * 2, bobOffset: Math.random() * Math.PI * 2, landed: false });
+    coins.push({ x: x - 6 + spread, y: y - 8, w: 12, h: 12, vy: -4 - Math.random() * 2, bobOffset: Math.random() * Math.PI * 2, landed: false, jackpot });
   }
-  if (count === 3) { spawnJackpotSparkles(player.x + player.w / 2, player.y - 10); playSfx('coindrop_jackpot'); }
+  if (jackpot) { spawnJackpotSparkles(player.x + player.w / 2, player.y - 10); playSfx('coindrop_jackpot'); }
 }
 
 export function updateCoins(dt) {
@@ -43,6 +44,7 @@ export function updateCoins(dt) {
     }
     if (rectOverlap(player, c)) {
       player.coins++;
+      if (!c.jackpot) playSfx('single_coin_pickup');
       spawnParticles(c.x + c.w / 2, c.y + c.h / 2, '#ffdd00', 6);
       updateHUD();
       coins.splice(i, 1);

@@ -252,18 +252,22 @@ document.getElementById('music-volume-slider').addEventListener('input', e => {
 
 // --- PAUSE / CHEAT MENU ---
 document.getElementById('pause-cheat-toggle').addEventListener('click', () => {
+  playSfx('button_press');
   document.getElementById('cheat-menu').classList.toggle('open');
 });
 document.getElementById('cheat-godmode').addEventListener('click', () => {
+  playSfx('button_press');
   setGodMode(!godMode);
   document.getElementById('cheat-godmode').classList.toggle('active', godMode);
 });
 let statsActive = false;
 document.getElementById('cheat-stats').addEventListener('click', () => {
+  playSfx('button_press');
   statsActive = !statsActive;
   document.getElementById('cheat-stats').classList.toggle('active', statsActive);
 });
 document.getElementById('cheat-weapon-upgrade').addEventListener('click', () => {
+  playSfx('button_press');
   const w = player.weapon;
   if      (w === 'sword') player.swordRarity = Math.min(5, player.swordRarity + 1);
   else if (w === 'bow')   player.bowRarity   = Math.min(5, player.bowRarity   + 1);
@@ -277,6 +281,7 @@ document.getElementById('cheat-weapon-upgrade').addEventListener('click', () => 
 });
 document.querySelectorAll('.cheat-diff').forEach(btn => {
   btn.addEventListener('click', () => {
+    playSfx('button_press');
     const level = parseInt(btn.dataset.diff);
     setDifficultyLevel(level); setZoneCount((level - 1) * 3);
     document.getElementById('difficulty-value').textContent = level;

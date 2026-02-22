@@ -19,6 +19,7 @@ import {
 import { rectOverlap } from './collision.js';
 import { spawnParticles } from './particles.js';
 import { updateHUD } from './hud.js';
+import { playSfx } from './audio.js';
 
 import { ctx } from '../canvas.js';
 
@@ -88,6 +89,7 @@ export function updatePowerups(dt) {
       else if (p.type === 'mana')        { player.mana += 5; updateHUD(); }
       else if (p.type === 'bomb')        { player.bombs = Math.min(5, player.bombs + 2); updateHUD(); }
       const glowCol = p.type === 'health' ? '#ff4466' : p.type === 'speedBoost' ? '#00ff88' : p.type === 'attackSpeed' ? '#ffcc00' : p.type === 'mana' ? '#2288ff' : '#ff8800';
+      playSfx('powerup_pickup');
       spawnParticles(p.x + p.w / 2, p.y + p.h / 2, glowCol, 10);
       powerups.splice(i, 1);
     }
