@@ -8,7 +8,7 @@ import {
   cameraX, setLastTime, lastTime, setZoneCount, setDifficultyLevel,
   zoneCount, difficultyLevel,
   keys, setMouseDown, setMouseRightDown, mousePos,
-  shopOpen, clearCombatArrays, clearGroundHistory, resetDropTimes,
+  shopOpen, clearCombatArrays, clearGroundHistory, resetDropTimes, clearParticles,
 } from './state.js';
 import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn } from '../entities/player.js';
 import { populateEnemies, updateEnemies, drawEnemies } from '../entities/enemies.js';
@@ -73,6 +73,7 @@ function resetLevel() {
   Object.assign(player, carry);
 
   clearCombatArrays();
+  clearParticles();
   populateEnemies();
   resetDropTimes();
   clearGroundHistory();
