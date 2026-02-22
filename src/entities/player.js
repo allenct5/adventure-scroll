@@ -393,118 +393,113 @@ export function drawPlayer() {
 
   // Body
   if (playerClass === 'mage') {
-    // --- ROBE ---
+    // --- ROBE BODY (deep purple) ---
     const robeGrad = ctx.createLinearGradient(0, 10, 0, player.h);
-    robeGrad.addColorStop(0, '#2244aa'); robeGrad.addColorStop(0.5, '#1a3388'); robeGrad.addColorStop(1, '#0d1f55');
+    robeGrad.addColorStop(0, '#5a0095'); robeGrad.addColorStop(0.5, '#3d0068'); robeGrad.addColorStop(1, '#1e0033');
     ctx.fillStyle = robeGrad;
     ctx.beginPath();
-    ctx.moveTo(2,  12);
-    ctx.lineTo(player.w - 2, 12);
+    ctx.moveTo(2, 14);
+    ctx.lineTo(player.w - 2, 14);
     ctx.lineTo(player.w + 2, player.h);
     ctx.lineTo(-2, player.h);
     ctx.closePath();
     ctx.fill();
 
-    // Robe highlight / fold
-    ctx.fillStyle = 'rgba(100,140,255,0.25)';
+    // Robe center fold highlight
+    ctx.fillStyle = 'rgba(180,80,255,0.18)';
     ctx.beginPath();
-    ctx.moveTo(player.w / 2 - 2, 14);
-    ctx.lineTo(player.w / 2 + 2, 14);
-    ctx.lineTo(player.w / 2 + 4, player.h);
-    ctx.lineTo(player.w / 2 - 4, player.h);
+    ctx.moveTo(player.w / 2 - 2, 16);
+    ctx.lineTo(player.w / 2 + 2, 16);
+    ctx.lineTo(player.w / 2 + 3, player.h);
+    ctx.lineTo(player.w / 2 - 3, player.h);
     ctx.closePath();
     ctx.fill();
 
-    // Robe hem trim
-    ctx.fillStyle = '#aabbff';
+    // Robe hem trim (lighter purple)
+    ctx.fillStyle = '#7a00cc';
     ctx.fillRect(-2, player.h - 5, player.w + 4, 3);
 
-    // Belt / sash
-    ctx.fillStyle = '#ccaa44';
-    ctx.fillRect(3, player.h * 0.52, player.w - 6, 5);
-    ctx.fillStyle = '#ffdd88';
-    ctx.fillRect(player.w / 2 - 3, player.h * 0.52, 6, 5);
-
-    // Sleeves
-    ctx.fillStyle = '#1a3388';
+    // --- SLEEVES (deep purple) ---
+    ctx.fillStyle = '#3d0068';
     ctx.fillRect(0, 14, 5, 18);
     ctx.fillRect(player.w - 5, 14, 5, 18);
-    // Sleeve cuffs
-    ctx.fillStyle = '#aabbff';
+    // Sleeve cuffs (slightly lighter purple)
+    ctx.fillStyle = '#6600aa';
     ctx.fillRect(-1, 30, 6, 3);
     ctx.fillRect(player.w - 5, 30, 6, 3);
 
-    // --- FACE ---
-    ctx.fillStyle = '#ffddbb';
-    ctx.fillRect(6, 2, player.w - 12, 12);
+    // --- BLUE BELT ---
+    const beltY = Math.floor(player.h * 0.52);
+    ctx.fillStyle = '#1a55cc';
+    ctx.fillRect(3, beltY, player.w - 6, 5);
+    // Belt buckle highlight
+    ctx.fillStyle = '#4488ff';
+    ctx.fillRect(player.w / 2 - 3, beltY, 6, 5);
 
-    // Eyes — wise, narrowed
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(player.w / 2 - 5, 6, 4, 3);
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(player.w / 2 + 1, 6, 4, 3);
-    ctx.fillStyle = '#4466ff'; ctx.fillRect(player.w / 2 - 4, 7, 2, 2);
-    ctx.fillStyle = '#4466ff'; ctx.fillRect(player.w / 2 + 2, 7, 2, 2);
+    // --- TRINKETS (hanging from belt) ---
+    const trinY = beltY + 6;
+    // Trinket 1: Small pouch (left)
+    ctx.fillStyle = '#885533';
+    ctx.fillRect(5, trinY + 2, 5, 4);
+    ctx.fillStyle = '#aa7744';
+    ctx.fillRect(6, trinY, 3, 3);
+    ctx.fillStyle = '#ccaa55';
+    ctx.fillRect(6, trinY + 1, 3, 1);
+    // Trinket 2: Gem amulet (center)
+    ctx.fillStyle = '#666666';
+    ctx.fillRect(13, trinY, 2, 2);
+    ctx.fillStyle = '#0088cc';
+    ctx.fillRect(12, trinY + 2, 4, 4);
+    ctx.fillStyle = '#66ddff';
+    ctx.fillRect(12, trinY + 2, 1, 1);
+    // Trinket 3: Vial (right)
+    ctx.fillStyle = '#774411';
+    ctx.fillRect(20, trinY - 1, 2, 2);
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(20, trinY + 1, 2, 5);
+    ctx.fillStyle = '#cc2222';
+    ctx.fillRect(20, trinY + 3, 2, 3);
 
-    // Eyebrows — bushy white
-    ctx.fillStyle = '#eeeeee';
-    ctx.fillRect(player.w / 2 - 6, 5, 5, 2);
-    ctx.fillRect(player.w / 2 + 1, 5, 5, 2);
-
-    // --- BEARD ---
-    ctx.fillStyle = '#f0f0f0';
+    // --- HOOD (deep purple, pulled up, face obscured) ---
+    const hoodGrad = ctx.createLinearGradient(player.w / 2, 0, player.w / 2, 17);
+    hoodGrad.addColorStop(0, '#5a0095'); hoodGrad.addColorStop(1, '#3d0068');
+    ctx.fillStyle = hoodGrad;
     ctx.beginPath();
-    ctx.moveTo(6,  13);
-    ctx.lineTo(player.w - 6, 13);
-    ctx.lineTo(player.w - 2, 26);
-    ctx.quadraticCurveTo(player.w / 2, 32, 2, 26);
+    ctx.moveTo(1, 17);
+    ctx.quadraticCurveTo(0, 8, 5, 2);
+    ctx.quadraticCurveTo(14, -3, 23, 2);
+    ctx.quadraticCurveTo(28, 8, 27, 17);
     ctx.closePath();
     ctx.fill();
-    // Beard highlight streaks
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(player.w / 2 - 2, 14, 2, 10);
-    ctx.fillRect(player.w / 2 + 3, 15, 1, 8);
-    ctx.fillRect(player.w / 2 - 6, 15, 1, 7);
-    // Moustache
-    ctx.fillStyle = '#dddddd';
-    ctx.fillRect(player.w / 2 - 4, 12, 8, 2);
 
-    // --- WIZARD HAT ---
-    // Brim
-    ctx.fillStyle = '#1a2266';
+    // Hood shadow interior (deep shadow obscures the face)
+    const shadowGrad = ctx.createRadialGradient(14, 14, 1, 14, 11, 9);
+    shadowGrad.addColorStop(0, '#0e0018');
+    shadowGrad.addColorStop(0.6, '#160028');
+    shadowGrad.addColorStop(1, '#3d0068');
+    ctx.fillStyle = shadowGrad;
     ctx.beginPath();
-    ctx.ellipse(player.w / 2, 2, player.w / 2 + 1, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(14, 13, 7, 7, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#4455cc'; ctx.lineWidth = 1;
+
+    // Hood opening rim (subtle purple highlight edge)
+    ctx.strokeStyle = '#7a00cc';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(14, 13, 7, 7, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Cone — tall and slightly tilted
-    const hatGrad = ctx.createLinearGradient(4, -28, player.w - 4, 2);
-    hatGrad.addColorStop(0, '#2233aa'); hatGrad.addColorStop(1, '#111644');
-    ctx.fillStyle = hatGrad;
+    // Hood fold lines (side depth texture)
+    ctx.strokeStyle = 'rgba(120,0,180,0.35)';
+    ctx.lineWidth = 0.5;
     ctx.beginPath();
-    ctx.moveTo(3, 2);
-    ctx.lineTo(player.w - 3, 2);
-    ctx.lineTo(player.w / 2 + 3, -28);
-    ctx.lineTo(player.w / 2 - 1, -28);
-    ctx.closePath();
-    ctx.fill();
-
-    // Hat band
-    ctx.fillStyle = '#ccaa44';
-    ctx.fillRect(4, -2, player.w - 8, 3);
-
-    // Star on hat
-    ctx.fillStyle = '#ffdd44';
-    ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 4;
-    const starX = player.w / 2 + 1, starY = -14, starR = 3.5;
+    ctx.moveTo(5, 3);
+    ctx.quadraticCurveTo(3, 10, 4, 17);
+    ctx.stroke();
     ctx.beginPath();
-    for (let pt = 0; pt < 10; pt++) {
-      const a   = (pt / 10) * Math.PI * 2 - Math.PI / 2;
-      const rad = pt % 2 === 0 ? starR : starR * 0.42;
-      pt === 0 ? ctx.moveTo(starX + Math.cos(a) * rad, starY + Math.sin(a) * rad)
-               : ctx.lineTo(starX + Math.cos(a) * rad, starY + Math.sin(a) * rad);
-    }
-    ctx.closePath(); ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.moveTo(23, 3);
+    ctx.quadraticCurveTo(25, 10, 24, 17);
+    ctx.stroke();
 
   } else if (playerClass === 'archer') {
     // --- GREEN TIGHTS ---
