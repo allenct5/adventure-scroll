@@ -21,7 +21,7 @@ import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } fr
 import { applyZoneBuffs } from '../utils/powerups.js';
 import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
-import { updateMusicForDifficulty, stopMusic } from '../utils/audio.js';
+import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume } from '../utils/audio.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
 registerGameLoop(gameLoop);
@@ -235,6 +235,14 @@ function returnToMenu() {
   document.getElementById('class-select').style.display = 'flex';
   setLastTime(0); requestAnimationFrame(gameLoop);
 }
+
+// --- PAUSE VOLUME SLIDERS ---
+document.getElementById('game-volume-slider').addEventListener('input', e => {
+  setGameVolume(parseFloat(e.target.value));
+});
+document.getElementById('music-volume-slider').addEventListener('input', e => {
+  setMusicVolume(parseFloat(e.target.value));
+});
 
 // --- PAUSE / CHEAT MENU ---
 document.getElementById('pause-cheat-toggle').addEventListener('click', () => {

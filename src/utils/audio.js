@@ -2,9 +2,20 @@
 
 const outdoorMusic = new Audio('assets/audio/music/242932_Overworld_Theme.mp3');
 outdoorMusic.loop = true;
-outdoorMusic.volume = 0.5;
+outdoorMusic.volume = 0.25;
 
 let currentTrack = null;
+export let gameVolume = 1.0;
+let musicVolume = 0.25;
+
+export function setMusicVolume(v) {
+  musicVolume = v;
+  if (currentTrack) currentTrack.volume = musicVolume;
+}
+
+export function setGameVolume(v) {
+  gameVolume = v;
+}
 
 function playTrack(track) {
   if (currentTrack === track) return;
@@ -13,7 +24,10 @@ function playTrack(track) {
     currentTrack.currentTime = 0;
   }
   currentTrack = track;
-  if (track) track.play().catch(() => {});
+  if (track) {
+    track.volume = musicVolume;
+    track.play().catch(() => {});
+  }
 }
 
 export function stopMusic() {
