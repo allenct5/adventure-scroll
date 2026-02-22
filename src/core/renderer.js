@@ -123,10 +123,11 @@ export function drawBackground() {
       const flicker2 = Math.sin(t * 6.7 + i * 1.4) * 0.25;
       const flicker3 = Math.sin(t * 2.1 + i * 0.8) * 0.2;
       const flicker = 0.75 + flicker1 + flicker2 + flicker3;
+      const flickerSafe = Math.max(0.01, flicker);
 
-      const glow = ctx.createRadialGradient(tx, ty, 0, tx, ty, 70 * flicker);
-      glow.addColorStop(0, `rgba(255,180,60,${0.25*flicker})`);
-      glow.addColorStop(0.5, `rgba(255,100,20,${0.12*flicker})`);
+      const glow = ctx.createRadialGradient(tx, ty, 0, tx, ty, 70 * flickerSafe);
+      glow.addColorStop(0, `rgba(255,180,60,${0.25*flickerSafe})`);
+      glow.addColorStop(0.5, `rgba(255,100,20,${0.12*flickerSafe})`);
       glow.addColorStop(1, 'rgba(255,50,0,0)');
       ctx.fillStyle = glow; ctx.fillRect(tx-70, ty-70, 140, 140);
 
@@ -138,8 +139,8 @@ export function drawBackground() {
         const layerWave = Math.sin(t*5+i*1.2+layerPhase)*0.2 + Math.sin(t*3.1+i*0.7+layerPhase)*0.15;
         const layerIntensity = 1.0 - layer * 0.4;
         const baseHue = 120 + Math.sin(t*8+i*1.7+layerPhase)*50;
-        const flameHeight = 12*flicker + 4*layerWave;
-        const flameWidth = 5 + Math.sin(t*3.3+i+layerPhase)*2.5;
+        const flameHeight = Math.max(0.5, 12*flickerSafe + 4*layerWave);
+        const flameWidth = Math.max(0.5, 5 + Math.sin(t*3.3+i+layerPhase)*2.5);
 
         ctx.fillStyle = `rgba(255,${Math.max(60,baseHue|0)},0,${0.7*layerIntensity})`;
         ctx.beginPath();
@@ -149,7 +150,7 @@ export function drawBackground() {
 
       ctx.fillStyle = 'rgba(255,240,120,0.9)';
       ctx.beginPath();
-      ctx.ellipse(tx, ty-2, 2.5, 5*flicker, 0, 0, Math.PI*2);
+      ctx.ellipse(tx, ty-2, 2.5, Math.max(0.5, 5*flickerSafe), 0, 0, Math.PI*2);
       ctx.fill();
     }
 
