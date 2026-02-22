@@ -83,8 +83,8 @@ export function updatePowerups(dt) {
     const p = powerups[i];
     if (rectOverlap(player, p)) {
       if      (p.type === 'health')      { player.hp = Math.min(player.maxHp, player.hp + 20); updateHUD(); }
-      else if (p.type === 'speedBoost')  { player.speedBoostTimer  = Math.max(player.speedBoostTimer,  60 * 7); }
-      else if (p.type === 'attackSpeed') { player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 7); }
+      else if (p.type === 'speedBoost')  { player.speedBoostTimer  = Math.max(player.speedBoostTimer,  60 * 7); player.speedBoostTimerMax  = Math.max(player.speedBoostTimerMax,  60 * 7); }
+      else if (p.type === 'attackSpeed') { player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 7); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 7); }
       else if (p.type === 'mana')        { player.mana += 5; updateHUD(); }
       else if (p.type === 'bomb')        { player.bombs = Math.min(5, player.bombs + 2); updateHUD(); }
       const glowCol = p.type === 'health' ? '#ff4466' : p.type === 'speedBoost' ? '#00ff88' : p.type === 'attackSpeed' ? '#ffcc00' : p.type === 'mana' ? '#2288ff' : '#ff8800';

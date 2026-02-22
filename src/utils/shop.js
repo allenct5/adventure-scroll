@@ -117,7 +117,7 @@ export function buyItem(item) {
     case 'maxHp1':    player.maxHp += 10; player.hp = Math.min(player.maxHp, player.hp + 20); msg.textContent = '+10 Max HP, +20 HP healed!'; break;
     case 'fullHeal':  player.hp = player.maxHp; msg.textContent = 'Fully healed!'; break;
     case 'soulBind':  player.revive = true; msg.textContent = 'Soul Bound — you will rise once!'; break;
-    case 'pu_speed':  player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 10); msg.textContent = 'Attack speed doubled for 10s!'; break;
+    case 'pu_speed':  player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 10); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 10); msg.textContent = 'Attack speed doubled for 10s!'; break;
     case 'berserker': player.damageMult = (player.damageMult || 1) * 1.3; msg.textContent = 'Berserker Rage — +30% damage this level!'; break;
   }
   updateHUD();

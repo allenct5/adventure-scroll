@@ -361,6 +361,206 @@ export function drawMerchant() {
   ctx.fillText('[ SHOP ]', sx + merchant.w / 2, merchant.y - 24); ctx.textAlign = 'left'; ctx.shadowBlur = 0;
 }
 
+export function drawBuffIcons() {
+  if (player.dead) return;
+
+  const ICON_SIZE = 36;
+  const GAP       = 4;
+  const MARGIN    = 10;
+
+  const active = [];
+  if (player.speedBoostTimer > 0)  active.push({ type: 'speed',    timer: player.speedBoostTimer,  timerMax: player.speedBoostTimerMax  || 1 });
+  if (player.attackSpeedTimer > 0) active.push({ type: 'atkspeed', timer: player.attackSpeedTimer, timerMax: player.attackSpeedTimerMax || 1 });
+  if (player.fortified)            active.push({ type: 'fortify',  timer: null });
+  if (player.damageMult > 1)       active.push({ type: 'berserk',  timer: null });
+  if (player.revive)               active.push({ type: 'revive',   timer: null });
+
+  if (active.length === 0) return;
+
+  const COLORS = {
+    speed:    '#00ff88',
+    atkspeed: '#ffcc00',
+    fortify:  '#4488ff',
+    berserk:  '#ff3322',
+    revive:   '#cc88ff',
+  };
+
+  ctx.save();
+
+  for (let i = 0; i < active.length; i++) {
+    const { type, timer } = active[i];
+    const ix    = MARGIN + i * (ICON_SIZE + GAP);
+    const iy    = MARGIN;
+    const color = COLORS[type];
+    const cx    = ix + ICON_SIZE / 2;
+    const cy    = iy + ICON_SIZE / 2;
+
+    // Dark background
+    ctx.globalAlpha = 0.80;
+    ctx.fillStyle = '#080c14';
+    ctx.beginPath();
+    ctx.roundRect(ix, iy, ICON_SIZE, ICON_SIZE, 4);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Colored border glow
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 6;
+    ctx.beginPath();
+    ctx.roundRect(ix, iy, ICON_SIZE, ICON_SIZE, 4);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Clip icon art to the icon square
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(ix, iy, ICON_SIZE, ICON_SIZE, 4);
+    ctx.clip();
+
+    if (type === 'speed') {
+      // Boot silhouette facing right with trailing motion lines
+      ctx.fillStyle   = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 4;
+      ctx.fillRect(cx - 3, cy - 12, 7, 11);       // shin
+      ctx.fillRect(cx - 5, cy - 1,  14, 6);        // foot sole
+      ctx.beginPath();                              // rounded toe
+      ctx.arc(cx + 9, cy + 2, 3.5, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Trailing motion lines to the left
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 1.5;
+      ctx.lineCap     = 'round';
+      ctx.globalAlpha = 0.65;
+      ctx.beginPath(); ctx.moveTo(cx - 14, cy - 6); ctx.lineTo(cx - 7, cy - 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx - 14, cy - 3); ctx.lineTo(cx - 6, cy - 3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx - 13, cy    ); ctx.lineTo(cx - 5, cy    ); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+    } else if (type === 'atkspeed') {
+      // Diagonal sword + sweep arc lines
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle   = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, -14); ctx.lineTo(2.5, 8); ctx.lineTo(-2.5, 8); ctx.closePath(); // blade
+      ctx.fill();
+      ctx.fillRect(-7, 6, 14, 3);                  // crossguard
+      ctx.fillStyle  = '#aa8833';
+      ctx.shadowBlur = 0;
+      ctx.fillRect(-2, 9, 4, 6);                   // handle
+      ctx.restore();
+      // Sweep arc (motion implied)
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 2;
+      ctx.lineCap     = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, 14, -Math.PI * 0.85, -Math.PI * 0.1); ctx.stroke();
+      ctx.globalAlpha = 0.28;
+      ctx.lineWidth   = 1.2;
+      ctx.beginPath(); ctx.arc(cx, cy, 10, -Math.PI * 0.75, -Math.PI * 0.15); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+    } else if (type === 'fortify') {
+      // Kite shield with cross emblem
+      ctx.lineWidth   = 2;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 5;
+      // Filled shield body (translucent)
+      ctx.fillStyle   = color;
+      ctx.globalAlpha = 0.22;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 13); ctx.lineTo(cx + 10, cy - 7); ctx.lineTo(cx + 10, cy + 3);
+      ctx.bezierCurveTo(cx + 10, cy + 11, cx, cy + 15, cx, cy + 15);
+      ctx.bezierCurveTo(cx - 10, cy + 15, cx - 10, cy + 11, cx - 10, cy + 3);
+      ctx.lineTo(cx - 10, cy - 7); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+      // Shield outline
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 13); ctx.lineTo(cx + 10, cy - 7); ctx.lineTo(cx + 10, cy + 3);
+      ctx.bezierCurveTo(cx + 10, cy + 11, cx, cy + 15, cx, cy + 15);
+      ctx.bezierCurveTo(cx - 10, cy + 15, cx - 10, cy + 11, cx - 10, cy + 3);
+      ctx.lineTo(cx - 10, cy - 7); ctx.closePath(); ctx.stroke();
+      ctx.shadowBlur  = 0;
+      // Cross emblem
+      ctx.fillStyle = color;
+      ctx.fillRect(cx - 1, cy - 7, 2, 12);
+      ctx.fillRect(cx - 5, cy - 1, 10, 2);
+
+    } else if (type === 'berserk') {
+      // Two crossed slash lines
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 3;
+      ctx.lineCap     = 'round';
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 8;
+      ctx.beginPath(); ctx.moveTo(cx - 11, cy - 11); ctx.lineTo(cx + 11, cy + 11); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx + 11, cy - 11); ctx.lineTo(cx - 11, cy + 11); ctx.stroke();
+      ctx.shadowBlur = 0;
+
+    } else if (type === 'revive') {
+      // Floating soul: halo above + glowing orb + wispy tail
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 2;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 8;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - 10, 7, 2.5, 0, 0, Math.PI * 2); // halo
+      ctx.stroke();
+      ctx.shadowBlur  = 0;
+      ctx.fillStyle   = '#ffffff';
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 10;
+      ctx.beginPath(); ctx.arc(cx, cy - 1, 6, 0, Math.PI * 2); ctx.fill(); // orb
+      ctx.shadowBlur  = 0;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth   = 2.5;
+      ctx.lineCap     = 'round';
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + 5);
+      ctx.bezierCurveTo(cx - 4, cy + 9, cx + 4, cy + 12, cx, cy + 15); // wispy tail
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore(); // end clip
+
+    // Timer countdown text (timed buffs only)
+    if (timer !== null) {
+      const secs = Math.ceil(timer / 60);
+      ctx.font        = 'bold 9px "Share Tech Mono", monospace';
+      ctx.textAlign   = 'right';
+      ctx.fillStyle   = '#ffffff';
+      ctx.globalAlpha = 0.88;
+      ctx.fillText(`${secs}s`, ix + ICON_SIZE - 3, iy + ICON_SIZE - 3);
+      ctx.globalAlpha = 1;
+      ctx.textAlign   = 'left';
+
+      // Duration drain bar below the icon
+      const pct  = Math.max(0, timer / active[i].timerMax);
+      const BAR_H = 4;
+      const barY  = iy + ICON_SIZE + 3;
+      ctx.fillStyle = '#111122';
+      ctx.fillRect(ix, barY, ICON_SIZE, BAR_H);
+      ctx.fillStyle   = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 4;
+      ctx.fillRect(ix, barY, Math.round(ICON_SIZE * pct), BAR_H);
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  ctx.restore();
+}
+
 export function drawDebugStats() {
   const isSword = player.weapon === 'sword';
   const isStaff = player.weapon === 'staff';

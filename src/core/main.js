@@ -19,7 +19,7 @@ import { updateParticles, drawParticles } from '../utils/particles.js';
 import { updateHUD, showMessage, hideMessage, showGameOver, hideGameOver } from '../utils/hud.js';
 import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } from '../utils/shop.js';
 import { applyZoneBuffs } from '../utils/powerups.js';
-import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawDebugStats } from './renderer.js';
+import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
@@ -39,6 +39,7 @@ function drawScene() {
   drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
   drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
   applyVignette();
+  drawBuffIcons();
   if (statsActive) drawDebugStats();
 }
 
@@ -61,7 +62,8 @@ function resetLevel() {
     staffRarity: player.staffRarity, mana: player.mana,
     fortified: player.fortified, damageMult: player.damageMult,
     revive: player.revive || false, regenActive: player.regenActive || false,
-    attackSpeedTimer: player.attackSpeedTimer, bombs: player.bombs,
+    attackSpeedTimer: player.attackSpeedTimer, attackSpeedTimerMax: player.attackSpeedTimerMax || 0,
+    bombs: player.bombs,
   };
 
   setPlayer(createPlayer());
