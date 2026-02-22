@@ -1,8 +1,12 @@
 // renderer.js — Environment drawing: background, platforms, hazards, checkpoint, merchant.
 
-import { W, H, LEVEL_WIDTH } from './constants.js';
+import {
+  W, H, LEVEL_WIDTH,
+  PLAYER_SPEED, SWORD_COOLDOWN, ARROW_COOLDOWN, STAFF_ORB_COOLDOWN,
+  BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_FIREBALL_DAMAGE, rarityDamage,
+} from './constants.js';
 import { platforms, spikes, lavaZones, checkpoint, merchant } from '../scenes/level.js';
-import { cameraX, difficultyLevel } from './state.js';
+import { cameraX, difficultyLevel, player } from './state.js';
 
 import { ctx } from '../canvas.js';
 
@@ -355,4 +359,47 @@ export function drawMerchant() {
   ctx.fillStyle = `rgba(255,220,80,${pulse})`; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 12 * pulse;
   ctx.font = 'bold 9px Share Tech Mono'; ctx.textAlign = 'center';
   ctx.fillText('[ SHOP ]', sx + merchant.w / 2, merchant.y - 24); ctx.textAlign = 'left'; ctx.shadowBlur = 0;
+}
+
+export function drawDebugStats() {
+  const isSword = player.weapon === 'sword';
+  const isStaff = player.weapon === 'staff';
+
+  // currMovSpd: base speed * speed boost multiplier
+  const currMovSpd = PLAYER_SPEED * (player.speedBoostTimer > 0 ? 1.25 : 1);
+
+  // currAttSpd: attacks per second. Timers decrement at 16 units/frame × 60fps = 960 units/sec.
+  // Attack speed buff reduces the reset cooldown by ×0.8, so effective rate is ×1.25.
+  const baseCooldown = isSword ? SWORD_COOLDOWN : isStaff ? STAFF_ORB_COOLDOWN : ARROW_COOLDOWN;
+  const effectiveCooldown = player.attackSpeedTimer > 0 ? baseCooldown * 0.8 : baseCooldown;
+  const currAttSpd = 960 / effectiveCooldown;
+
+  // currWepDmg: rarity-scaled base damage × damage multiplier
+  const baseDmg = isSword ? BASE_SWORD_DAMAGE : isStaff ? BASE_FIREBALL_DAMAGE : BASE_ARROW_DAMAGE;
+  const rarity   = isSword ? player.swordRarity : isStaff ? player.staffRarity : player.bowRarity;
+  const currWepDmg = Math.round(rarityDamage(baseDmg, rarity) * player.damageMult);
+
+  const panelW = 178, panelH = 76, panelX = W - panelW - 8, panelY = 8;
+
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = '#080c12';
+  ctx.fillRect(panelX, panelY, panelW, panelH);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#00ff4466';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+  ctx.font = 'bold 9px "Share Tech Mono", monospace';
+  ctx.fillStyle = '#00ff44';
+  ctx.textAlign = 'left';
+  ctx.fillText('— DEBUG STATS —', panelX + 8, panelY + 15);
+
+  ctx.font = '9px "Share Tech Mono", monospace';
+  ctx.fillStyle = '#aaffcc';
+  ctx.fillText(`ATK SPD  : ${currAttSpd.toFixed(2)} atk/s`, panelX + 8, panelY + 33);
+  ctx.fillText(`MOV SPD  : ${currMovSpd.toFixed(4)}`,        panelX + 8, panelY + 49);
+  ctx.fillText(`WEP DMG  : ${currWepDmg}`,                   panelX + 8, panelY + 65);
+
+  ctx.restore();
 }

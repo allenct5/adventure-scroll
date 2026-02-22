@@ -19,7 +19,7 @@ import { updateParticles, drawParticles } from '../utils/particles.js';
 import { updateHUD, showMessage, hideMessage, showGameOver, hideGameOver } from '../utils/hud.js';
 import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } from '../utils/shop.js';
 import { applyZoneBuffs } from '../utils/powerups.js';
-import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant } from './renderer.js';
+import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawDebugStats } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
@@ -39,6 +39,7 @@ function drawScene() {
   drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
   drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
   applyVignette();
+  if (statsActive) drawDebugStats();
 }
 
 function triggerCheckpoint() {
@@ -220,6 +221,8 @@ function returnToMenu() {
   document.getElementById('difficulty-value').textContent = '1';
   document.getElementById('cheat-godmode').classList.remove('active');
   document.getElementById('cheat-weapon-upgrade').classList.remove('active');
+  document.getElementById('cheat-stats').classList.remove('active');
+  statsActive = false;
   document.getElementById('cheat-menu').classList.remove('open');
   updateHUD();
   document.getElementById('class-select').style.display = 'flex';
@@ -233,6 +236,11 @@ document.getElementById('pause-cheat-toggle').addEventListener('click', () => {
 document.getElementById('cheat-godmode').addEventListener('click', () => {
   setGodMode(!godMode);
   document.getElementById('cheat-godmode').classList.toggle('active', godMode);
+});
+let statsActive = false;
+document.getElementById('cheat-stats').addEventListener('click', () => {
+  statsActive = !statsActive;
+  document.getElementById('cheat-stats').classList.toggle('active', statsActive);
 });
 document.getElementById('cheat-weapon-upgrade').addEventListener('click', () => {
   const w = player.weapon;
