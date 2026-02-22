@@ -233,7 +233,7 @@ export function shootArrow() {
 export function shootStaffOrb() {
   playSfx('orb_spell');
   const cx    = player.x + player.w / 2;
-  const cy    = player.y + player.h / 2 - 5;
+  const cy    = player.y + player.h / 2 - 1;
   const angle = getAimAngle();
   const speed = 6.5;
   const staffTipDist = 28;
@@ -393,113 +393,107 @@ export function drawPlayer() {
 
   // Body
   if (playerClass === 'mage') {
-    // --- ROBE BODY (deep purple) ---
-    const robeGrad = ctx.createLinearGradient(0, 10, 0, player.h);
-    robeGrad.addColorStop(0, '#5a0095'); robeGrad.addColorStop(0.5, '#3d0068'); robeGrad.addColorStop(1, '#1e0033');
+
+    // === ROBE BODY ===
+    const robeGrad = ctx.createLinearGradient(0, 12, 0, player.h);
+    robeGrad.addColorStop(0, '#5500aa');
+    robeGrad.addColorStop(0.55, '#3a0078');
+    robeGrad.addColorStop(1, '#1a0038');
     ctx.fillStyle = robeGrad;
     ctx.beginPath();
-    ctx.moveTo(2, 14);
-    ctx.lineTo(player.w - 2, 14);
-    ctx.lineTo(player.w + 2, player.h);
-    ctx.lineTo(-2, player.h);
+    ctx.moveTo(4, 12);
+    ctx.lineTo(player.w - 4, 12);
+    ctx.lineTo(player.w + 4, player.h);
+    ctx.lineTo(-4, player.h);
     ctx.closePath();
     ctx.fill();
 
-    // Robe center fold highlight
-    ctx.fillStyle = 'rgba(180,80,255,0.18)';
+    // Center fold (subtle lighter strip)
+    ctx.fillStyle = 'rgba(140,50,210,0.2)';
     ctx.beginPath();
-    ctx.moveTo(player.w / 2 - 2, 16);
-    ctx.lineTo(player.w / 2 + 2, 16);
+    ctx.moveTo(player.w / 2 - 1, 15);
+    ctx.lineTo(player.w / 2 + 1, 15);
     ctx.lineTo(player.w / 2 + 3, player.h);
     ctx.lineTo(player.w / 2 - 3, player.h);
     ctx.closePath();
     ctx.fill();
 
-    // Robe hem trim (lighter purple)
-    ctx.fillStyle = '#7a00cc';
-    ctx.fillRect(-2, player.h - 5, player.w + 4, 3);
+    // Hem trim
+    ctx.fillStyle = '#7722bb';
+    ctx.fillRect(-4, player.h - 4, player.w + 8, 3);
 
-    // --- SLEEVES (deep purple) ---
-    ctx.fillStyle = '#3d0068';
-    ctx.fillRect(0, 14, 5, 18);
-    ctx.fillRect(player.w - 5, 14, 5, 18);
-    // Sleeve cuffs (slightly lighter purple)
-    ctx.fillStyle = '#6600aa';
-    ctx.fillRect(-1, 30, 6, 3);
-    ctx.fillRect(player.w - 5, 30, 6, 3);
+    // === ARMS / HANDS (drawn before face so face is on top) ===
+    // Left arm: back-side forearm visible at left edge, at staff-grip height
+    ctx.fillStyle = '#4a0088';
+    ctx.fillRect(0, 16, 6, 7);
+    ctx.fillStyle = '#6633aa';               // cuff
+    ctx.fillRect(-1, 22, 7, 2);
+    ctx.fillStyle = '#f5c070';               // hand
+    ctx.fillRect(0, 24, 5, 4);
 
-    // --- BLUE BELT ---
-    const beltY = Math.floor(player.h * 0.52);
-    ctx.fillStyle = '#1a55cc';
-    ctx.fillRect(3, beltY, player.w - 6, 5);
-    // Belt buckle highlight
-    ctx.fillStyle = '#4488ff';
-    ctx.fillRect(player.w / 2 - 3, beltY, 6, 5);
+    // Right arm: front-side forearm at right edge, slightly higher
+    ctx.fillStyle = '#4a0088';
+    ctx.fillRect(player.w - 6, 14, 6, 7);
+    ctx.fillStyle = '#6633aa';               // cuff
+    ctx.fillRect(player.w - 6, 20, 7, 2);
+    ctx.fillStyle = '#f5c070';               // hand
+    ctx.fillRect(player.w - 5, 22, 5, 4);
 
-    // --- TRINKETS (hanging from belt) ---
-    const trinY = beltY + 6;
-    // Trinket 1: Small pouch (left)
-    ctx.fillStyle = '#885533';
-    ctx.fillRect(5, trinY + 2, 5, 4);
-    ctx.fillStyle = '#aa7744';
-    ctx.fillRect(6, trinY, 3, 3);
-    ctx.fillStyle = '#ccaa55';
-    ctx.fillRect(6, trinY + 1, 3, 1);
-    // Trinket 2: Gem amulet (center)
-    ctx.fillStyle = '#666666';
-    ctx.fillRect(13, trinY, 2, 2);
-    ctx.fillStyle = '#0088cc';
-    ctx.fillRect(12, trinY + 2, 4, 4);
-    ctx.fillStyle = '#66ddff';
-    ctx.fillRect(12, trinY + 2, 1, 1);
-    // Trinket 3: Vial (right)
-    ctx.fillStyle = '#774411';
-    ctx.fillRect(20, trinY - 1, 2, 2);
-    ctx.fillStyle = '#222222';
-    ctx.fillRect(20, trinY + 1, 2, 5);
-    ctx.fillStyle = '#cc2222';
-    ctx.fillRect(20, trinY + 3, 2, 3);
+    // === FACE ===
+    ctx.fillStyle = '#f5c890';
+    ctx.fillRect(7, 3, 14, 11);
 
-    // --- HOOD (deep purple, pulled up, face obscured) ---
-    const hoodGrad = ctx.createLinearGradient(player.w / 2, 0, player.w / 2, 17);
-    hoodGrad.addColorStop(0, '#5a0095'); hoodGrad.addColorStop(1, '#3d0068');
-    ctx.fillStyle = hoodGrad;
+    // Eyebrows
+    ctx.fillStyle = '#664422';
+    ctx.fillRect(8, 5, 4, 1);
+    ctx.fillRect(16, 5, 4, 1);
+
+    // Eyes (white + pupil)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(8, 7, 4, 3);
+    ctx.fillRect(16, 7, 4, 3);
+    ctx.fillStyle = '#223388';
+    ctx.fillRect(9, 7, 2, 3);
+    ctx.fillRect(17, 7, 2, 3);
+
+    // Nose
+    ctx.fillStyle = '#cc9966';
+    ctx.fillRect(13, 10, 2, 2);
+
+    // Mouth
+    ctx.fillStyle = '#aa5533';
+    ctx.fillRect(10, 12, 8, 1);
+
+    // Small beard
+    ctx.fillStyle = '#ddddcc';
+    ctx.fillRect(8, 13, 12, 4);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(10, 14, 8, 2);
+
+    // === WIZARD HAT ===
+    // Brim (drawn first, cone sits on top)
+    ctx.fillStyle = '#2d0055';
     ctx.beginPath();
-    ctx.moveTo(1, 17);
-    ctx.quadraticCurveTo(0, 8, 5, 2);
-    ctx.quadraticCurveTo(14, -3, 23, 2);
-    ctx.quadraticCurveTo(28, 8, 27, 17);
+    ctx.ellipse(14, 3, 13, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cone
+    const hatGrad = ctx.createLinearGradient(14, -22, 14, 3);
+    hatGrad.addColorStop(0, '#1e0040');
+    hatGrad.addColorStop(1, '#5500aa');
+    ctx.fillStyle = hatGrad;
+    ctx.beginPath();
+    ctx.moveTo(5, 3);
+    ctx.lineTo(23, 3);
+    ctx.lineTo(14, -22);
     ctx.closePath();
     ctx.fill();
 
-    // Hood shadow interior (deep shadow obscures the face)
-    const shadowGrad = ctx.createRadialGradient(14, 14, 1, 14, 11, 9);
-    shadowGrad.addColorStop(0, '#0e0018');
-    shadowGrad.addColorStop(0.6, '#160028');
-    shadowGrad.addColorStop(1, '#3d0068');
-    ctx.fillStyle = shadowGrad;
-    ctx.beginPath();
-    ctx.ellipse(14, 13, 7, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Hood opening rim (subtle purple highlight edge)
-    ctx.strokeStyle = '#7a00cc';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(14, 13, 7, 7, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Hood fold lines (side depth texture)
-    ctx.strokeStyle = 'rgba(120,0,180,0.35)';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(5, 3);
-    ctx.quadraticCurveTo(3, 10, 4, 17);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(23, 3);
-    ctx.quadraticCurveTo(25, 10, 24, 17);
-    ctx.stroke();
+    // Hat band (gold strip over cone base)
+    ctx.fillStyle = '#cc9922';
+    ctx.fillRect(5, 0, 18, 3);
+    ctx.fillStyle = '#ffdd55';              // highlight
+    ctx.fillRect(5, 0, 18, 1);
 
   } else if (playerClass === 'archer') {
     // --- GREEN TIGHTS ---
