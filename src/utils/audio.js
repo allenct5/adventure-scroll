@@ -1,6 +1,6 @@
 // audio.js — Background music management.
 
-const outdoorMusic = new Audio('assets/audio/242932_Overworld_Theme.mp3');
+const outdoorMusic = new Audio('assets/audio/music/242932_Overworld_Theme.mp3');
 outdoorMusic.loop = true;
 outdoorMusic.volume = 0.5;
 
