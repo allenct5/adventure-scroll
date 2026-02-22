@@ -65,6 +65,8 @@ function resetLevel() {
     revive: player.revive || false, regenActive: player.regenActive || false,
     attackSpeedTimer: player.attackSpeedTimer, attackSpeedTimerMax: player.attackSpeedTimerMax || 0,
     bombs: player.bombs,
+    damageMult: (player.damageMult > 1 && !player.berserkerUsed) ? player.damageMult : 1,
+    berserkerUsed: (player.damageMult > 1 && !player.berserkerUsed),
   };
 
   setPlayer(createPlayer());

@@ -2,11 +2,11 @@
 
 const outdoorMusic = new Audio('assets/audio/music/242932_Overworld_Theme.mp3');
 outdoorMusic.loop = true;
-outdoorMusic.volume = 0.25;
+outdoorMusic.volume = 0.1;
 
 let currentTrack = null;
 export let gameVolume = 1.0;
-let musicVolume = 0.25;
+let musicVolume = 0.1;
 
 export function setMusicVolume(v) {
   musicVolume = v;
