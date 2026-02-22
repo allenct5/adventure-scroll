@@ -89,6 +89,7 @@ export function updatePlayer(dt) {
     player.vy = JUMP_FORCE;
     player.jumpCooldown = 30;
     player.jumpHeld = true;
+    playSfx('jump_sound');
     spawnParticles(player.x + player.w / 2, player.y + player.h, '#aaaaff', 5);
   }
   if (!(keys[' '] || keys['space'])) player.jumpHeld = false;
@@ -219,7 +220,7 @@ export const getBowAimAngle   = getAimAngle;
 export const getStaffAimAngle = getAimAngle;
 
 export function shootArrow() {
-  playSfx('axe_attack');
+  playSfx('bow_attack');
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
@@ -278,6 +279,7 @@ export function damagePlayer(amount, killerType = null) {
   let dmg = player.fortified ? Math.round(amount * 0.75) : amount;
   if (player.blocking && playerClass === 'warrior') {
     dmg = Math.round(dmg * 0.70);
+    playSfx('shield_block');
     spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#88ccff', 8);
   }
   player.hp -= dmg;

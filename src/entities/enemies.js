@@ -11,6 +11,7 @@ import { spawnParticles, spawnBloodParticles } from '../utils/particles.js';
 import { tryDropPowerup, zoneBuffs } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
 import { damagePlayer } from './player.js';
+import { playSfx } from '../utils/audio.js';
 
 import { ctx } from '../canvas.js';
 
@@ -192,7 +193,7 @@ export function updateEnemies(dt) {
             if (pitAhead && e.onGround && e.jumpCooldown <= 0) {
               const jumpVy = JUMP_FORCE * 0.9, g = GRAVITY * 1.7, airTime = (-2 * jumpVy) / g;
               const requiredVx = (pitWidth * 1.2) / airTime;
-              e.vy = jumpVy; e.vx = moveDir * Math.max(requiredVx, effectiveSpeed * 1.2); e.jumpCooldown = 70;
+              e.vy = jumpVy; e.vx = moveDir * Math.max(requiredVx, effectiveSpeed * 1.2); e.jumpCooldown = 70; playSfx('jump_sound');
             } else if (dist > 38 && !deadlyWallAhead && !pitAhead) {
               e.vx = moveDir * effectiveSpeed;
             } else if (deadlyWallAhead) { e.vx *= 0.8; }
@@ -201,6 +202,7 @@ export function updateEnemies(dt) {
             if (dist < 42 && e.attackTimer <= 0 && sameLevel) {
               e.attackTimer = Math.round(112 * cooldownMult);
               const baseDmg = Math.round(12 * Math.pow(1.2, difficultyLevel - 1) * zoneBuffs.enemyDamageMult);
+              playSfx('axe_attack');
               if (player.invincible === 0) damagePlayer(baseDmg, e.type);
             }
           } else {
@@ -217,6 +219,7 @@ export function updateEnemies(dt) {
               const dy2 = (player.y + player.h / 2) - (e.y + e.h / 2);
               const mag  = Math.sqrt(dx * dx + dy2 * dy2) || 1;
               enemyProjectiles.push({ x: e.x+e.w/2, y: e.y+e.h/2, vx: moveDir*5*(Math.abs(dx)/mag), vy: dy2/mag*5, life: 100, r: 7, killerType: e.type });
+              playSfx('orb_spell');
             }
           }
           e.facingRight = dx > 0;

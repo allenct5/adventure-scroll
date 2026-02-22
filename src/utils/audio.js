@@ -63,7 +63,10 @@ export function playDeathMusic() {
 const SFX_MIN_INTERVAL = {
   sword_attack:        450,   // fastest sword cooldown ~600ms real
   axe_attack:          450,   // fastest arrow cooldown ~600ms real
+  bow_attack:          450,   // fastest arrow cooldown ~600ms real
   bomb_throw:          500,
+  shield_block:          0,
+  jump_sound:          150,   // allows player + nearby enemy jumps to both sound
   bomb_explode:        150,   // explosions can briefly stack
   fireball_spell:      700,   // fastest fireball cooldown ~917ms real
   fireball_explode:    150,
@@ -79,7 +82,10 @@ const SFX_MIN_INTERVAL = {
 const SFX_FILES = {
   sword_attack:       'assets/audio/sfx/attacks/sword_attack.mp3',
   axe_attack:         'assets/audio/sfx/attacks/axe_attack.mp3',
+  bow_attack:         'assets/audio/sfx/attacks/bow_attack.mp3',
   bomb_throw:         'assets/audio/sfx/attacks/bomb_throw.mp3',
+  shield_block:       'assets/audio/sfx/attacks/shield_block.mp3',
+  jump_sound:         'assets/audio/sfx/attacks/jump_sound.mp3',
   bomb_explode:       'assets/audio/sfx/attacks/bomb_explode.mp3',
   fireball_spell:     'assets/audio/sfx/spells/fireball_spell.mp3',
   fireball_explode:   'assets/audio/sfx/spells/fireball_explode.mp3',

@@ -32,7 +32,7 @@ export function updateArrows(dt) {
       const e = enemies[j];
       if (!remove && rectOverlap({x: a.x - 4, y: a.y - 4, w: 8, h: 8}, e)) {
         e.hp -= rarityDamage(BASE_ARROW_DAMAGE, player.bowRarity) * player.damageMult;
-        spawnBloodParticles(a.x, a.y); remove = true;
+        spawnBloodParticles(a.x, a.y); playSfx('sword_attack'); remove = true;
         if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
         break;
       }

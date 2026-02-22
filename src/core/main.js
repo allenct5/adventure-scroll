@@ -47,14 +47,14 @@ function drawScene() {
 function triggerCheckpoint() {
   if (gameState === 'checkpoint') return;
   setGameState('checkpoint');
-  playSfx('checkpoint_continue');
+  playSfx('levelup');
   showMessage('ONWARD!', 'Level Complete — Journey Forth...', '#44ff88');
   levelResetTimer = 180;
 }
 
 function resetLevel() {
   setGameState('playing');
-  playSfx('levelup');
+  playSfx('checkpoint_continue');
   setZoneCount(zoneCount + 1);
   setDifficultyLevel(Math.min(5, 1 + Math.floor((zoneCount + 1) / 3)));
   applyZoneBuffs();
