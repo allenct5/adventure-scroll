@@ -241,6 +241,24 @@ canvas {
 #gameCanvas.merchant-hover {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23ffdd00' stroke='%23aa8800' stroke-width='2'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='20' fill='%23664400'%3E%24%3C/text%3E%3C/svg%3E") 16 16, pointer;
 }
+.buff-tooltip {
+  position: fixed;
+  background: #1a1a1a;
+  border: 2px solid #ffffff;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #ffffff;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 150;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+  transform: translateX(-50%);
+}
+.buff-tooltip.hidden {
+  display: none;
+}
 #class-select {
   position: fixed; inset: 0;
   background: linear-gradient(180deg, #3a3a3a 0%, #000000 100%);

@@ -362,6 +362,18 @@ export function drawMerchant() {
   ctx.fillText("[ HELLO THERE! ]", sx + merchant.w / 2, merchant.y - 24); ctx.textAlign = 'left'; ctx.shadowBlur = 0;
 }
 
+// Global buff positions for tooltip tracking
+export let buffIconPositions = [];
+
+// Buff descriptions for tooltips
+const BUFF_DESCRIPTIONS = {
+  speed:    '+25% Movement Speed',
+  atkspeed: '−20% Attack Cooldown',
+  fortify:  'Damage Reduction',
+  berserk:  'Increased Damage',
+  revive:   'Soul Bind Active',
+};
+
 export function drawBuffIcons() {
   if (player.dead) return;
 
@@ -376,7 +388,13 @@ export function drawBuffIcons() {
   if (player.damageMult > 1)       active.push({ type: 'berserk',  timer: null });
   if (player.revive)               active.push({ type: 'revive',   timer: null });
 
-  if (active.length === 0) return;
+  if (active.length === 0) {
+    buffIconPositions = [];
+    return;
+  }
+  
+  // Clear and rebuild buff positions for tooltip tracking
+  buffIconPositions = [];
 
   const COLORS = {
     speed:    '#00ff88',
@@ -395,6 +413,16 @@ export function drawBuffIcons() {
     const color = COLORS[type];
     const cx    = ix + ICON_SIZE / 2;
     const cy    = iy + ICON_SIZE / 2;
+    
+    // Track buff position for tooltip detection
+    buffIconPositions.push({
+      type,
+      x: ix,
+      y: iy,
+      width: ICON_SIZE,
+      height: ICON_SIZE,
+      description: BUFF_DESCRIPTIONS[type]
+    });
 
     // Dark background
     ctx.globalAlpha = 0.80;

@@ -20,7 +20,7 @@ import { updateParticles, drawParticles } from '../utils/particles.js';
 import { updateHUD, showMessage, hideMessage, showGameOver, hideGameOver } from '../utils/hud.js';
 import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } from '../utils/shop.js';
 import { applyZoneBuffs } from '../utils/powerups.js';
-import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats } from './renderer.js';
+import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats, buffIconPositions } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
 import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume, playSfx } from '../utils/audio.js';
 import { loadSprites } from '../utils/sprites.js';
@@ -208,6 +208,28 @@ canvas.addEventListener('mousemove', e => {
   const overMerchant = mousePos.x >= msx && mousePos.x <= msx + merchant.w &&
                        mousePos.y >= merchant.y && mousePos.y <= merchant.y + merchant.h;
   canvas.classList.toggle('merchant-hover', overMerchant);
+  
+  // Check if hovering over a buff icon
+  const tooltip = document.getElementById('buff-tooltip');
+  let hoveredBuff = null;
+  for (const buff of buffIconPositions) {
+    if (mousePos.x >= buff.x && mousePos.x <= buff.x + buff.width &&
+        mousePos.y >= buff.y && mousePos.y <= buff.y + buff.height) {
+      hoveredBuff = buff;
+      break;
+    }
+  }
+  
+  if (hoveredBuff) {
+    tooltip.textContent = hoveredBuff.description;
+    tooltip.classList.remove('hidden');
+    const iconCenterX = rect.left + hoveredBuff.x + hoveredBuff.width / 2;
+    const tooltipY = rect.top + hoveredBuff.y + hoveredBuff.height + 8;
+    tooltip.style.left = iconCenterX + 'px';
+    tooltip.style.top = tooltipY + 'px';
+  } else {
+    tooltip.classList.add('hidden');
+  }
 });
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
