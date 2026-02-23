@@ -2,7 +2,7 @@
 
 import { W } from '../core/constants.js';
 import { merchant } from '../scenes/level.js';
-import { cameraX } from '../core/state.js';
+import { cameraX, activeEvent, merlinRandomAppearance } from '../core/state.js';
 import { ctx } from '../canvas.js';
 import { getSprite } from '../utils/sprites.js';
 
@@ -12,9 +12,14 @@ export const npcTaliesin = {w: 28, h: 44, showName: false};
 export const NPC_DISPLAY_NAMES = {
   npcMerlin: 'Magnificent Merlin',
   npcTaliesin: 'Taliesin, Bard of Legend',
+  merlinRandomAppearance: "[ SHOP'S CLOSED! ]",
 };
 
 export function drawNpcMerlin() {
+  // Only draw Merlin if merchant stall event is active OR if random 10% appearance triggers
+  const shouldDraw = activeEvent === 'merchantStall' || merlinRandomAppearance;
+  if (!shouldDraw) return;
+
   const nw = npcMerlin.w, nh = npcMerlin.h;
   const msx = merchant.x - cameraX;
   if (msx > W + 60 || msx < -60) return;
@@ -122,7 +127,13 @@ export function drawNpcMerlin() {
   ctx.restore();
 
   // Name label
-  if (npcMerlin.showName) {
+  if (merlinRandomAppearance) {
+    const namePulse = 0.75 + Math.sin(Date.now() * 0.004) * 0.25;
+    ctx.fillStyle = `rgba(255,220,80,${namePulse})`; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 8 * namePulse;
+    ctx.font = 'bold 9px Share Tech Mono'; ctx.textAlign = 'center';
+    ctx.fillText(NPC_DISPLAY_NAMES.merlinRandomAppearance, sx + nw / 2, sy - 38);
+    ctx.textAlign = 'left'; ctx.shadowBlur = 0;
+  } else if (npcMerlin.showName) {
     const namePulse = 0.75 + Math.sin(Date.now() * 0.004) * 0.25;
     ctx.fillStyle = `rgba(255,220,80,${namePulse})`; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 8 * namePulse;
     ctx.font = 'bold 9px Share Tech Mono'; ctx.textAlign = 'center';

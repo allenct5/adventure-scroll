@@ -10,6 +10,7 @@ import {
   zoneCount, difficultyLevel,
   keys, setMouseDown, setMouseRightDown, mousePos,
   shopOpen, clearCombatArrays, clearGroundHistory, resetDropTimes, clearParticles, activeEvent, setActiveEvent,
+  merlinRandomAppearance, setMerlinRandomAppearance,
 } from './state.js';
 import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn, applyClassMod, removeClassMod } from '../entities/player.js';
 import { populateEnemies, updateEnemies, drawEnemies } from '../entities/enemies.js';
@@ -104,6 +105,9 @@ function resetLevel() {
   
   // Select the random event for this level
   setActiveEvent(selectRandomEvent());
+
+  // If neither merchant stall nor taliesin events are active, 10% chance Merlin appears anyway
+  setMerlinRandomAppearance(activeEvent !== 'merchantStall' && activeEvent !== 'taliesin' && Math.random() < 0.1);
 
   // Store class mod state before creating new player
   const modState = {
