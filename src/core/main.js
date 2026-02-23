@@ -238,15 +238,8 @@ canvas.addEventListener('mousedown', e => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
   const msx = merchant.x - cameraX;
-  if (mx >= msx && mx <= msx + merchant.w && my >= merchant.y && my <= merchant.y + merchant.h) {
-    const playerCx   = player.x + player.w / 2;
-    const merchantCx = merchant.x + merchant.w / 2;
-    const playerFeetY = player.y + player.h;
-    const proximityX = Math.abs(playerCx - merchantCx) < 120;
-    const proximityY = Math.abs(playerFeetY - (merchant.y + merchant.h)) < 120;
-    if (proximityX && proximityY) { openShop(); return; }
-  }
-  // Check for Taliesin click (fate screen event)
+  
+  // Check for Taliesin click first (more specific hitbox)
   const taliesiX = msx + (merchant.w - npcTaliesin.w) / 2;
   const taliesiY = merchant.y + merchant.h - npcTaliesin.h;
   if (activeEvent === 'taliesin' && mx >= taliesiX && mx <= taliesiX + npcTaliesin.w && my >= taliesiY && my <= taliesiY + npcTaliesin.h) {
@@ -257,6 +250,15 @@ canvas.addEventListener('mousedown', e => {
     const proximityX = Math.abs(playerCx - taliesinCx) < 120;
     const proximityY = Math.abs(playerFeetY - taliesinFeetY) < 120;
     if (proximityX && proximityY) { showFateScreen(); return; }
+  }
+  // Check for merchant stall click
+  if (activeEvent === 'merchantStall' && mx >= msx && mx <= msx + merchant.w && my >= merchant.y && my <= merchant.y + merchant.h) {
+    const playerCx   = player.x + player.w / 2;
+    const merchantCx = merchant.x + merchant.w / 2;
+    const playerFeetY = player.y + player.h;
+    const proximityX = Math.abs(playerCx - merchantCx) < 120;
+    const proximityY = Math.abs(playerFeetY - (merchant.y + merchant.h)) < 120;
+    if (proximityX && proximityY) { openShop(); return; }
   }
   if (!shopOpen) setMouseDown(true);
 });

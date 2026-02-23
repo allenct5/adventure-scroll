@@ -251,42 +251,33 @@ export function drawNpcTaliesin() {
   ctx.arc(nw / 2, 11, 2, 0, Math.PI, true);
   ctx.fill();
 
-  // --- FEATHERED GREEN CAP ---
-  // Cap base
-  ctx.fillStyle = '#1a8844';
+  // --- GREEN ROBIN HOOD HAT ---
+  ctx.fillStyle = '#2e7d32';
+  ctx.fillRect(2, -2, nw - 4, 4);
+  const archerHatGrad = ctx.createLinearGradient(4, -16, nw - 4, -2);
+  archerHatGrad.addColorStop(0, '#1b5e20'); archerHatGrad.addColorStop(1, '#388e3c');
+  ctx.fillStyle = archerHatGrad;
   ctx.beginPath();
-  ctx.ellipse(nw / 2, 2, 6, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#0a6633'; ctx.lineWidth = 1; ctx.stroke();
-
-  // Cap feathers
-  ctx.fillStyle = '#22aa55';
-  // Left feather
-  ctx.beginPath();
-  ctx.moveTo(nw / 2 - 5, 1);
-  ctx.quadraticCurveTo(nw / 2 - 8, -6, nw / 2 - 6, -12);
-  ctx.lineTo(nw / 2 - 5, -10);
-  ctx.quadraticCurveTo(nw / 2 - 7, -5, nw / 2 - 4, 1);
+  ctx.moveTo(4,     -2);
+  ctx.lineTo(nw - 4, -2);
+  ctx.lineTo(nw - 6, -15);
+  ctx.lineTo(6,      -15);
   ctx.closePath();
   ctx.fill();
-  // Center feather
-  ctx.fillStyle = '#1a8844';
+  // Feather
+  ctx.strokeStyle = '#f5f5dc'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(nw / 2, 0);
-  ctx.quadraticCurveTo(nw / 2 + 1, -8, nw / 2, -14);
-  ctx.lineTo(nw / 2 + 1, -13);
-  ctx.quadraticCurveTo(nw / 2, -8, nw / 2 + 1, 0);
-  ctx.closePath();
-  ctx.fill();
-  // Right feather
-  ctx.fillStyle = '#22aa55';
+  ctx.moveTo(5, -4);
+  ctx.bezierCurveTo(-4, -12, -2, -22, 2, -26);
+  ctx.stroke();
+  ctx.strokeStyle = '#e0e0c8'; ctx.lineWidth = 0.8;
   ctx.beginPath();
-  ctx.moveTo(nw / 2 + 5, 1);
-  ctx.quadraticCurveTo(nw / 2 + 8, -6, nw / 2 + 6, -12);
-  ctx.lineTo(nw / 2 + 5, -10);
-  ctx.quadraticCurveTo(nw / 2 + 7, -5, nw / 2 + 4, 1);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(5, -4);
+  ctx.bezierCurveTo(-2, -10, -1, -20, 3, -24);
+  ctx.stroke();
+  // Hat band
+  ctx.fillStyle = '#5d3a1a';
+  ctx.fillRect(4, -4, nw - 8, 3);
 
   // --- LUTE (Wooden Brown, held in hands) ---
   // Lute body (right side)
