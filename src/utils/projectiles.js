@@ -49,21 +49,42 @@ export function updatePlayerOrbs(dt) {
   for (let i = playerOrbs.length - 1; i >= 0; i--) {
     const o = playerOrbs[i];
     if (o.portalLife !== undefined) o.portalLife = Math.max(0, o.portalLife - dt);
-    o.x += o.vx * dt; o.y += o.vy * dt; o.vy += 0.05 * dt; o.life -= dt;
+    o.x += o.vx * dt; o.y += o.vy * dt; 
+    if (!o.isSpark) o.vy += 0.05 * dt;  // Lightning spark travels in straight line, no gravity
+    o.life -= dt;
     if (o.life <= 0) { playerOrbs.splice(i, 1); continue; }
     const oRect = {x: o.x - o.r, y: o.y - o.r, w: o.r * 2, h: o.r * 2};
     let hitTerrain = false;
     for (const p of platforms) { if (rectOverlap(oRect, p)) { hitTerrain = true; break; } }
-    if (hitTerrain) { o.vx = 0; o.vy = 0; o.life = Math.min(o.life, 12); spawnParticles(o.x, o.y, '#ff44ff', 4); continue; }
+    if (hitTerrain) { 
+      if (o.isSpark) {
+        o.vx = 0; o.vy = 0; o.life = Math.min(o.life, 8); spawnParticles(o.x, o.y, '#00ccff', 8); 
+      } else {
+        o.vx = 0; o.vy = 0; o.life = Math.min(o.life, 12); spawnParticles(o.x, o.y, '#ff44ff', 4); 
+      }
+      continue;
+    }
+    // Check if lightning spark has traveled too far
+    if (o.isSpark && o.sparkStartX !== undefined) {
+      const distTraveled = Math.hypot(o.x - o.sparkStartX, o.y - o.sparkStartY);
+      if (distTraveled >= W * 2 / 3) { o.life = 0; continue; }
+    }
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
       if (rectOverlap({x: o.x - o.r, y: o.y - o.r, w: o.r * 2, h: o.r * 2}, e)) {
+        // Check if this projectile has already hit this enemy (for piercing)
+        if (o.hitEnemies && o.hitEnemies.has(j)) continue;
+        
         // Use custom damage if provided (from class mods), otherwise use default
         const dmg = o.damage ?? rarityDamage(BASE_ORB_DAMAGE, player.staffRarity);
         e.hp -= dmg * player.damageMult;
-        playSfx('orb_hit'); spawnParticles(o.x, o.y, '#ff44ff', 8); playerOrbs.splice(i, 1);
+        playSfx('orb_hit'); spawnParticles(o.x, o.y, '#ff44ff', 8);
+        
+        // Mark this enemy as hit (for piercing spells)
+        if (o.hitEnemies) o.hitEnemies.add(j);
+        else playerOrbs.splice(i, 1);  // Remove if not a piercing projectile
+        
         if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
-        break;
       }
     }
   }
@@ -79,7 +100,7 @@ export function updateFireballs(dt) {
       if (f.dissipateTimer <= 0) { fireballsPlayer.splice(i, 1); }
       continue;
     }
-    f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 0.0575 * dt; f.life -= dt;
+    f.x += f.vx * dt; f.y += f.vy * dt; f.vy += (f.isLightningBolt ? 0 : 0.0575) * dt; f.life -= dt;
     if (f.life <= 0) { fireballsPlayer.splice(i, 1); continue; }
     if (f.trail) {
       f.trail.push({x: f.x, y: f.y, age: 0});
@@ -87,20 +108,49 @@ export function updateFireballs(dt) {
       // Guard against spikes: keep trail bounded
       while (f.trail.length > 18) f.trail.shift();
     }
-    const fRect = {x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: f.r * 2};
+    const fRect = f.isLightningBolt 
+      ? {x: f.x - f.r, y: 0, w: f.r * 2, h: f.y}  // Lightning bolt from top of screen to impact
+      : {x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: (f.boltHeight || f.r * 2)};
     let hitTerrain = false;
     for (const p of platforms) { if (rectOverlap(fRect, p)) { hitTerrain = true; break; } }
-    if (hitTerrain) { f.vx = 0; f.vy = 0; f.dissipating = true; f.dissipateTimer = 30; f.trail = []; spawnParticles(f.x, f.y, '#ff4400', 10); playSfx('fireball_explode'); continue; }
+    if (hitTerrain) { 
+      if (f.isLightningBolt) {
+        f.vx = 0; f.vy = 0; f.dissipating = true; f.dissipateTimer = 20;
+        spawnParticles(f.x, f.y, '#00ccff', 20); spawnParticles(f.x, f.y, '#ffffff', 10); playSfx('fireball_explode');
+      } else {
+        f.vx = 0; f.vy = 0; f.dissipating = true; f.dissipateTimer = 30; f.trail = []; spawnParticles(f.x, f.y, '#ff4400', 10); playSfx('fireball_explode');
+      }
+      continue;
+    }
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
-      if (rectOverlap({x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: f.r * 2}, e)) {
-        // Use custom damage if provided (from class mods), otherwise use default
-        const dmg = f.damage ?? rarityDamage(BASE_FIREBALL_DAMAGE, player.staffRarity);
-        e.hp -= dmg * player.damageMult;
-        e.burnTimer = 300; e.burnDps = 20 / 300;
-        spawnParticles(f.x, f.y, '#ff4400', 10); f.dissipating = true; f.dissipateTimer = 20; f.trail = []; playSfx('fireball_explode');
-        if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
-        break;
+      const collisionRect = f.isLightningBolt 
+        ? {x: f.x - f.r, y: 0, w: f.r * 2, h: f.y}  // Lightning bolt from top of screen to impact
+        : {x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: (f.boltHeight || f.r * 2)};
+      if (rectOverlap(collisionRect, e)) {
+        // Lightning bolt dissipates on first enemy contact
+        if (f.isLightningBolt) {
+          if (!f.hitSomething) {
+            f.hitSomething = true;
+            const dmg = f.damage ?? rarityDamage(BASE_FIREBALL_DAMAGE, player.staffRarity);
+            e.hp -= dmg * player.damageMult;
+            spawnBloodParticles(e.x + e.w / 2, e.y);
+            spawnParticles(f.x, f.y, '#00ccff', 20); spawnParticles(f.x, f.y, '#ffffff', 10);
+            playSfx('fireball_explode');
+            f.vx = 0; f.vy = 0; f.dissipating = true; f.dissipateTimer = 15;
+            if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
+          }
+          break;
+        } else {
+          // Regular fireball behavior
+          const dmg = f.damage ?? rarityDamage(BASE_FIREBALL_DAMAGE, player.staffRarity);
+          e.hp -= dmg * player.damageMult;
+          e.burnTimer = 300; e.burnDps = 20 / 300;
+          spawnParticles(f.x, f.y, '#ff4400', 10); f.dissipating = true; f.dissipateTimer = 20; f.trail = []; playSfx('fireball_explode');
+          spawnBloodParticles(e.x + e.w / 2, e.y);
+          if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
+          break;
+        }
       }
     }
   }
@@ -153,21 +203,69 @@ export function drawProjectiles() {
   // Player staff orbs
   for (const o of playerOrbs) {
     const sx = o.x - cameraX;
-    if (o.portalLife !== undefined && o.portalLife > 0) {
-      const portalAlpha = o.portalLife / 25;
-      ctx.strokeStyle = `rgba(170, 0, 255, ${portalAlpha * 0.6})`;
-      ctx.lineWidth = 3;
-      for (let ring = 0; ring < 2; ring++) {
-        const ringRadius = 15 + ring * 8;
+    if (o.isSpark) {
+      // Lightning Spark - large cyan/white glowing electrical ball
+      const displayRadius = o.r * 2;  // 2x the size of normal orbs
+      
+      // Large outer glow
+      const outerGlow = ctx.createRadialGradient(sx, o.y, 0, sx, o.y, displayRadius * 2.5);
+      outerGlow.addColorStop(0, 'rgba(0, 200, 255, 0.4)');
+      outerGlow.addColorStop(0.5, 'rgba(0, 150, 200, 0.1)');
+      outerGlow.addColorStop(1, 'rgba(0, 100, 255, 0)');
+      ctx.fillStyle = outerGlow;
+      ctx.beginPath(); ctx.arc(sx, o.y, displayRadius * 2.5, 0, Math.PI * 2); ctx.fill();
+      
+      // Middle glow layer
+      const midGlow = ctx.createRadialGradient(sx, o.y, 0, sx, o.y, displayRadius * 1.5);
+      midGlow.addColorStop(0, 'rgba(100, 220, 255, 0.6)');
+      midGlow.addColorStop(0.6, 'rgba(0, 180, 255, 0.3)');
+      midGlow.addColorStop(1, 'rgba(0, 150, 200, 0)');
+      ctx.fillStyle = midGlow;
+      ctx.beginPath(); ctx.arc(sx, o.y, displayRadius * 1.5, 0, Math.PI * 2); ctx.fill();
+      
+      // Core gradient - bright white to cyan
+      const sparkGrad = ctx.createRadialGradient(sx - displayRadius * 0.3, o.y - displayRadius * 0.3, 0, sx, o.y, displayRadius);
+      sparkGrad.addColorStop(0, '#ffffff');
+      sparkGrad.addColorStop(0.3, '#ddffff');
+      sparkGrad.addColorStop(0.6, '#00ddff');
+      sparkGrad.addColorStop(1, '#0088ff');
+      ctx.fillStyle = sparkGrad;
+      ctx.shadowColor = '#00ccff'; ctx.shadowBlur = 28;
+      ctx.beginPath(); ctx.arc(sx, o.y, displayRadius, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      // Electric spark details
+      const sparkCount = 8;
+      for (let s = 0; s < sparkCount; s++) {
+        const angle = (s / sparkCount) * Math.PI * 2;
+        const sparkLength = displayRadius * (0.8 + Math.sin(Date.now() * 0.01 + s) * 0.4);
+        const sparkX = sx + Math.cos(angle) * sparkLength;
+        const sparkY = o.y + Math.sin(angle) * sparkLength;
+        ctx.strokeStyle = `rgba(100, 220, 255, ${0.6 + Math.sin(Date.now() * 0.008 + s) * 0.4})`;
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(sx, o.y, ringRadius, 0, Math.PI * 2);
+        ctx.moveTo(sx, o.y);
+        ctx.lineTo(sparkX, sparkY);
         ctx.stroke();
       }
+    } else {
+      // Regular staff orb - purple
+      if (o.portalLife !== undefined && o.portalLife > 0) {
+        const portalAlpha = o.portalLife / 25;
+        ctx.strokeStyle = `rgba(170, 0, 255, ${portalAlpha * 0.6})`;
+        ctx.lineWidth = 3;
+        for (let ring = 0; ring < 2; ring++) {
+          const ringRadius = 15 + ring * 8;
+          ctx.beginPath();
+          ctx.arc(sx, o.y, ringRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.beginPath(); ctx.arc(sx, o.y, o.r, 0, Math.PI * 2);
+      const ograd = ctx.createRadialGradient(sx, o.y, 0, sx, o.y, o.r);
+      ograd.addColorStop(0, '#ffffff'); ograd.addColorStop(0.4, '#ff88ff'); ograd.addColorStop(1, 'rgba(180,0,255,0)');
+      ctx.fillStyle = ograd; ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
     }
-    ctx.beginPath(); ctx.arc(sx, o.y, o.r, 0, Math.PI * 2);
-    const ograd = ctx.createRadialGradient(sx, o.y, 0, sx, o.y, o.r);
-    ograd.addColorStop(0, '#ffffff'); ograd.addColorStop(0.4, '#ff88ff'); ograd.addColorStop(1, 'rgba(180,0,255,0)');
-    ctx.fillStyle = ograd; ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
   }
 
   // Fireballs
@@ -176,26 +274,98 @@ export function drawProjectiles() {
     const t     = Date.now() * 0.008;
     const pulse = 1 + Math.sin(t + f.x * 0.1) * 0.15;
     const r     = f.r * pulse;
-    if (f.trail && f.trail.length > 1) {
-      const MAX_AGE = 18;
-      for (let i = 0; i < f.trail.length; i++) {
-        const tp   = f.trail[i];
-        const frac = i / f.trail.length;
-        const ageFrac = 1 - (tp.age / MAX_AGE);
-        const tx = tp.x - cameraX;
-        ctx.shadowColor = '#ff4400'; ctx.shadowBlur = 8 * frac;
-        ctx.fillStyle = `rgba(255,${Math.round(180 * frac)},0,${ageFrac * 0.7 * frac})`;
-        ctx.beginPath(); ctx.arc(tx, tp.y, Math.max(1, f.r * frac * 0.85), 0, Math.PI * 2); ctx.fill();
+    if (f.isLightningBolt) {
+      // Lightning Bolt - violent descending lightning strike from top of screen to impact
+      const sx = f.x - cameraX;
+      const boltWidth = f.r * 2;
+      const topY = 0;  // Start from top of screen
+      const impactY = f.y;  // Current position is the impact point
+      const boltLength = impactY - topY;
+      const pulseBrightness = 0.5 + Math.sin(Date.now() * 0.02) * 0.5;
+      
+      // Draw jagged lightning bolt shape
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * pulseBrightness})`;
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      // Main bolt path with jagged edges
+      ctx.beginPath();
+      ctx.moveTo(sx, topY);
+      for (let i = 0; i < boltLength; i += 20) {
+        const jaggedness = (Math.random() - 0.5) * boltWidth * 0.8;
+        ctx.lineTo(sx + jaggedness, topY + i);
       }
+      ctx.lineTo(sx, impactY);
+      ctx.stroke();
+      
+      // Bright white core
+      ctx.strokeStyle = `rgba(255, 255, 255, ${pulseBrightness})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(sx, topY);
+      for (let i = 0; i < boltLength; i += 20) {
+        const jaggedness = (Math.random() - 0.5) * boltWidth * 0.4;
+        ctx.lineTo(sx + jaggedness, topY + i);
+      }
+      ctx.lineTo(sx, impactY);
+      ctx.stroke();
+      
+      // Cyan glow surrounding the bolt
+      ctx.shadowColor = '#00ccff';
+      ctx.shadowBlur = 30;
+      ctx.strokeStyle = `rgba(0, 200, 255, ${0.6 * pulseBrightness})`;
+      ctx.lineWidth = 20;
+      ctx.beginPath();
+      ctx.moveTo(sx, topY);
+      for (let i = 0; i < boltLength; i += 20) {
+        const jaggedness = (Math.random() - 0.5) * boltWidth;
+        ctx.lineTo(sx + jaggedness, topY + i);
+      }
+      ctx.lineTo(sx, impactY);
+      ctx.stroke();
       ctx.shadowBlur = 0;
+      
+      // Electric branching effects
+      const branchCount = 3;
+      for (let b = 0; b < branchCount; b++) {
+        const startPos = Math.random() * boltLength;
+        const branchAngle = (Math.random() - 0.5) * Math.PI * 0.5;
+        const baseX = sx + (Math.random() - 0.5) * boltWidth;
+        ctx.strokeStyle = `rgba(100, 220, 255, ${0.5 * pulseBrightness})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(baseX, topY + startPos);
+        for (let s = 0; s < 40; s += 10) {
+          const x = baseX + Math.cos(branchAngle) * s;
+          const y = topY + startPos + Math.sin(branchAngle) * s + (Math.random() - 0.5) * 10;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    } else {
+      // Fireball - orange/red effect
+      if (f.trail && f.trail.length > 1) {
+        const MAX_AGE = 18;
+        for (let i = 0; i < f.trail.length; i++) {
+          const tp   = f.trail[i];
+          const frac = i / f.trail.length;
+          const ageFrac = 1 - (tp.age / MAX_AGE);
+          const tx = tp.x - cameraX;
+          ctx.shadowColor = '#ff4400'; ctx.shadowBlur = 8 * frac;
+          ctx.fillStyle = `rgba(255,${Math.round(180 * frac)},0,${ageFrac * 0.7 * frac})`;
+          ctx.beginPath(); ctx.arc(tx, tp.y, Math.max(1, f.r * frac * 0.85), 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+      }
+      const outerGrad = ctx.createRadialGradient(sx, f.y, 0, sx, f.y, r * 2.5);
+      outerGrad.addColorStop(0, 'rgba(255,140,0,0.35)'); outerGrad.addColorStop(1, 'rgba(255,60,0,0)');
+      ctx.fillStyle = outerGrad; ctx.beginPath(); ctx.arc(sx, f.y, r * 2.5, 0, Math.PI * 2); ctx.fill();
+      const coreGrad = ctx.createRadialGradient(sx - r * 0.3, f.y - r * 0.3, 0, sx, f.y, r);
+      coreGrad.addColorStop(0, '#ffffff'); coreGrad.addColorStop(0.2, '#ffee44'); coreGrad.addColorStop(0.6, '#ff6600'); coreGrad.addColorStop(1, '#cc2200');
+      ctx.shadowColor = '#ff6600'; ctx.shadowBlur = f.dissipating ? 4 : 18;
+      ctx.fillStyle = coreGrad; ctx.beginPath(); ctx.arc(sx, f.y, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
     }
-    const outerGrad = ctx.createRadialGradient(sx, f.y, 0, sx, f.y, r * 2.5);
-    outerGrad.addColorStop(0, 'rgba(255,140,0,0.35)'); outerGrad.addColorStop(1, 'rgba(255,60,0,0)');
-    ctx.fillStyle = outerGrad; ctx.beginPath(); ctx.arc(sx, f.y, r * 2.5, 0, Math.PI * 2); ctx.fill();
-    const coreGrad = ctx.createRadialGradient(sx - r * 0.3, f.y - r * 0.3, 0, sx, f.y, r);
-    coreGrad.addColorStop(0, '#ffffff'); coreGrad.addColorStop(0.2, '#ffee44'); coreGrad.addColorStop(0.6, '#ff6600'); coreGrad.addColorStop(1, '#cc2200');
-    ctx.shadowColor = '#ff6600'; ctx.shadowBlur = f.dissipating ? 4 : 18;
-    ctx.fillStyle = coreGrad; ctx.beginPath(); ctx.arc(sx, f.y, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
   }
 
   // Bombs

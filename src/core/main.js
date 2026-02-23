@@ -25,7 +25,11 @@ import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchan
 import { canvas, ctx } from '../canvas.js';
 import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume, playSfx } from '../utils/audio.js';
 import { loadSprites } from '../utils/sprites.js';
-import { CLASS_MODS } from '../utils/classMods.js';
+import { CLASS_MODS, initializeClassModSpellOverrides } from '../utils/classMods.js';
+import { shootLightningSpark, shootLightningBolt } from '../entities/player.js';
+
+// Initialize class mod spell overrides (fixes circular import issue)
+initializeClassModSpellOverrides(shootLightningSpark, shootLightningBolt);
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
 registerGameLoop(gameLoop);

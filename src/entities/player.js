@@ -3,7 +3,7 @@
 import {
   GRAVITY, PLAYER_SPEED, JUMP_FORCE, SWORD_RANGE, SWORD_COOLDOWN,
   ARROW_SPEED, ARROW_COOLDOWN, FIREBALL_SPEED, FIREBALL_COOLDOWN,
-  STAFF_ORB_COOLDOWN, BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE,
+  STAFF_ORB_COOLDOWN, LIGHTNING_BOLT_COOLDOWN, BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE,
   BASE_FIREBALL_DAMAGE, BASE_ORB_DAMAGE, BOMB_GRAVITY, BOMB_EXPLODE_RADIUS,
   RARITY, rarityDamage, W, H, LEVEL_WIDTH,
 } from '../core/constants.js';
@@ -105,6 +105,7 @@ export function createPlayer() {
     ammo: 30,
     mana: 20,
     swordTimer: 0, arrowTimer: 0, staffTimer: 0, staffOrbTimer: 0,
+    lightningBoltTimer: 0,
     swingActive: false, swingTimer: 0, swingDuration: 0,
     invincible: 0,
     dead: false, respawnTimer: 0,
@@ -139,6 +140,7 @@ export function updatePlayer(dt) {
   player.arrowTimer    = Math.max(0, player.arrowTimer    - 16 * dt);
   player.staffTimer    = Math.max(0, player.staffTimer    - 16 * dt);
   player.staffOrbTimer = Math.max(0, player.staffOrbTimer - 16 * dt);
+  player.lightningBoltTimer = Math.max(0, player.lightningBoltTimer - 16 * dt);
   if (player.swingTimer > 0) player.swingTimer -= 16 * dt;
   else player.swingActive = false;
 
@@ -210,7 +212,13 @@ export function updatePlayer(dt) {
     player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
     const classMod = getActiveClassMod();
     if (classMod && classMod.spellOverrides?.rightClick) {
-      classMod.spellOverrides.rightClick();
+      // Lightning Bolt has its own cooldown
+      if (classMod.id === 'classMod_Cloudshaper' && player.lightningBoltTimer > 0) {
+        // Can't fire - still on cooldown
+      } else {
+        classMod.spellOverrides.rightClick();
+        if (classMod.id === 'classMod_Cloudshaper') player.lightningBoltTimer = LIGHTNING_BOLT_COOLDOWN;
+      }
     } else {
       shootFireball();
     }
@@ -337,55 +345,70 @@ export function shootLightningSpark() {
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2 - 1;
   const angle = getAimAngle();
-  const speed = 9;  // Faster than default orb (6.5)
+  const speed = 4.5;  // Slow-moving projectile
   const staffTipDist = 28;
   const startX = cx + Math.cos(angle) * staffTipDist;
   const startY = cy + Math.sin(angle) * staffTipDist;
   
-  // Lightning Spark: smaller, faster projectile with electricity effect
+  // Lightning Spark: slow-moving ball of lightning that pierces enemies
   playerOrbs.push({
     x: startX, y: startY,
+    sparkStartX: startX, sparkStartY: startY,  // Track starting position for distance calculation
     vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-    r: 5,  // Smaller than default orb (7)
-    life: 100, maxLife: 100,
+    r: 6,  // Medium-sized lightning ball
+    life: 150, maxLife: 150,  // Longer life to compensate for slower speed
     portalLife: 25,
-    damage: 24,  // Slightly higher than default orb (18)
+    damage: 30,  // Damage per pierced enemy
     isSpark: true,  // Flag to identify as lightning spark for rendering
+    hitEnemies: new Set(),  // Track which enemies this spark has hit for piercing
   });
   
-  spawnParticles(startX, startY, '#00ccff', 8);
-  spawnParticles(startX, startY, '#ffffff', 5);
+  spawnParticles(startX, startY, '#00ccff', 10);
+  spawnParticles(startX, startY, '#ffffff', 6);
 }
 
 // Lightning Bolt (Cloudshaper right-click replacement)
 export function shootLightningBolt() {
   playSfx('fireball_spell');
   
-  // Lightning Bolt: create an area attack at the cursor location
+  // Lightning Bolt: violent bolt crashes down from top of screen at cursor x position
   const targetX = mousePos.x + cameraX;
-  const targetY = mousePos.y;
-  const radius = 60;
-  const damage = 45;  // Higher than fireball (35)
+  const startY = -50;
+  const damage = 60;
   
-  // Create the lightning bolt projectile with area damage
+  // Find the impact Y by checking for terrain (both ground and floating platforms) below cursor
+  let impactY = H + 50;  // Default to bottom of screen if no terrain
+  const boltWidth = 90;  // Same as bolt radius * 2
+  const cursorWorldY = mousePos.y;  // No camera Y offset since camera only pans horizontally
+  const cursorWorldX = targetX;
+  
+  for (const platform of platforms) {
+    // Check if platform is below cursor and overlaps horizontally with bolt width
+    if (platform.y >= cursorWorldY && 
+        platform.x < cursorWorldX + boltWidth && 
+        platform.x + platform.w > cursorWorldX - boltWidth) {
+      // Use the topmost platform we hit
+      impactY = Math.min(impactY, platform.y);
+    }
+  }
+  
+  // Create the lightning bolt projectile - crashes down from above
   fireballsPlayer.push({
     x: targetX,
-    y: targetY,
+    y: impactY,
     vx: 0,
-    vy: 0,
-    r: radius,
-    life: 30,  // Short lived - instantaneous effect
-    maxLife: 30,
+    vy: 0,  // Bolt doesn't move - it's already at impact position
+    r: 45,  // Width of the bolt - wide enough for 2 enemies
+    life: 10,  // Short lifespan
+    maxLife: 10,
     dissipating: false,
     dissipateTimer: 0,
     trail: [],
     isLightningBolt: true,  // Flag to identify as lightning bolt
     damage: damage,
+    boltHeight: 600,  // Tall rectangular damage field
+    hitSomething: false,  // Flag to prevent multiple hits
   });
-  
-  // Create impact particles
-  spawnParticles(targetX, targetY, '#00ccff', 15);
-  spawnParticles(targetX, targetY, '#ffffff', 10);
 }
 
 // --- BOMB ---
@@ -817,6 +840,21 @@ export function drawPlayer() {
     ctx.fillStyle   = low ? `rgba(255,${Math.round(40 * (1 - pulse))},0,1)` : '#ffcc00';
     ctx.shadowColor = low ? '#ff2200' : '#ffaa00';
     ctx.shadowBlur  = low ? 6 * pulse : 4;
+    ctx.fillRect(barX, barY, Math.round(BAR_W * pct), BAR_H);
+    ctx.shadowBlur = 0;
+  }
+
+  // Lightning Bolt cooldown bar (Cloudshaper mage)
+  if (playerClass === 'mage' && getActiveClassMod()?.id === 'classMod_Cloudshaper' && player.lightningBoltTimer > 0) {
+    const BAR_W = 28, BAR_H = 4;
+    const barX = sx + (player.w - BAR_W) / 2;
+    const barY = player.y - 10;
+    const pct  = player.lightningBoltTimer / LIGHTNING_BOLT_COOLDOWN;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(barX - 1, barY - 1, BAR_W + 2, BAR_H + 2);
+    ctx.fillStyle = '#001a33'; ctx.fillRect(barX, barY, BAR_W, BAR_H);
+    ctx.fillStyle = '#0066ff';
+    ctx.shadowColor = '#0066ff';
+    ctx.shadowBlur = 4;
     ctx.fillRect(barX, barY, Math.round(BAR_W * pct), BAR_H);
     ctx.shadowBlur = 0;
   }

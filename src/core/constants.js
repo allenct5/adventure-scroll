@@ -15,7 +15,8 @@ export const ARROW_SPEED       = 10;
 export const ARROW_COOLDOWN    = 720;
 export const FIREBALL_SPEED    = 5.408;
 export const FIREBALL_COOLDOWN = 1100;
-export const STAFF_ORB_COOLDOWN = 417;
+export const STAFF_ORB_COOLDOWN = 600;
+export const LIGHTNING_BOLT_COOLDOWN = 300;  // 5 seconds
 
 export const BASE_SWORD_DAMAGE    = 40;
 export const BASE_ARROW_DAMAGE    = 30;

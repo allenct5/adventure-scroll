@@ -20,8 +20,6 @@
  * the original weapon and rarity are restored.
  */
 
-import { shootLightningSpark, shootLightningBolt } from '../entities/player.js';
-
 // Mage Class Mods
 export const classMod_Cloudshaper = {
   id: 'classMod_Cloudshaper',
@@ -31,8 +29,8 @@ export const classMod_Cloudshaper = {
   weaponOverride: 'staff',
   weaponVariant: 'cloudshaper',
   spellOverrides: {
-    leftClick: shootLightningSpark,
-    rightClick: shootLightningBolt,
+    leftClick: null,  // Will be set by initializeClassMods()
+    rightClick: null, // Will be set by initializeClassMods()
   },
 };
 
@@ -61,4 +59,12 @@ export function getClassModById(id) {
  */
 export function getClassModsForClass(classType) {
   return CLASS_MODS[classType] || [];
+}
+/**
+ * Initialize class mod spell overrides (must be called after player functions are loaded)
+ * This avoids circular import issues by setting up spell function references after both modules are loaded.
+ */
+export function initializeClassModSpellOverrides(shootLightningSpark, shootLightningBolt) {
+  classMod_Cloudshaper.spellOverrides.leftClick = shootLightningSpark;
+  classMod_Cloudshaper.spellOverrides.rightClick = shootLightningBolt;
 }
