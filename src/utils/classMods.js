@@ -7,11 +7,17 @@
  *   displayName: 'Display Name',          // shown to player
  *   classRequired: 'mage|warrior|archer', // which class this mod is for
  *   description: 'Brief description',     // what changes
+ *   weaponOverride: 'staff|bow|sword',    // optional - changes equipped weapon
  *   spellOverrides: {                     // spells this mod overrides
  *     leftClick: function,  // optional - imported from player.js
  *     rightClick: function, // optional - imported from player.js
  *   }
  * }
+ * 
+ * WEAPON RARITY PRESERVATION:
+ * When weaponOverride is specified, the new weapon inherits the rarity
+ * from the previously equipped weapon. When the mod is unequipped,
+ * the original weapon and rarity are restored.
  */
 
 import { shootLightningSpark, shootLightningBolt } from '../entities/player.js';

@@ -1,4 +1,11 @@
-// INTEGRATION EXAMPLE - How to use Cloudshaper Class Mod
+// INTEGRATION EXAMPLE - How to use Class Mods with Weapon Rarity Preservation
+
+/**
+ * RECOMMENDED: Use applyClassMod() and removeClassMod()
+ * 
+ * These functions handle weapon changes and rarity preservation automatically.
+ * Always use these instead of setActiveClassMod() directly!
+ */
 
 /**
  * EXAMPLE 1: Simple Test
@@ -7,11 +14,11 @@
  */
 
 function testCloudshperMod() {
-  import { setActiveClassMod } from './core/state.js';
+  import { applyClassMod } from './entities/player.js';
   import { classMod_Cloudshaper } from './utils/classMods.js';
   
-  // Activate the Cloudshaper mod
-  setActiveClassMod(classMod_Cloudshaper.id);
+  // Activate the Cloudshaper mod using applyClassMod
+  applyClassMod(classMod_Cloudshaper.id);
   console.log('Cloudshaper mod activated!');
 }
 
@@ -34,14 +41,13 @@ function displayClassModsForPlayer(playerClass) {
 }
 
 function equipClassMod(modId) {
-  import { setActiveClassMod } from './core/state.js';
+  import { applyClassMod, removeClassMod } from './entities/player.js';
   
-  // Validate that mod exists
   if (modId) {
-    setActiveClassMod(modId);
+    applyClassMod(modId);  // Use applyClassMod, not setActiveClassMod
     console.log(`Equipped class mod: ${modId}`);
   } else {
-    setActiveClassMod(null);
+    removeClassMod();  // Use removeClassMod to properly restore weapon/rarity
     console.log('Unequipped class mod');
   }
 }
@@ -57,12 +63,12 @@ function startLevel(levelConfig) {
   
   // If level specifies a class mod bonus
   if (levelConfig.classModBonus) {
-    import { setActiveClassMod } from './core/state.js';
+    import { applyClassMod } from './entities/player.js';
     import { getClassModById } from './utils/classMods.js';
     
     const mod = getClassModById(levelConfig.classModBonus);
     if (mod) {
-      setActiveClassMod(mod.id);
+      applyClassMod(mod.id);  // Use applyClassMod
       console.log(`Level bonus: ${mod.displayName} activated!`);
     }
   }
@@ -75,11 +81,11 @@ function startLevel(levelConfig) {
  */
 
 function loadGameState(saveData) {
-  import { setActiveClassMod } from './core/state.js';
+  import { applyClassMod } from './entities/player.js';
   
   // Restore the player's equipped class mod
   if (saveData.activeClassMod) {
-    setActiveClassMod(saveData.activeClassMod);
+    applyClassMod(saveData.activeClassMod);  // Use applyClassMod
   }
 }
 
@@ -117,6 +123,7 @@ function getCurrentModInfo() {
         name: mod.displayName,
         description: mod.description,
         class: mod.classRequired,
+        weaponOverride: mod.weaponOverride || null,
       };
     }
   }
@@ -137,12 +144,13 @@ function createClassModShopItem(mod) {
     displayName: mod.displayName,
     description: mod.description,
     classRequired: mod.classRequired,
+    weaponOverride: mod.weaponOverride,
     price: calculateModPrice(mod),  // Your pricing logic
     onPurchase: (playerData) => {
-      import { setActiveClassMod } from './core/state.js';
+      import { applyClassMod } from './entities/player.js';
       
-      // Equip the mod when purchased
-      setActiveClassMod(mod.id);
+      // Equip the mod when purchased using applyClassMod
+      applyClassMod(mod.id);
       
       // Notify player
       console.log(`Purchased and equipped: ${mod.displayName}`);
@@ -159,7 +167,7 @@ function createClassModShopItem(mod) {
 
 function testAllModsForClass(playerClass) {
   import { getClassModsForClass } from './utils/classMods.js';
-  import { setActiveClassMod } from './core/state.js';
+  import { applyClassMod, removeClassMod } from './entities/player.js';
   
   const mods = getClassModsForClass(playerClass);
   
@@ -171,7 +179,10 @@ function testAllModsForClass(playerClass) {
   // Test each mod
   mods.forEach((mod, index) => {
     setTimeout(() => {
-      setActiveClassMod(mod.id);
+      // Remove previous mod first
+      if (index > 0) removeClassMod();
+      
+      applyClassMod(mod.id);  // Use applyClassMod
       console.log(`Testing [${index + 1}/${mods.length}]: ${mod.displayName}`);
       console.log(mod.description);
     }, index * 5000);  // 5 seconds between each
@@ -179,11 +190,94 @@ function testAllModsForClass(playerClass) {
 }
 
 /**
- * USAGE NOTES:
+ * WEAPON RARITY PRESERVATION - HOW IT WORKS
+ * =============================================
  * 
- * 1. Always import at the function level or module top
- * 2. Use setActiveClassMod(null) to disable a mod
- * 3. The mod only applies when the player's weapon matches the class
- * 4. Changing classes automatically keeps/unsets mods as appropriate
- * 5. Different mods can have different spell overrides (not just left/right)
+ * The system automatically preserves weapon rarity when class mods
+ * change the active weapon.
+ * 
+ * SCENARIO: Mage has staff at rarity 3, then equips a mod that uses bow
+ * 
+ * STEP-BY-STEP:
+ * 1. Mod specifies: weaponOverride: 'bow'
+ * 2. applyClassMod(modId) is called
+ * 3. Current weapon (staff) is saved to preModWeapon
+ * 4. Current rarity (3) is saved to preModWeaponRarity
+ * 5. Player.weapon is changed to 'bow'
+ * 6. Player.bowRarity is set to 3 (inherited from previous weapon)
+ * 7. Player now uses bow with rarity 3
+ * 
+ * RESTORING:
+ * 8. removeClassMod() is called
+ * 9. Original weapon (staff) is restored
+ * 10. Original rarity (3) is restored to staffRarity
+ * 11. Player is back to using staff at rarity 3
+ * 
+ * KEY POINTS:
+ * - Each weapon tracks its own rarity independently
+ *   - player.swordRarity
+ *   - player.bowRarity
+ *   - player.staffRarity
+ * - Class mods transfer rarity from old weapon to new weapon
+ * - Original weapon state is preserved in preModWeapon/preModWeaponRarity
+ * - Switching back restores everything perfectly
  */
+
+/**
+ * WORKFLOW: Equipping, Switching, and Removing Mods
+ * ===================================================
+ * 
+ * SCENARIO A: Equip a single mod, then remove it
+ * 
+ *   applyClassMod('classMod_Cloudshaper');   // Apply mod
+ *   // ... play with mod ...
+ *   removeClassMod();                        // Remove mod, restore original
+ * 
+ * 
+ * SCENARIO B: Switch between two different mods
+ * 
+ *   applyClassMod('classMod_FireMage');    // Apply first mod
+ *   // ... play ...
+ *   removeClassMod();                      // IMPORTANT: Remove first
+ *   applyClassMod('classMod_FrostMage');   // THEN apply second
+ * 
+ *   // WRONG - don't do this:
+ *   applyClassMod('classMod_FireMage');
+ *   applyClassMod('classMod_FrostMage');   // ❌ Skipped removeClassMod()
+ * 
+ * 
+ * SCENARIO C: Level bonus auto-applies mod
+ * 
+ *   // At level start:
+ *   applyClassMod(levelBonusModId);
+ *   
+ *   // At level end or when transitioning:
+ *   removeClassMod();
+ *   
+ *   // OR if switching to different level bonus:
+ *   removeClassMod();
+ *   applyClassMod(newLevelBonusModId);
+ */
+
+/**
+ * USAGE NOTES & BEST PRACTICES
+ * =============================
+ * 
+ * ✅ DO USE:
+ *    - applyClassMod(modId)     when equipping a mod
+ *    - removeClassMod()         when removing a mod
+ * 
+ * ⚠️  AVOID:
+ *    - setActiveClassMod(id) directly
+ *    - setActiveClassMod(null) directly
+ * 
+ * WHY?
+ *    - setActiveClassMod only changes state
+ *    - applyClassMod/removeClassMod also handle weapon changes and rarity
+ * 
+ * 2. Always removeClassMod() before applying a different mod
+ * 3. The system automatically preserves ALL weapon rarity across changes
+ * 5. Weapon rarity transfers 1-to-1 from source to target weapon
+ */
+
+

@@ -3,6 +3,8 @@
 
 export let playerClass = null;
 export let activeClassMod = null; // Current class mod applied to player
+export let preModWeapon = null; // Original weapon before mod was applied
+export let preModWeaponRarity = null; // Original weapon rarity before mod was applied
 export let gameState   = 'classSelect';
 export let godMode     = false;
 export let cameraX     = 0;
@@ -36,6 +38,8 @@ export let lastJackpotTime = -Infinity;
 // --- Setters (keeps module references valid for primitive values) ---
 export function setPlayerClass(v)     { playerClass = v; }
 export function setActiveClassMod(v)  { activeClassMod = v; }
+export function setPreModWeapon(v)    { preModWeapon = v; }
+export function setPreModWeaponRarity(v) { preModWeaponRarity = v; }
 export function setGameState(v)       { gameState = v; }
 export function setGodMode(v)         { godMode = v; }
 export function setCameraX(v)         { cameraX = v; }

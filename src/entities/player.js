@@ -10,10 +10,11 @@ import {
 import { platforms, spikes, lavaZones, checkpoint } from '../scenes/level.js';
 import {
   player, setPlayer, playerClass, activeClassMod, cameraX, setCameraX,
+  preModWeapon, preModWeaponRarity, setPreModWeapon, setPreModWeaponRarity,
   keys, mouseDown, mouseRightDown, mousePos,
   arrows, fireballsPlayer, playerOrbs, playerBombs, enemies,
   playerGroundHistory, clearGroundHistory, godMode, difficultyLevel,
-  setGameState, setMouseRightDown,
+  setGameState, setMouseRightDown, setActiveClassMod,
 } from '../core/state.js';
 import { rectOverlap, resolvePlayerPlatforms } from '../utils/collision.js';
 import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from '../utils/particles.js';
@@ -37,6 +38,49 @@ function getActiveClassMod() {
   if (!activeClassMod) return null;
   const mod = getClassModById(activeClassMod);
   return mod;
+}
+
+// Helper: apply class mod and handle weapon changes with rarity preservation
+export function applyClassMod(modId) {
+  const mod = getClassModById(modId);
+  if (!mod) return;
+  
+  // Save current weapon and rarity before applying mod
+  setPreModWeapon(player.weapon);
+  
+  // Determine rarity of current weapon
+  const currentRarity = player.weapon === 'sword' ? player.swordRarity :
+                        player.weapon === 'bow' ? player.bowRarity :
+                        player.staffRarity;
+  setPreModWeaponRarity(currentRarity);
+  
+  // If mod specifies a weapon override, switch to it and apply saved rarity
+  if (mod.weaponOverride) {
+    player.weapon = mod.weaponOverride;
+    // Apply the saved rarity to the new weapon
+    if (mod.weaponOverride === 'sword') player.swordRarity = currentRarity;
+    else if (mod.weaponOverride === 'bow') player.bowRarity = currentRarity;
+    else if (mod.weaponOverride === 'staff') player.staffRarity = currentRarity;
+  }
+  
+  // Set active mod in state
+  setActiveClassMod(modId);
+}
+
+// Helper: remove class mod and restore original weapon/rarity
+export function removeClassMod() {
+  // Restore original weapon and rarity
+  if (preModWeapon && preModWeaponRarity !== null) {
+    player.weapon = preModWeapon;
+    if (preModWeapon === 'sword') player.swordRarity = preModWeaponRarity;
+    else if (preModWeapon === 'bow') player.bowRarity = preModWeaponRarity;
+    else if (preModWeapon === 'staff') player.staffRarity = preModWeaponRarity;
+  }
+  setPreModWeapon(null);
+  setPreModWeaponRarity(null);
+  
+  // Clear active mod in state
+  setActiveClassMod(null);
 }
 
 export function createPlayer() {
