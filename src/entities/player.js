@@ -57,10 +57,11 @@ export function createPlayer() {
     stamina: 100, staminaRegenDelay: 0,
     bombs: 0,
     damageMult: 1,
+    damageReduction: 0,  // fraction of damage to reduce (0.0 - 1.0)
   };
-  if (playerClass === 'warrior') { p.weapon = 'sword'; p.swordRarity = 1; p.hp = 120; p.maxHp = 120; }
-  else if (playerClass === 'archer') { p.weapon = 'bow'; p.bowRarity = 1; p.bombs = 5; p.hp = 100; p.maxHp = 100; }
-  else if (playerClass === 'mage')   { p.weapon = 'staff'; p.staffRarity = 1; p.mana = 25; p.hp = 80; p.maxHp = 80; }
+  if (playerClass === 'warrior') { p.weapon = 'sword'; p.swordRarity = 1; p.hp = 120; p.maxHp = 120; p.damageReduction = 0.10; }
+  else if (playerClass === 'archer') { p.weapon = 'bow'; p.bowRarity = 1; p.bombs = 5; p.hp = 100; p.maxHp = 100; p.damageReduction = 0.05; }
+  else if (playerClass === 'mage')   { p.weapon = 'staff'; p.staffRarity = 1; p.mana = 25; p.hp = 80; p.maxHp = 80; p.damageReduction = 0.00; }
   return p;
 }
 
@@ -279,12 +280,13 @@ export function throwBomb() {
 // --- DAMAGE / DEATH ---
 export function damagePlayer(amount, killerType = null) {
   if (godMode || player.invincible > 0 || player.dead) return;
-  let dmg = player.fortified ? Math.round(amount * 0.75) : amount;
+  let reduction = player.damageReduction + (player.fortified ? 0.25 : 0);
   if (player.blocking && playerClass === 'warrior') {
-    dmg = Math.round(dmg * 0.70);
+    reduction += 0.10;
     playSfx('shield_block');
     spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#88ccff', 8);
   }
+  let dmg = Math.round(amount * (1 - reduction));
   
   // Apply damage to overshield first, then HP
   if (player.overshield > 0) {
