@@ -11,7 +11,8 @@ export function updateHUD() {
   document.getElementById('health-bar-text').textContent  = `${Math.max(0, Math.ceil(player.hp))}/${player.maxHp}`;
   
   const overshieldPct = Math.max(0, player.overshield / player.maxOvershield) * 100;
-  document.getElementById('overshield-bar-overlay').style.width = `${overshieldPct}%`;
+  document.getElementById('overshield-bar').style.width       = `${overshieldPct}%`;
+  document.getElementById('overshield-bar-text').textContent  = Math.max(0, Math.ceil(player.overshield));
 
   const soulActive = !!player.revive;
   document.getElementById('soul-bind-label').style.display = soulActive ? 'block' : 'none';

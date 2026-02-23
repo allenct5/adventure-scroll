@@ -20,7 +20,6 @@ import { rectOverlap } from './collision.js';
 import { spawnParticles } from './particles.js';
 import { updateHUD } from './hud.js';
 import { playSfx } from './audio.js';
-import { addOvershield } from '../entities/player.js';
 
 import { ctx } from '../canvas.js';
 
@@ -66,11 +65,10 @@ export function tryDropPowerup(x, y) {
   const roll = Math.random();
   let type = null;
   if      (roll < 0.10) type = 'speedBoost';
-  else if (roll < 0.22) type = 'attackSpeed';
-  else if (roll < 0.40) type = 'health';
-  else if (roll < 0.50) type = 'mana';
-  else if (roll < 0.58) type = 'bomb';
-  else if (roll < 0.68) type = 'overshield';
+  else if (roll < 0.25) type = 'attackSpeed';
+  else if (roll < 0.45) type = 'health';
+  else if (roll < 0.55) type = 'mana';
+  else if (roll < 0.65) type = 'bomb';
   if (!type) return;
   if (type === 'mana' && playerClass !== 'mage')   return;
   if (type === 'bomb' && playerClass !== 'archer') return;
@@ -97,7 +95,6 @@ export function updatePowerups(dt) {
       else if (p.type === 'attackSpeed') { player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 7); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 7); }
       else if (p.type === 'mana')        { player.mana += 5; updateHUD(); }
       else if (p.type === 'bomb')        { player.bombs = Math.min(5, player.bombs + 2); updateHUD(); }
-      else if (p.type === 'overshield')  { addOvershield(50); }
       const glowCol = p.type === 'health' ? '#ff4466' : p.type === 'speedBoost' ? '#00ff88' : p.type === 'attackSpeed' ? '#ffcc00' : p.type === 'mana' ? '#2288ff' : '#ff8800';
       playSfx('powerup_pickup');
       spawnParticles(p.x + p.w / 2, p.y + p.h / 2, glowCol, 10);
@@ -124,7 +121,6 @@ export function drawPowerups() {
     attackSpeed: { glow: '#ffcc00', shadow: '#ffcc00' },
     mana: { glow: '#2288ff', shadow: '#2288ff' },
     bomb: { glow: '#ff6600', shadow: '#ff6600' },
-    overshield: { glow: '#ff9933', shadow: '#ff8800' },
   };
 
   for (const p of powerups) {
@@ -192,24 +188,6 @@ export function drawPowerups() {
       for (let m = 1; m <= 3; m++) {
         ctx.beginPath(); ctx.moveTo(-8 - m * 2, -2); ctx.lineTo(-12 - m * 3, -4); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(-8 - m * 2,  2); ctx.lineTo(-12 - m * 3,  4); ctx.stroke();
-      }
-    } else if (p.type === 'overshield') {
-      // Draw orange shield with yellow cog
-      ctx.fillStyle = '#ff7722';
-      ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill();
-      // Yellow cog center
-      ctx.fillStyle = '#ffdd44';
-      ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
-      // Cog teeth (6 teeth)
-      ctx.fillStyle = '#ffdd44';
-      for (let tooth = 0; tooth < 6; tooth++) {
-        const angle = (tooth / 6) * Math.PI * 2;
-        const x = Math.cos(angle) * 6;
-        const y = Math.sin(angle) * 6;
-        ctx.beginPath();
-        const size = 1.2;
-        ctx.rect(x - size/2, y - size/2, size, size);
-        ctx.fill();
       }
     }
     ctx.restore();
