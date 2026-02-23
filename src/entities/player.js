@@ -388,6 +388,30 @@ export function drawPlayer() {
     ctx.fillRect(sx + player.w / 2 - 40, player.y + player.h / 2 - 40, 80, 80);
   }
 
+  // Overshield protective circle
+  if (player.overshield >= 1) {
+    const shieldPct = player.overshield / player.maxOvershield;
+    const t = Date.now() * 0.002;
+    const baseRadius = 32;
+    const pulseAmount = Math.sin(t) * 2;
+    const radius = baseRadius + pulseAmount;
+    
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(sx + player.w / 2, player.y + player.h / 2, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(68, 204, 255, ${0.25 + shieldPct * 0.15})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Inner shimmer
+    ctx.beginPath();
+    ctx.arc(sx + player.w / 2, player.y + player.h / 2, radius - 3, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(136, 221, 255, ${0.1 + shieldPct * 0.1})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+
   const flash = player.invincible > 0 && Math.floor(player.invincible / 4) % 2 === 0;
   if (flash) return;
 
