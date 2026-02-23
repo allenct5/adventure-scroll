@@ -371,7 +371,7 @@ const BUFF_DESCRIPTIONS = {
   atkspeed: 'Attack speed cooldown reduced by 20%.',
   fortify:  'Attacks deal 25% less damage to you.',
   berserk:  'Increases all damage you deal by 30%.',
-  revive:   'Soul Bind Active',
+  revive:   'You will revive once upon death.',
 };
 
 export function drawBuffIcons() {

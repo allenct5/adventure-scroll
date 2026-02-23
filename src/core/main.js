@@ -305,6 +305,14 @@ document.getElementById('cheat-weapon-upgrade').addEventListener('click', () => 
   btn.style.boxShadow = '0 0 18px #00ff44';
   setTimeout(() => btn.style.boxShadow = '', 400);
 });
+document.getElementById('debug-money').addEventListener('click', () => {
+  playSfx('button_press');
+  player.coins += 999;
+  updateHUD();
+  const btn = document.getElementById('debug-money');
+  btn.style.boxShadow = '0 0 18px #00ff44';
+  setTimeout(() => btn.style.boxShadow = '', 400);
+});
 document.querySelectorAll('.cheat-diff').forEach(btn => {
   btn.addEventListener('click', () => {
     playSfx('button_press');
