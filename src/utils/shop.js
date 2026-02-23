@@ -21,6 +21,15 @@ export const SHOP_ITEMS = [
 export const shopPurchased = {};
 export function clearShopPurchased() { Object.keys(shopPurchased).forEach(k => delete shopPurchased[k]); }
 
+function generateUpgradeTooltip(baseValue, weaponType, currentRarity) {
+  const rarityKey = weaponType === 'sword' ? 'sword' : weaponType === 'bow' ? 'bow' : 'staff';
+  const playerRarity = weaponType === 'sword' ? player.swordRarity : weaponType === 'bow' ? player.bowRarity : player.staffRarity;
+  const cur  = rarityDamage(baseValue, playerRarity);
+  const next = rarityDamage(baseValue, Math.min(5, playerRarity + 1));
+  const pct  = Math.round(((next - cur) / cur) * 100);
+  return `Increases ${weaponType} damage per ${weaponType === 'bow' ? 'arrow' : weaponType === 'staff' ? 'magic missile' : 'hit'} by ${pct}%.<br><span style="color:#ff5555;text-decoration:line-through">${cur}</span>&nbsp;→&nbsp;<strong style="color:#44ee66">${next}</strong>`;
+}
+
 let _gameLoop = null;
 export function registerGameLoop(fn) { _gameLoop = fn; }
 
@@ -70,20 +79,11 @@ export function renderShopGrid() {
 
     let tooltipHTML = item.tooltip;
     if (item.id === 'swordUp1') {
-      const cur  = rarityDamage(BASE_SWORD_DAMAGE, player.swordRarity);
-      const next = rarityDamage(BASE_SWORD_DAMAGE, Math.min(5, player.swordRarity + 1));
-      const pct  = Math.round(((next - cur) / cur) * 100);
-      tooltipHTML = `Increases sword damage per hit by ${pct}%.<br><span style="color:#ff5555;text-decoration:line-through">${cur}</span>&nbsp;→&nbsp;<strong style="color:#44ee66">${next}</strong>`;
+      tooltipHTML = generateUpgradeTooltip(BASE_SWORD_DAMAGE, 'sword', player.swordRarity);
     } else if (item.id === 'bowUp1') {
-      const cur  = rarityDamage(BASE_ARROW_DAMAGE, player.bowRarity);
-      const next = rarityDamage(BASE_ARROW_DAMAGE, Math.min(5, player.bowRarity + 1));
-      const pct  = Math.round(((next - cur) / cur) * 100);
-      tooltipHTML = `Increases bow damage per arrow by ${pct}%.<br><span style="color:#ff5555;text-decoration:line-through">${cur}</span>&nbsp;→&nbsp;<strong style="color:#44ee66">${next}</strong>`;
+      tooltipHTML = generateUpgradeTooltip(BASE_ARROW_DAMAGE, 'bow', player.bowRarity);
     } else if (item.id === 'staffUp1') {
-      const cur  = rarityDamage(BASE_ORB_DAMAGE, player.staffRarity);
-      const next = rarityDamage(BASE_ORB_DAMAGE, Math.min(5, player.staffRarity + 1));
-      const pct  = Math.round(((next - cur) / cur) * 100);
-      tooltipHTML = `Increases magic missile damage by ${pct}%.<br><span style="color:#ff5555;text-decoration:line-through">${cur}</span>&nbsp;→&nbsp;<strong style="color:#44ee66">${next}</strong>`;
+      tooltipHTML = generateUpgradeTooltip(BASE_ORB_DAMAGE, 'staff', player.staffRarity);
     }
 
     const remaining  = item.limit - purchased;

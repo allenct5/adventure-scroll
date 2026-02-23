@@ -124,10 +124,21 @@ export function updateFireballs(dt) {
     }
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
-      const collisionRect = f.isLightningBolt 
-        ? {x: f.x - f.r, y: 0, w: f.r * 2, h: f.y}  // Lightning bolt from top of screen to impact
-        : {x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: (f.boltHeight || f.r * 2)};
-      if (rectOverlap(collisionRect, e)) {
+      let isHit = false;
+      
+      if (f.isLightningBolt) {
+        // Lightning bolt uses circle collision at impact point
+        const enemyCenterX = e.x + e.w / 2;
+        const enemyCenterY = e.y + e.h / 2;
+        const dist = Math.hypot(enemyCenterX - f.x, enemyCenterY - f.y);
+        isHit = dist <= f.r;  // Check if distance is within the radius
+      } else {
+        // Regular fireballs use rectangle collision
+        const collisionRect = {x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: (f.boltHeight || f.r * 2)};
+        isHit = rectOverlap(collisionRect, e);
+      }
+      
+      if (isHit) {
         // Lightning bolt dissipates on first enemy contact
         if (f.isLightningBolt) {
           if (!f.hitSomething) {

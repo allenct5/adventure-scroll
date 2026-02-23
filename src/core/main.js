@@ -41,6 +41,22 @@ registerRespawnFn(respawnPlayer);
 
 // --- LEVEL RESET ---
 let levelResetTimer = 0;
+let _tooltipElement = null;
+
+function getTooltipElement() {
+  if (!_tooltipElement) _tooltipElement = document.getElementById('buff-tooltip');
+  return _tooltipElement;
+}
+
+function performCommonCleanup() {
+  clearCombatArrays();
+  clearParticles();
+  populateEnemies();
+  resetDropTimes();
+  clearShopPurchased();
+  updateHUD();
+  hideMessage();
+}
 
 function drawScene() {
   ctx.clearRect(0, 0, W, H);
@@ -97,15 +113,9 @@ function resetLevel() {
   setPreModWeapon(modState.preModWeapon);
   setPreModWeaponRarity(modState.preModWeaponRarity);
 
-  clearCombatArrays();
-  clearParticles();
-  populateEnemies();
-  resetDropTimes();
+  performCommonCleanup();
   clearGroundHistory();
-  clearShopPurchased();
   document.getElementById('difficulty-value').textContent = difficultyLevel;
-  updateHUD();
-  hideMessage();
   updateMusicForDifficulty(difficultyLevel);
 }
 
@@ -115,13 +125,7 @@ function respawnPlayer() {
   setZoneCount(0); setDifficultyLevel(1);
   setActiveClassMod(null); setPreModWeapon(null); setPreModWeaponRarity(null);
   document.getElementById('difficulty-value').textContent = '1';
-  clearCombatArrays();
-  clearParticles();
-  populateEnemies();
-  resetDropTimes();
-  clearShopPurchased();
-  updateHUD();
-  hideMessage();
+  performCommonCleanup();
   setGameState('playing');
   updateMusicForDifficulty(1);
 }
@@ -231,7 +235,6 @@ canvas.addEventListener('mousemove', e => {
   canvas.classList.toggle('merchant-hover', overMerchant);
   
   // Check if hovering over a buff icon
-  const tooltip = document.getElementById('buff-tooltip');
   let hoveredBuff = null;
   for (const buff of buffIconPositions) {
     if (mousePos.x >= buff.x && mousePos.x <= buff.x + buff.width &&
@@ -242,6 +245,7 @@ canvas.addEventListener('mousemove', e => {
   }
   
   if (hoveredBuff) {
+    const tooltip = getTooltipElement();
     tooltip.textContent = hoveredBuff.description;
     tooltip.classList.remove('hidden');
     const iconCenterX = rect.left + hoveredBuff.x + hoveredBuff.width / 2;
@@ -249,7 +253,7 @@ canvas.addEventListener('mousemove', e => {
     tooltip.style.left = iconCenterX + 'px';
     tooltip.style.top = tooltipY + 'px';
   } else {
-    tooltip.classList.add('hidden');
+    getTooltipElement().classList.add('hidden');
   }
 });
 canvas.addEventListener('contextmenu', e => e.preventDefault());

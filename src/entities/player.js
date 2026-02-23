@@ -208,21 +208,24 @@ export function updatePlayer(dt) {
     }
   }
 
-  if (player.weapon === 'staff' && mouseRightDown && player.staffTimer <= 0 && player.mana >= 5) {
-    player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
+  if (player.weapon === 'staff' && mouseRightDown && player.staffTimer <= 0) {
     const classMod = getActiveClassMod();
-    if (classMod && classMod.spellOverrides?.rightClick) {
-      // Lightning Bolt has its own cooldown
-      if (classMod.id === 'classMod_Cloudshaper' && player.lightningBoltTimer > 0) {
-        // Can't fire - still on cooldown
+    const manaCost = classMod?.id === 'classMod_Cloudshaper' ? 10 : 5;
+    if (player.mana >= manaCost) {
+      player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
+      if (classMod && classMod.spellOverrides?.rightClick) {
+        // Lightning Bolt has its own cooldown
+        if (classMod.id === 'classMod_Cloudshaper' && player.lightningBoltTimer > 0) {
+          // Can't fire - still on cooldown
+        } else {
+          classMod.spellOverrides.rightClick();
+          if (classMod.id === 'classMod_Cloudshaper') player.lightningBoltTimer = LIGHTNING_BOLT_COOLDOWN;
+        }
       } else {
-        classMod.spellOverrides.rightClick();
-        if (classMod.id === 'classMod_Cloudshaper') player.lightningBoltTimer = LIGHTNING_BOLT_COOLDOWN;
+        shootFireball();
       }
-    } else {
-      shootFireball();
+      player.mana -= manaCost; updateHUD();
     }
-    player.mana -= 5; updateHUD();
   }
   if (player.weapon === 'bow' && mouseRightDown && player.bombs > 0) {
     throwBomb();
@@ -378,7 +381,7 @@ export function shootLightningBolt() {
   
   // Find the impact Y by checking for terrain (both ground and floating platforms) below cursor
   let impactY = H + 50;  // Default to bottom of screen if no terrain
-  const boltWidth = 90;  // Same as bolt radius * 2
+  const boltWidth = 80;  // Same as bolt radius * 2
   const cursorWorldY = mousePos.y;  // No camera Y offset since camera only pans horizontally
   const cursorWorldX = targetX;
   
@@ -398,7 +401,7 @@ export function shootLightningBolt() {
     y: impactY,
     vx: 0,
     vy: 0,  // Bolt doesn't move - it's already at impact position
-    r: 45,  // Width of the bolt - wide enough for 2 enemies
+    r: 40,  // Radius for collision circle - 80 pixel diameter
     life: 10,  // Short lifespan
     maxLife: 10,
     dissipating: false,

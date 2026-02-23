@@ -32,20 +32,18 @@ export const ENEMY_DISPLAY_NAMES = {
   evilSkull:   'Blazing Skull',
 };
 
-function resolveOrcType() {
-  if (difficultyLevel <= 2) return 'outdoorOrc';
-  if (difficultyLevel <= 4) return 'castleOrc';
-  return 'evilOrc';
-}
-
-function resolveMageType() {
-  if (difficultyLevel <= 2) return 'outdoorMage';
-  if (difficultyLevel <= 4) return 'castleMage';
-  return 'evilMage';
-}
-
-function resolveSkullType() {
-  return difficultyLevel >= 5 ? 'evilSkull' : 'castleSkull';
+function resolveEnemyVariant(category) {
+  if (category === 'orc') {
+    if (difficultyLevel <= 2) return 'outdoorOrc';
+    if (difficultyLevel <= 4) return 'castleOrc';
+    return 'evilOrc';
+  } else if (category === 'mage') {
+    if (difficultyLevel <= 2) return 'outdoorMage';
+    if (difficultyLevel <= 4) return 'castleMage';
+    return 'evilMage';
+  } else if (category === 'skull') {
+    return difficultyLevel >= 5 ? 'evilSkull' : 'castleSkull';
+  }
 }
 
 export function isOrc(type) {
@@ -74,7 +72,6 @@ export function spawnEnemy(type = 'outdoorOrc', spawnX = 100, spawnY = 350) {
     speed: ENEMY_SPEED_BASE + Math.random() * 0.35,
     onGround: false, type,
     attackTimer: 0, fireTimer: isMageType ? 150 : 9999,
-    projectiles: [],
     aggroRange: isMageType ? 500 : isSkullType ? 300 : 220,
     facingRight: false,
     state: 'idle', spawnX, spawnY,
@@ -87,9 +84,9 @@ export function spawnEnemy(type = 'outdoorOrc', spawnX = 100, spawnY = 350) {
 
 export function populateEnemies() {
   enemies.length = 0;
-  const orcType   = resolveOrcType();
-  const mageType  = resolveMageType();
-  const skullType = resolveSkullType();
+  const orcType   = resolveEnemyVariant('orc');
+  const mageType  = resolveEnemyVariant('mage');
+  const skullType = resolveEnemyVariant('skull');
   for (const sp of ENEMY_SPAWN_POINTS) {
     const onStart = sp.x >= PLAYER_START_PLATFORM.x && sp.x <= PLAYER_START_PLATFORM.x + PLAYER_START_PLATFORM.w;
     if (onStart) continue;
