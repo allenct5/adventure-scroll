@@ -63,6 +63,11 @@ export function applyClassMod(modId) {
     else if (mod.weaponOverride === 'staff') player.staffRarity = currentRarity;
   }
   
+  // Apply weapon variant if specified (e.g., tint color for cloudshaper staff)
+  if (mod.weaponVariant) {
+    player.weaponVariant = mod.weaponVariant;
+  }
+  
   // Set active mod in state
   setActiveClassMod(modId);
 }
@@ -79,6 +84,9 @@ export function removeClassMod() {
   setPreModWeapon(null);
   setPreModWeaponRarity(null);
   
+  // Clear weapon variant
+  player.weaponVariant = null;
+  
   // Clear active mod in state
   setActiveClassMod(null);
 }
@@ -93,6 +101,7 @@ export function createPlayer() {
     hp: 100, maxHp: 100,  // overridden per class below
     overshield: 0, maxOvershield: 100,
     weapon: 'sword',
+    weaponVariant: null,  // e.g., 'cloudshaper' for tinted staff variants
     ammo: 30,
     mana: 20,
     swordTimer: 0, arrowTimer: 0, staffTimer: 0, staffOrbTimer: 0,
@@ -1047,8 +1056,21 @@ export function drawAimIndicator() {
   const aimAngle = getAimAngle();
   const BASE     = player.facingRight ? 0 : Math.PI;
   const MAX_DEV  = Math.PI / 3;
-  const arcColor = isStaff ? '#ff8833' : '#ffcc44';
-  const lineColor = isStaff ? 'rgba(255,140,50,0.7)' : 'rgba(255,220,80,0.7)';
+  
+  // Determine aim indicator color based on weapon and variant
+  let arcColor, lineColor;
+  if (isStaff) {
+    if (player.weaponVariant === 'cloudshaper') {
+      arcColor = '#0099ff';
+      lineColor = 'rgba(0,153,255,0.7)';
+    } else {
+      arcColor = '#ff8833';
+      lineColor = 'rgba(255,140,50,0.7)';
+    }
+  } else {
+    arcColor = '#ffcc44';
+    lineColor = 'rgba(255,220,80,0.7)';
+  }
 
   ctx.save();
   ctx.globalAlpha = 0.18;

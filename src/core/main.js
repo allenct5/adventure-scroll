@@ -5,12 +5,13 @@ import { merchant } from '../scenes/level.js';
 import {
   gameState, setGameState, godMode, setGodMode,
   player, setPlayer, playerClass, setPlayerClass,
+  activeClassMod, setActiveClassMod, preModWeapon, setPreModWeapon, preModWeaponRarity, setPreModWeaponRarity,
   cameraX, setLastTime, lastTime, setZoneCount, setDifficultyLevel,
   zoneCount, difficultyLevel,
   keys, setMouseDown, setMouseRightDown, mousePos,
   shopOpen, clearCombatArrays, clearGroundHistory, resetDropTimes, clearParticles,
 } from './state.js';
-import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn } from '../entities/player.js';
+import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn, applyClassMod, removeClassMod } from '../entities/player.js';
 import { populateEnemies, updateEnemies, drawEnemies } from '../entities/enemies.js';
 import { drawNpcMerlin } from '../entities/npc.js';
 import { updateArrows, updatePlayerOrbs, updateFireballs, updateBombs, drawProjectiles } from '../utils/projectiles.js';
@@ -62,9 +63,16 @@ function resetLevel() {
   setDifficultyLevel(Math.min(5, 1 + Math.floor((zoneCount + 1) / 3)));
   applyZoneBuffs();
 
+  // Store class mod state before creating new player
+  const modState = {
+    activeClassMod: activeClassMod,
+    preModWeapon: preModWeapon,
+    preModWeaponRarity: preModWeaponRarity,
+  };
+
   const carry = {
     hp: player.hp, maxHp: player.maxHp, ammo: player.ammo, coins: player.coins,
-    weapon: player.weapon, swordRarity: player.swordRarity, bowRarity: player.bowRarity,
+    weapon: player.weapon, weaponVariant: player.weaponVariant, swordRarity: player.swordRarity, bowRarity: player.bowRarity,
     staffRarity: player.staffRarity, mana: player.mana,
     overshield: player.overshield, maxOvershield: player.maxOvershield,
     fortified: player.fortified && !player.fortifiedUsed,
@@ -79,6 +87,11 @@ function resetLevel() {
 
   setPlayer(createPlayer());
   Object.assign(player, carry);
+  
+  // Restore class mod state
+  setActiveClassMod(modState.activeClassMod);
+  setPreModWeapon(modState.preModWeapon);
+  setPreModWeaponRarity(modState.preModWeaponRarity);
 
   clearCombatArrays();
   clearParticles();
@@ -96,6 +109,7 @@ function respawnPlayer() {
   clearGroundHistory();
   setPlayer(createPlayer());
   setZoneCount(0); setDifficultyLevel(1);
+  setActiveClassMod(null); setPreModWeapon(null); setPreModWeaponRarity(null);
   document.getElementById('difficulty-value').textContent = '1';
   clearCombatArrays();
   clearParticles();
@@ -258,6 +272,7 @@ function returnToMenu() {
   setGameState('classSelect'); setPlayerClass(null); setPlayer(createPlayer());
   clearCombatArrays(); clearParticles(); resetDropTimes(); clearGroundHistory(); clearShopPurchased();
   setZoneCount(0); setDifficultyLevel(1); setGodMode(false);
+  setActiveClassMod(null); setPreModWeapon(null); setPreModWeaponRarity(null);
   document.getElementById('difficulty-value').textContent = '1';
   document.getElementById('cheat-godmode').classList.remove('active');
   document.getElementById('cheat-weapon-upgrade').classList.remove('active');
@@ -356,9 +371,8 @@ function populateClassModList() {
     card.querySelector('.class-mod-card-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       playSfx('button_press');
-      console.log(`Applying Class Mod: ${mod.id}`);
-      // TODO: Implement actual class mod application system
-      showMessage(`Testing: ${mod.displayName}`, 'Class Mod applied!', '#0099ff');
+      applyClassMod(mod.id);
+      updateHUD();
       closeClassModModal();
     });
   });
@@ -377,6 +391,13 @@ function closeClassModModal() {
 
 document.getElementById('debug-class').addEventListener('click', openClassModModal);
 document.getElementById('class-mod-close').addEventListener('click', closeClassModModal);
+document.getElementById('class-mod-reset').addEventListener('click', (e) => {
+  e.stopPropagation();
+  playSfx('button_press');
+  removeClassMod();
+  updateHUD();
+  closeClassModModal();
+});
 
 // Expose for any residual inline handlers
 window.selectClass = selectClass;

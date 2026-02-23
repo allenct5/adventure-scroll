@@ -28,6 +28,8 @@ export const classMod_Cloudshaper = {
   displayName: 'Cloudshaper',
   classRequired: 'mage',
   description: 'Transform your orbs into lightning sparks and your fireball into a massive lightning bolt.',
+  weaponOverride: 'staff',
+  weaponVariant: 'cloudshaper',
   spellOverrides: {
     leftClick: shootLightningSpark,
     rightClick: shootLightningBolt,
