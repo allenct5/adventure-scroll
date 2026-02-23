@@ -9,11 +9,11 @@ import {
   cameraX, setLastTime, lastTime, setZoneCount, setDifficultyLevel,
   zoneCount, difficultyLevel,
   keys, setMouseDown, setMouseRightDown, mousePos,
-  shopOpen, clearCombatArrays, clearGroundHistory, resetDropTimes, clearParticles,
+  shopOpen, clearCombatArrays, clearGroundHistory, resetDropTimes, clearParticles, activeEvent, setActiveEvent,
 } from './state.js';
 import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn, applyClassMod, removeClassMod } from '../entities/player.js';
 import { populateEnemies, updateEnemies, drawEnemies } from '../entities/enemies.js';
-import { drawNpcMerlin } from '../entities/npc.js';
+import { drawNpcMerlin, drawNpcTaliesin, npcTaliesin } from '../entities/npc.js';
 import { updateArrows, updatePlayerOrbs, updateFireballs, updateBombs, drawProjectiles } from '../utils/projectiles.js';
 import { updatePowerups, drawPowerups } from '../utils/powerups.js';
 import { updateCoins, drawCoins } from '../utils/coins.js';
@@ -25,7 +25,7 @@ import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchan
 import { canvas, ctx } from '../canvas.js';
 import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume, playSfx } from '../utils/audio.js';
 import { loadSprites } from '../utils/sprites.js';
-import { CLASS_MODS, initializeClassModSpellOverrides } from '../utils/classMods.js';
+import { CLASS_MODS, initializeClassModSpellOverrides, getClassModsForClass } from '../utils/classMods.js';
 import { shootLightningSpark, shootLightningBolt } from '../entities/player.js';
 
 // Initialize class mod spell overrides (fixes circular import issue)
@@ -42,6 +42,17 @@ registerRespawnFn(respawnPlayer);
 // --- LEVEL RESET ---
 let levelResetTimer = 0;
 let _tooltipElement = null;
+
+function selectRandomEvent() {
+  const rand = Math.random() * 100;
+  // Merchant Stall and Taliesin are mutually exclusive
+  if (rand < 40) {
+    return 'merchantStall'; // 40% chance
+  } else if (rand < 60) {
+    return 'taliesin'; // 20% chance (only if merchant didn't roll)
+  }
+  return null; // 40% chance for no event
+}
 
 function getTooltipElement() {
   if (!_tooltipElement) _tooltipElement = document.getElementById('buff-tooltip');
@@ -60,7 +71,15 @@ function performCommonCleanup() {
 
 function drawScene() {
   ctx.clearRect(0, 0, W, H);
-  drawBackground(); drawPlatforms(); drawHazards(); drawCheckpoint(); drawNpcMerlin(); drawMerchant();
+  drawBackground(); drawPlatforms(); drawHazards(); drawCheckpoint(); drawNpcMerlin();
+  
+  // Draw event-based NPCs/objects
+  if (activeEvent === 'merchantStall') {
+    drawMerchant();
+  } else if (activeEvent === 'taliesin') {
+    drawNpcTaliesin();
+  }
+  
   drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
   drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
   applyVignette();
@@ -82,6 +101,9 @@ function resetLevel() {
   setZoneCount(zoneCount + 1);
   setDifficultyLevel(Math.min(5, 1 + Math.floor((zoneCount + 1) / 3)));
   applyZoneBuffs();
+  
+  // Select the random event for this level
+  setActiveEvent(selectRandomEvent());
 
   // Store class mod state before creating new player
   const modState = {
@@ -124,6 +146,7 @@ function respawnPlayer() {
   setPlayer(createPlayer());
   setZoneCount(0); setDifficultyLevel(1);
   setActiveClassMod(null); setPreModWeapon(null); setPreModWeaponRarity(null);
+  setActiveEvent(null);
   document.getElementById('difficulty-value').textContent = '1';
   performCommonCleanup();
   setGameState('playing');
@@ -219,6 +242,18 @@ canvas.addEventListener('mousedown', e => {
     const proximityY = Math.abs(playerFeetY - (merchant.y + merchant.h)) < 120;
     if (proximityX && proximityY) { openShop(); return; }
   }
+  // Check for Taliesin click (fate screen event)
+  const taliesiX = msx + (merchant.w - npcTaliesin.w) / 2;
+  const taliesiY = merchant.y + merchant.h - npcTaliesin.h;
+  if (activeEvent === 'taliesin' && mx >= taliesiX && mx <= taliesiX + npcTaliesin.w && my >= taliesiY && my <= taliesiY + npcTaliesin.h) {
+    const playerCx   = player.x + player.w / 2;
+    const taliesinCx = taliesiX + npcTaliesin.w / 2;
+    const playerFeetY = player.y + player.h;
+    const taliesinFeetY = taliesiY + npcTaliesin.h;
+    const proximityX = Math.abs(playerCx - taliesinCx) < 120;
+    const proximityY = Math.abs(playerFeetY - taliesinFeetY) < 120;
+    if (proximityX && proximityY) { showFateScreen(); return; }
+  }
   if (!shopOpen) setMouseDown(true);
 });
 canvas.addEventListener('mouseup', e => {
@@ -229,10 +264,21 @@ canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   mousePos.x = e.clientX - rect.left;
   mousePos.y = e.clientY - rect.top;
+  
+  // Check for merchant stall hover
   const msx = merchant.x - cameraX;
-  const overMerchant = mousePos.x >= msx && mousePos.x <= msx + merchant.w &&
+  const overMerchant = activeEvent === 'merchantStall' &&
+                       mousePos.x >= msx && mousePos.x <= msx + merchant.w &&
                        mousePos.y >= merchant.y && mousePos.y <= merchant.y + merchant.h;
   canvas.classList.toggle('merchant-hover', overMerchant);
+  
+  // Check for Taliesin hover
+  const taliesiX = msx + (merchant.w - npcTaliesin.w) / 2;
+  const taliesiY = merchant.y + merchant.h - npcTaliesin.h;
+  const overTaliesin = activeEvent === 'taliesin' &&
+                       mousePos.x >= taliesiX && mousePos.x <= taliesiX + npcTaliesin.w &&
+                       mousePos.y >= taliesiY && mousePos.y <= taliesiY + npcTaliesin.h;
+  canvas.classList.toggle('taliesin-hover', overTaliesin);
   
   // Check if hovering over a buff icon
   let hoveredBuff = null;
@@ -281,6 +327,8 @@ function returnToMenu() {
   clearCombatArrays(); clearParticles(); resetDropTimes(); clearGroundHistory(); clearShopPurchased();
   setZoneCount(0); setDifficultyLevel(1); setGodMode(false);
   setActiveClassMod(null); setPreModWeapon(null); setPreModWeaponRarity(null);
+  setActiveEvent(null);
+  hideFateScreen();
   document.getElementById('difficulty-value').textContent = '1';
   document.getElementById('cheat-godmode').classList.remove('active');
   document.getElementById('cheat-weapon-upgrade').classList.remove('active');
@@ -292,6 +340,46 @@ function returnToMenu() {
   stopMusic();
   document.getElementById('class-select').style.display = 'flex';
   setLastTime(0);
+}
+
+// --- FATE SCREEN (Taliesin Event) ---
+function showFateScreen() {
+  const fateScreen = document.getElementById('fate-screen');
+  const fateCards = document.getElementById('fate-cards');
+  fateCards.innerHTML = '';
+  
+  // Get the class mods for the current player class
+  const mods = getClassModsForClass(playerClass);
+  
+  // Create cards for available mods (or placeholder if no mods exist)
+  if (mods.length === 0) {
+    fateCards.innerHTML = '<div style="color: #999; padding: 20px;">No fates available for this class yet.</div>';
+  } else {
+    for (const mod of mods) {
+      const card = document.createElement('div');
+      card.className = 'fate-card';
+      card.innerHTML = `
+        <span class="fate-card-icon">✨</span>
+        <span class="fate-card-name">${mod.displayName}</span>
+        <div class="fate-card-desc">${mod.description}</div>
+      `;
+      card.addEventListener('click', () => {
+        playSfx('button_press');
+        applyClassMod(mod.id);
+        updateHUD();
+        hideFateScreen();
+      });
+      fateCards.appendChild(card);
+    }
+  }
+  
+  fateScreen.classList.add('visible');
+  setGameState('paused');
+}
+
+function hideFateScreen() {
+  document.getElementById('fate-screen').classList.remove('visible');
+  setGameState('playing');
 }
 
 // --- PAUSE VOLUME SLIDERS ---

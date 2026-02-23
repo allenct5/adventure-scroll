@@ -14,6 +14,7 @@ export let lastTime    = 0;
 export let zoneCount      = 0;
 export let difficultyLevel = 1;
 export let shopOpen        = false;
+export let activeEvent     = null; // 'merchantStall' or 'taliesin' or null
 
 export let player    = null; // set by player.js createPlayer()
 export let enemies   = [];
@@ -48,6 +49,7 @@ export function setLastTime(v)        { lastTime = v; }
 export function setZoneCount(v)       { zoneCount = v; }
 export function setDifficultyLevel(v) { difficultyLevel = v; }
 export function setShopOpen(v)        { shopOpen = v; }
+export function setActiveEvent(v)     { activeEvent = v; }
 export function setPlayer(v)          { player = v; }
 export function setMouseDown(v)       { mouseDown = v; }
 export function setMouseRightDown(v)  { mouseRightDown = v; }

@@ -17,6 +17,7 @@ const SPRITE_PATHS = {
 
   // NPCs
   npc_merlin: 'assets/sprites/npc/merlin.png',
+  npc_taliesin: 'assets/sprites/npc/taliesin.png',
 };
 
 // Registry of loaded HTMLImageElement objects (null = not available)

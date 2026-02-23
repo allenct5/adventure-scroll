@@ -244,6 +244,9 @@ canvas {
 #gameCanvas.merchant-hover {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23ffdd00' stroke='%23aa8800' stroke-width='2'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='20' fill='%23664400'%3E%24%3C/text%3E%3C/svg%3E") 16 16, pointer;
 }
+#gameCanvas.taliesin-hover {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='24' height='28' rx='2' fill='%23000000' stroke='%23333333' stroke-width='1'/%3E%3Cpath d='M16 8 L20 15 L18 15 L18 22 L14 22 L14 15 L12 15 Z' fill='%23ffffff'/%3E%3C/svg%3E") 16 16, pointer;
+}
 .buff-tooltip {
   position: fixed;
   background: #1a1a1a;
@@ -403,6 +406,72 @@ canvas {
   border-color: #cc4444;
   color: #ff8888;
   box-shadow: 0 0 14px #88111144;
+}
+#fate-screen {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.78);
+  z-index: 250;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+#fate-screen.visible { display: flex; }
+#fate-panel {
+  background: #3a3a3a;
+  border: 3px solid #666666;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+}
+#fate-panel h2 {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  letter-spacing: 0.15em;
+  color: #ffdd00;
+  text-shadow: 0 0 20px #ffaa00;
+  margin-bottom: 30px;
+}
+#fate-cards {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+.fate-card {
+  background: linear-gradient(160deg, #1a1919, #050505);
+  border: 2px solid #6b6968;
+  border-radius: 14px;
+  padding: 28px 22px 22px;
+  width: 160px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.fate-card:hover {
+  border-color: #bfbcbb;
+  box-shadow: 0 0 30px #8833ff66;
+  transform: translateY(-4px);
+}
+.fate-card .fate-card-icon {
+  font-size: 2.8rem;
+  display: block;
+  margin-bottom: 10px;
+}
+.fate-card .fate-card-name {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: #c7c7c7;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 8px;
+}
+.fate-card .fate-card-desc {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: #9977cc;
+  line-height: 1.6;
 }
 #pause-overlay {
   display: none;
