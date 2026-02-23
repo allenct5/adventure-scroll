@@ -102,6 +102,7 @@
       <button class="cheat-btn" id="cheat-weapon-upgrade">⚔ WEAPON UPGRADE</button>
       <button class="cheat-btn" id="cheat-stats">STATS</button>
       <button class="cheat-btn" id="debug-money">$$$</button>
+      <button class="cheat-btn" id="debug-class">CLASS</button>
     </div>
     <div id="cheat-diff-row">
       <button class="cheat-btn cheat-diff" data-diff="1">DIFF 1</button>
@@ -109,6 +110,17 @@
       <button class="cheat-btn cheat-diff" data-diff="3">DIFF 3</button>
       <button class="cheat-btn cheat-diff" data-diff="4">DIFF 4</button>
       <button class="cheat-btn cheat-diff" data-diff="5">DIFF 5</button>
+    </div>
+  </div>
+  <div id="class-mod-overlay">
+    <div id="class-mod-modal">
+      <div id="class-mod-title">CLASS MODS</div>
+      <div id="class-mod-current">
+        <span style="font-size:0.7rem;color:#999;">Current Class:</span>
+        <span id="class-mod-current-class" style="color:#ffdd00;">—</span>
+      </div>
+      <div id="class-mod-list"></div>
+      <button id="class-mod-close" class="cheat-btn">CLOSE</button>
     </div>
   </div>
   <button class="go-btn go-btn-alt" id="pause-menu" style="margin-top:16px;">⚔ Main Menu</button>

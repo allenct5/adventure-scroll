@@ -24,6 +24,7 @@ import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchan
 import { canvas, ctx } from '../canvas.js';
 import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume, playSfx } from '../utils/audio.js';
 import { loadSprites } from '../utils/sprites.js';
+import { CLASS_MODS } from '../utils/classMods.js';
 
 // Give shop a reference to gameLoop (avoids circular import at module parse time)
 registerGameLoop(gameLoop);
@@ -263,6 +264,7 @@ function returnToMenu() {
   document.getElementById('cheat-stats').classList.remove('active');
   statsActive = false;
   document.getElementById('cheat-menu').classList.remove('open');
+  document.getElementById('class-mod-overlay').classList.remove('open');
   updateHUD();
   stopMusic();
   document.getElementById('class-select').style.display = 'flex';
@@ -326,6 +328,55 @@ document.querySelectorAll('.cheat-diff').forEach(btn => {
     setTimeout(() => btn.style.boxShadow = '', 400);
   });
 });
+
+// --- CLASS MODS ---
+function populateClassModList() {
+  const modList = document.getElementById('class-mod-list');
+  modList.innerHTML = '';
+  
+  // Get all mods for current player class
+  const currentMods = CLASS_MODS[playerClass] || [];
+  
+  if (currentMods.length === 0) {
+    modList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #999; padding: 20px;">No Class Mods available for this class.</div>';
+    return;
+  }
+  
+  currentMods.forEach(mod => {
+    const card = document.createElement('div');
+    card.className = 'class-mod-card';
+    card.innerHTML = `
+      <span class="class-mod-card-name">${mod.displayName}</span>
+      <span class="class-mod-card-class">${mod.classRequired}</span>
+      <div class="class-mod-card-desc">${mod.description}</div>
+      <button class="class-mod-card-btn" data-mod-id="${mod.id}">TEST MOD</button>
+    `;
+    modList.appendChild(card);
+    
+    card.querySelector('.class-mod-card-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      playSfx('button_press');
+      console.log(`Applying Class Mod: ${mod.id}`);
+      // TODO: Implement actual class mod application system
+      showMessage(`Testing: ${mod.displayName}`, 'Class Mod applied!', '#0099ff');
+      closeClassModModal();
+    });
+  });
+}
+
+function openClassModModal() {
+  playSfx('button_press');
+  document.getElementById('class-mod-current-class').textContent = playerClass ? playerClass.toUpperCase() : 'NONE';
+  populateClassModList();
+  document.getElementById('class-mod-overlay').classList.add('open');
+}
+
+function closeClassModModal() {
+  document.getElementById('class-mod-overlay').classList.remove('open');
+}
+
+document.getElementById('debug-class').addEventListener('click', openClassModModal);
+document.getElementById('class-mod-close').addEventListener('click', closeClassModModal);
 
 // Expose for any residual inline handlers
 window.selectClass = selectClass;
