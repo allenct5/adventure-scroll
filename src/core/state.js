@@ -2,6 +2,7 @@
 // Use the set* helpers to update values so consumers stay in sync.
 
 export let playerClass = null;
+export let activeClassMod = null; // Current class mod applied to player
 export let gameState   = 'classSelect';
 export let godMode     = false;
 export let cameraX     = 0;
@@ -34,6 +35,7 @@ export let lastJackpotTime = -Infinity;
 
 // --- Setters (keeps module references valid for primitive values) ---
 export function setPlayerClass(v)     { playerClass = v; }
+export function setActiveClassMod(v)  { activeClassMod = v; }
 export function setGameState(v)       { gameState = v; }
 export function setGodMode(v)         { godMode = v; }
 export function setCameraX(v)         { cameraX = v; }

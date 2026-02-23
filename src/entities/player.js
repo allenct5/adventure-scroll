@@ -9,7 +9,7 @@ import {
 } from '../core/constants.js';
 import { platforms, spikes, lavaZones, checkpoint } from '../scenes/level.js';
 import {
-  player, setPlayer, playerClass, cameraX, setCameraX,
+  player, setPlayer, playerClass, activeClassMod, cameraX, setCameraX,
   keys, mouseDown, mouseRightDown, mousePos,
   arrows, fireballsPlayer, playerOrbs, playerBombs, enemies,
   playerGroundHistory, clearGroundHistory, godMode, difficultyLevel,
@@ -22,6 +22,7 @@ import { playDeathMusic, playSfx } from '../utils/audio.js';
 import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
 import { ENEMY_DISPLAY_NAMES } from './enemies.js';
+import { getClassModById } from '../utils/classMods.js';
 
 import { ctx } from '../canvas.js';
 import { getSprite } from '../utils/sprites.js';
@@ -29,6 +30,13 @@ import { getSprite } from '../utils/sprites.js';
 // Helper: apply attack speed cooldown reduction
 function applyCooldown(base) {
   return player.attackSpeedTimer > 0 ? base * 0.8 : base;
+}
+
+// Helper: get active class mod (if any)
+function getActiveClassMod() {
+  if (!activeClassMod) return null;
+  const mod = getClassModById(activeClassMod);
+  return mod;
 }
 
 export function createPlayer() {
@@ -136,13 +144,24 @@ export function updatePlayer(dt) {
       shootArrow();
     } else if (player.weapon === 'staff' && player.staffOrbTimer <= 0) {
       player.staffOrbTimer = applyCooldown(STAFF_ORB_COOLDOWN);
-      shootStaffOrb();
+      const classMod = getActiveClassMod();
+      if (classMod && classMod.spellOverrides?.leftClick) {
+        classMod.spellOverrides.leftClick();
+      } else {
+        shootStaffOrb();
+      }
     }
   }
 
   if (player.weapon === 'staff' && mouseRightDown && player.staffTimer <= 0 && player.mana >= 5) {
     player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
-    shootFireball(); player.mana -= 5; updateHUD();
+    const classMod = getActiveClassMod();
+    if (classMod && classMod.spellOverrides?.rightClick) {
+      classMod.spellOverrides.rightClick();
+    } else {
+      shootFireball();
+    }
+    player.mana -= 5; updateHUD();
   }
   if (player.weapon === 'bow' && mouseRightDown && player.bombs > 0) {
     throwBomb();
@@ -255,6 +274,65 @@ export function shootFireball() {
   const speed = 6.5;
   fireballsPlayer.push({ x: cx + Math.cos(angle) * 20, y: cy + Math.sin(angle) * 20, vx: Math.cos(angle) * FIREBALL_SPEED, vy: Math.sin(angle) * speed, r, life: 220, maxLife: 220, dissipating: false, dissipateTimer: 0, trail: [] });
   spawnParticles(cx, cy, '#ff8833', 6);
+}
+
+// --- CLASS MOD SPELLS ---
+
+// Lightning Spark (Cloudshaper left-click replacement)
+export function shootLightningSpark() {
+  playSfx('orb_spell');
+  const cx = player.x + player.w / 2;
+  const cy = player.y + player.h / 2 - 1;
+  const angle = getAimAngle();
+  const speed = 9;  // Faster than default orb (6.5)
+  const staffTipDist = 28;
+  const startX = cx + Math.cos(angle) * staffTipDist;
+  const startY = cy + Math.sin(angle) * staffTipDist;
+  
+  // Lightning Spark: smaller, faster projectile with electricity effect
+  playerOrbs.push({
+    x: startX, y: startY,
+    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+    r: 5,  // Smaller than default orb (7)
+    life: 100, maxLife: 100,
+    portalLife: 25,
+    damage: 24,  // Slightly higher than default orb (18)
+    isSpark: true,  // Flag to identify as lightning spark for rendering
+  });
+  
+  spawnParticles(startX, startY, '#00ccff', 8);
+  spawnParticles(startX, startY, '#ffffff', 5);
+}
+
+// Lightning Bolt (Cloudshaper right-click replacement)
+export function shootLightningBolt() {
+  playSfx('fireball_spell');
+  
+  // Lightning Bolt: create an area attack at the cursor location
+  const targetX = mousePos.x + cameraX;
+  const targetY = mousePos.y;
+  const radius = 60;
+  const damage = 45;  // Higher than fireball (35)
+  
+  // Create the lightning bolt projectile with area damage
+  fireballsPlayer.push({
+    x: targetX,
+    y: targetY,
+    vx: 0,
+    vy: 0,
+    r: radius,
+    life: 30,  // Short lived - instantaneous effect
+    maxLife: 30,
+    dissipating: false,
+    dissipateTimer: 0,
+    trail: [],
+    isLightningBolt: true,  // Flag to identify as lightning bolt
+    damage: damage,
+  });
+  
+  // Create impact particles
+  spawnParticles(targetX, targetY, '#00ccff', 15);
+  spawnParticles(targetX, targetY, '#ffffff', 10);
 }
 
 // --- BOMB ---

@@ -58,7 +58,9 @@ export function updatePlayerOrbs(dt) {
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
       if (rectOverlap({x: o.x - o.r, y: o.y - o.r, w: o.r * 2, h: o.r * 2}, e)) {
-        e.hp -= rarityDamage(BASE_ORB_DAMAGE, player.staffRarity) * player.damageMult;
+        // Use custom damage if provided (from class mods), otherwise use default
+        const dmg = o.damage ?? rarityDamage(BASE_ORB_DAMAGE, player.staffRarity);
+        e.hp -= dmg * player.damageMult;
         playSfx('orb_hit'); spawnParticles(o.x, o.y, '#ff44ff', 8); playerOrbs.splice(i, 1);
         if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
         break;
@@ -92,7 +94,9 @@ export function updateFireballs(dt) {
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
       if (rectOverlap({x: f.x - f.r, y: f.y - f.r, w: f.r * 2, h: f.r * 2}, e)) {
-        e.hp -= rarityDamage(BASE_FIREBALL_DAMAGE, player.staffRarity) * player.damageMult;
+        // Use custom damage if provided (from class mods), otherwise use default
+        const dmg = f.damage ?? rarityDamage(BASE_FIREBALL_DAMAGE, player.staffRarity);
+        e.hp -= dmg * player.damageMult;
         e.burnTimer = 300; e.burnDps = 20 / 300;
         spawnParticles(f.x, f.y, '#ff4400', 10); f.dissipating = true; f.dissipateTimer = 20; f.trail = []; playSfx('fireball_explode');
         if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
