@@ -65,6 +65,7 @@ function resetLevel() {
     hp: player.hp, maxHp: player.maxHp, ammo: player.ammo, coins: player.coins,
     weapon: player.weapon, swordRarity: player.swordRarity, bowRarity: player.bowRarity,
     staffRarity: player.staffRarity, mana: player.mana,
+    overshield: player.overshield, maxOvershield: player.maxOvershield,
     fortified: player.fortified && !player.fortifiedUsed,
     fortifiedUsed: player.fortified && !player.fortifiedUsed,
     revive: player.revive || false, regenActive: player.regenActive || false,
