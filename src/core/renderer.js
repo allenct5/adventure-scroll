@@ -6,7 +6,7 @@ import {
   BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_FIREBALL_DAMAGE, rarityDamage,
 } from './constants.js';
 import { platforms, spikes, lavaZones, checkpoint, merchant } from '../scenes/level.js';
-import { cameraX, difficultyLevel, player } from './state.js';
+import { cameraX, difficultyLevel, player, playerClass } from './state.js';
 
 import { ctx } from '../canvas.js';
 
@@ -686,7 +686,12 @@ export function drawDebugStats() {
   const rarity   = isSword ? player.swordRarity : isStaff ? player.staffRarity : player.bowRarity;
   const currWepDmg = Math.round(rarityDamage(baseDmg, rarity) * player.damageMult);
 
-  const panelW = 178, panelH = 76, panelX = W - panelW - 8, panelY = 8;
+  // currDmgReduction: base reduction + fortified bonus + blocking bonus
+  let currDmgReduction = player.damageReduction + (player.fortified ? 0.25 : 0);
+  if (player.blocking && playerClass === 'warrior') currDmgReduction += 0.10;
+  const dmgReductionPct = Math.round(currDmgReduction * 100);
+
+  const panelW = 178, panelH = 90, panelX = W - panelW - 8, panelY = 8;
 
   ctx.save();
   ctx.globalAlpha = 0.85;
@@ -707,6 +712,7 @@ export function drawDebugStats() {
   ctx.fillText(`ATK SPD  : ${currAttSpd.toFixed(2)} atk/s`, panelX + 8, panelY + 33);
   ctx.fillText(`MOV SPD  : ${currMovSpd.toFixed(4)}`,        panelX + 8, panelY + 49);
   ctx.fillText(`WEP DMG  : ${currWepDmg}`,                   panelX + 8, panelY + 65);
+  ctx.fillText(`DMG RED  : ${dmgReductionPct}%`,             panelX + 8, panelY + 81);
 
   ctx.restore();
 }
