@@ -39,7 +39,7 @@ export function createPlayer() {
     onGround: false,
     facingRight: true,
     hp: 100, maxHp: 100,  // overridden per class below
-    overshield: 0, maxOvershield: 50,
+    overshield: 0, maxOvershield: 100,
     weapon: 'sword',
     ammo: 30,
     mana: 20,

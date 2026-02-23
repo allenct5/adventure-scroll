@@ -39,7 +39,7 @@ body {
 #health-bar-bg.soul-bind-active { border-color: #ffdd00; box-shadow: 0 0 8px #ffdd0088; }
 #health-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff2222, #ff6666); border-radius: 2px; }
 #health-bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 0.6rem; color: #fff; text-shadow: 0 0 4px #000, 0 0 8px #000; letter-spacing: 0.05em; pointer-events: none; }
-#overshield-bar-wrap { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+#overshield-bar-wrap { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
 #overshield-label { color: #44aaff; font-family: var(--font-display); font-size: 0.7rem; }
 #overshield-bar-bg { position: relative; width: 140px; height: 12px; background: #0a1a2e; border: 1px solid #2266aa88; border-radius: 2px; overflow: hidden; }
 #overshield-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #44ccff, #88ddff); border-radius: 2px; transition: width 0.15s ease-out; }

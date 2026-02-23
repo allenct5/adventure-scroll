@@ -65,10 +65,11 @@ export function tryDropPowerup(x, y) {
   const roll = Math.random();
   let type = null;
   if      (roll < 0.10) type = 'speedBoost';
-  else if (roll < 0.25) type = 'attackSpeed';
-  else if (roll < 0.45) type = 'health';
-  else if (roll < 0.55) type = 'mana';
-  else if (roll < 0.65) type = 'bomb';
+  else if (roll < 0.20) type = 'overshield';
+  else if (roll < 0.35) type = 'attackSpeed';
+  else if (roll < 0.55) type = 'health';
+  else if (roll < 0.65) type = 'mana';
+  else if (roll < 0.75) type = 'bomb';
   if (!type) return;
   if (type === 'mana' && playerClass !== 'mage')   return;
   if (type === 'bomb' && playerClass !== 'archer') return;
@@ -95,7 +96,8 @@ export function updatePowerups(dt) {
       else if (p.type === 'attackSpeed') { player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 7); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 7); }
       else if (p.type === 'mana')        { player.mana += 5; updateHUD(); }
       else if (p.type === 'bomb')        { player.bombs = Math.min(5, player.bombs + 2); updateHUD(); }
-      const glowCol = p.type === 'health' ? '#ff4466' : p.type === 'speedBoost' ? '#00ff88' : p.type === 'attackSpeed' ? '#ffcc00' : p.type === 'mana' ? '#2288ff' : '#ff8800';
+      else if (p.type === 'overshield')  { player.overshield = Math.min(player.maxOvershield, player.overshield + 25); updateHUD(); }
+      const glowCol = p.type === 'health' ? '#ff4466' : p.type === 'speedBoost' ? '#00ff88' : p.type === 'attackSpeed' ? '#ffcc00' : p.type === 'mana' ? '#2288ff' : p.type === 'overshield' ? '#44ccff' : '#ff8800';
       playSfx('powerup_pickup');
       spawnParticles(p.x + p.w / 2, p.y + p.h / 2, glowCol, 10);
       powerups.splice(i, 1);
@@ -121,6 +123,7 @@ export function drawPowerups() {
     attackSpeed: { glow: '#ffcc00', shadow: '#ffcc00' },
     mana: { glow: '#2288ff', shadow: '#2288ff' },
     bomb: { glow: '#ff6600', shadow: '#ff6600' },
+    overshield: { glow: '#44ccff', shadow: '#44ccff' },
   };
 
   for (const p of powerups) {
@@ -189,6 +192,24 @@ export function drawPowerups() {
         ctx.beginPath(); ctx.moveTo(-8 - m * 2, -2); ctx.lineTo(-12 - m * 3, -4); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(-8 - m * 2,  2); ctx.lineTo(-12 - m * 3,  4); ctx.stroke();
       }
+    } else if (p.type === 'overshield') {
+      ctx.fillStyle = '#44ccff';
+      ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffdd00';
+      const cogTeeth = 8;
+      const outerRadius = 6;
+      const innerRadius = 3;
+      ctx.beginPath();
+      for (let i = 0; i < cogTeeth * 2; i++) {
+        const angle = (i / (cogTeeth * 2)) * Math.PI * 2 + t * 2;
+        const r = i % 2 === 0 ? outerRadius : innerRadius;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
     }
     ctx.restore();
   }
