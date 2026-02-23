@@ -9,6 +9,9 @@ export function updateHUD() {
   const hpPct = Math.max(0, player.hp / player.maxHp) * 100;
   document.getElementById('health-bar').style.width       = `${hpPct}%`;
   document.getElementById('health-bar-text').textContent  = `${Math.max(0, Math.ceil(player.hp))}/${player.maxHp}`;
+  
+  const overshieldPct = Math.max(0, player.overshield / player.maxOvershield) * 100;
+  document.getElementById('overshield-bar-overlay').style.width = `${overshieldPct}%`;
 
   const soulActive = !!player.revive;
   document.getElementById('soul-bind-label').style.display = soulActive ? 'block' : 'none';

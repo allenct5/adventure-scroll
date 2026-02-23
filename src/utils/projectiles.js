@@ -77,7 +77,7 @@ export function updateFireballs(dt) {
       if (f.dissipateTimer <= 0) { fireballsPlayer.splice(i, 1); }
       continue;
     }
-    f.x += f.vx * dt; f.y += f.vy * dt; f.life -= dt;
+    f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 0.0575 * dt; f.life -= dt;
     if (f.life <= 0) { fireballsPlayer.splice(i, 1); continue; }
     if (f.trail) {
       f.trail.push({x: f.x, y: f.y, age: 0});

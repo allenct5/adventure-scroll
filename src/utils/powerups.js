@@ -20,6 +20,7 @@ import { rectOverlap } from './collision.js';
 import { spawnParticles } from './particles.js';
 import { updateHUD } from './hud.js';
 import { playSfx } from './audio.js';
+import { addOvershield } from '../entities/player.js';
 
 import { ctx } from '../canvas.js';
 
@@ -65,43 +66,67 @@ export function tryDropPowerup(x, y) {
   const roll = Math.random();
   let type = null;
   if      (roll < 0.10) type = 'speedBoost';
-  else if (roll < 0.25) type = 'attackSpeed';
-  else if (roll < 0.45) type = 'health';
-  else if (roll < 0.55) type = 'mana';
-  else if (roll < 0.65) type = 'bomb';
+  else if (roll < 0.22) type = 'attackSpeed';
+  else if (roll < 0.40) type = 'health';
+  else if (roll < 0.50) type = 'mana';
+  else if (roll < 0.58) type = 'bomb';
+  else if (roll < 0.68) type = 'overshield';
   if (!type) return;
   if (type === 'mana' && playerClass !== 'mage')   return;
   if (type === 'bomb' && playerClass !== 'archer') return;
   if (performance.now() - lastDropTime[type] < POWERUP_DROP_COOLDOWN) return;
   lastDropTime[type] = performance.now();
-  powerups.push({ x: x - 12, y: y - 10, w: 24, h: 24, type, bobOffset: Math.random() * Math.PI * 2 });
+  powerups.push({ x: x - 12, y: y - 10, w: 24, h: 24, type, bobOffset: Math.random() * Math.PI * 2, createdAt: performance.now() });
 }
 
 export function updatePowerups(dt) {
   player.speedBoostTimer  = Math.max(0, player.speedBoostTimer  - dt);
   player.attackSpeedTimer = Math.max(0, player.attackSpeedTimer - dt);
+  const now = performance.now();
+  const POWERUP_LIFETIME = 30000; // 30 seconds before auto-removal
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
+    // Auto-remove powerups that have been on ground too long
+    if (now - p.createdAt > POWERUP_LIFETIME) {
+      powerups.splice(i, 1);
+      continue;
+    }
     if (rectOverlap(player, p)) {
       if      (p.type === 'health')      { player.hp = Math.min(player.maxHp, player.hp + 20); updateHUD(); }
       else if (p.type === 'speedBoost')  { player.speedBoostTimer  = Math.max(player.speedBoostTimer,  60 * 7); player.speedBoostTimerMax  = Math.max(player.speedBoostTimerMax,  60 * 7); }
       else if (p.type === 'attackSpeed') { player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 7); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 7); }
       else if (p.type === 'mana')        { player.mana += 5; updateHUD(); }
       else if (p.type === 'bomb')        { player.bombs = Math.min(5, player.bombs + 2); updateHUD(); }
+      else if (p.type === 'overshield')  { addOvershield(50); }
       const glowCol = p.type === 'health' ? '#ff4466' : p.type === 'speedBoost' ? '#00ff88' : p.type === 'attackSpeed' ? '#ffcc00' : p.type === 'mana' ? '#2288ff' : '#ff8800';
       playSfx('powerup_pickup');
       spawnParticles(p.x + p.w / 2, p.y + p.h / 2, glowCol, 10);
       powerups.splice(i, 1);
     }
   }
+  if (powerups.length > 0) console.debug(`[Powerups] ${powerups.length} active on ground`);
 }
 
 // ---------------------------------------------------------------------------
 // DRAW
 // ---------------------------------------------------------------------------
 
+// Cached mana gradient to avoid creating it every frame
+let manaGradCache = null;
+let manaGradCanvasSize = null;
+
 export function drawPowerups() {
   const t = Date.now() * 0.003;
+  // Pre-compute color map to avoid repeated ternaries
+  const colorMap = {
+    health: { glow: '#ff2255', shadow: '#ff2244' },
+    speedBoost: { glow: '#00ff88', shadow: '#00ff88' },
+    attackSpeed: { glow: '#ffcc00', shadow: '#ffcc00' },
+    mana: { glow: '#2288ff', shadow: '#2288ff' },
+    bomb: { glow: '#ff6600', shadow: '#ff6600' },
+    overshield: { glow: '#ff9933', shadow: '#ff8800' },
+  };
+
   for (const p of powerups) {
     const sx = p.x - cameraX;
     if (sx > W + 40 || sx < -40) continue;
@@ -111,42 +136,48 @@ export function drawPowerups() {
     ctx.save();
     ctx.translate(sx + p.w / 2, py + p.h / 2);
 
-    const glow = p.type === 'health' ? '#ff2255' : p.type === 'speedBoost' ? '#00ff88' : p.type === 'attackSpeed' ? '#ffcc00' : p.type === 'mana' ? '#2288ff' : '#ff6600';
-    ctx.shadowColor = glow; ctx.shadowBlur = 14 + Math.sin(t * 3 + p.bobOffset) * 4;
+    const colors = colorMap[p.type];
+    const glow = colors.glow;
+    // Reduced shadow blur for better performance (was 14 + sine variation)
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = 10;
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = glow; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.shadowBlur = 0;
 
     if (p.type === 'health') {
-      ctx.fillStyle = '#ff2244'; ctx.shadowColor = '#ff2244'; ctx.shadowBlur = 8;
+      ctx.fillStyle = '#ff2244';
       ctx.beginPath(); ctx.moveTo(0, 4);
       ctx.bezierCurveTo(-9, -3, -9, -10, 0, -6); ctx.bezierCurveTo(9, -10, 9, -3, 0, 4); ctx.fill();
     } else if (p.type === 'mana') {
-      const flaskGrad = ctx.createRadialGradient(-2, 2, 1, 0, 0, 9);
-      flaskGrad.addColorStop(0, '#88ccff'); flaskGrad.addColorStop(0.5, '#2266cc'); flaskGrad.addColorStop(1, '#001166');
-      ctx.fillStyle = flaskGrad; ctx.shadowColor = '#2288ff'; ctx.shadowBlur = 10;
+      // Create gradient only once and cache it
+      if (!manaGradCache || manaGradCanvasSize !== (ctx.canvas.width + ctx.canvas.height)) {
+        manaGradCache = ctx.createRadialGradient(-2, 2, 1, 0, 0, 9);
+        manaGradCache.addColorStop(0, '#88ccff'); manaGradCache.addColorStop(0.5, '#2266cc'); manaGradCache.addColorStop(1, '#001166');
+        manaGradCanvasSize = ctx.canvas.width + ctx.canvas.height;
+      }
+      ctx.fillStyle = manaGradCache;
       ctx.beginPath(); ctx.ellipse(0, 3, 7, 8, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#114499'; ctx.fillRect(-3, -7, 6, 5);
       ctx.fillStyle = '#cc8833'; ctx.fillRect(-4, -9, 8, 3);
       ctx.fillStyle = 'rgba(255,255,255,0.35)';
       ctx.beginPath(); ctx.ellipse(-2, 0, 2, 4, -0.4, 0, Math.PI * 2); ctx.fill();
     } else if (p.type === 'bomb') {
-      ctx.fillStyle = '#333333'; ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 10;
+      ctx.fillStyle = '#333333';
       ctx.beginPath(); ctx.arc(0, 2, 8, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#996633'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(3, -5); ctx.quadraticCurveTo(7, -9, 4, -12); ctx.stroke();
-      ctx.fillStyle = '#ffee44'; ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 8;
+      ctx.fillStyle = '#ffee44';
       ctx.beginPath(); ctx.arc(4, -12, 2.5, 0, Math.PI * 2); ctx.fill();
     } else if (p.type === 'speedBoost') {
-      ctx.fillStyle = '#00ff88'; ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 10;
+      ctx.fillStyle = '#00ff88';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(-4, -6); ctx.lineTo(4, 0); ctx.lineTo(-4, 6); ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(0, -6); ctx.lineTo(8, 0); ctx.lineTo(0, 6); ctx.stroke();
     } else if (p.type === 'attackSpeed') {
-      ctx.strokeStyle = '#ffcc00'; ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 10;
+      ctx.strokeStyle = '#ffcc00';
       ctx.lineWidth = 2; ctx.lineCap = 'round';
       ctx.save();
       const swingAngle = Math.sin(t * 4 + p.bobOffset) * 0.45;
@@ -162,8 +193,25 @@ export function drawPowerups() {
         ctx.beginPath(); ctx.moveTo(-8 - m * 2, -2); ctx.lineTo(-12 - m * 3, -4); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(-8 - m * 2,  2); ctx.lineTo(-12 - m * 3,  4); ctx.stroke();
       }
+    } else if (p.type === 'overshield') {
+      // Draw orange shield with yellow cog
+      ctx.fillStyle = '#ff7722';
+      ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill();
+      // Yellow cog center
+      ctx.fillStyle = '#ffdd44';
+      ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
+      // Cog teeth (6 teeth)
+      ctx.fillStyle = '#ffdd44';
+      for (let tooth = 0; tooth < 6; tooth++) {
+        const angle = (tooth / 6) * Math.PI * 2;
+        const x = Math.cos(angle) * 6;
+        const y = Math.sin(angle) * 6;
+        ctx.beginPath();
+        const size = 1.2;
+        ctx.rect(x - size/2, y - size/2, size, size);
+        ctx.fill();
+      }
     }
-    ctx.shadowBlur = 0;
     ctx.restore();
   }
 }

@@ -22,7 +22,7 @@ export const BASE_ARROW_DAMAGE    = 30;
 export const BASE_FIREBALL_DAMAGE = 35;
 export const BASE_ORB_DAMAGE      = 18;
 
-export const BOMB_GRAVITY        = 0.18;
+export const BOMB_GRAVITY        = 0.207;
 export const BOMB_EXPLODE_RADIUS = 60;
 
 export const POWERUP_DROP_COOLDOWN = 5000; // ms

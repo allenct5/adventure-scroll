@@ -39,6 +39,7 @@ export function createPlayer() {
     onGround: false,
     facingRight: true,
     hp: 100, maxHp: 100,  // overridden per class below
+    overshield: 0, maxOvershield: 50,
     weapon: 'sword',
     ammo: 30,
     mana: 20,
@@ -250,7 +251,8 @@ export function shootFireball() {
   const cy    = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
   const r     = 10;
-  fireballsPlayer.push({ x: cx + Math.cos(angle) * 20, y: cy + Math.sin(angle) * 20, vx: Math.cos(angle) * FIREBALL_SPEED, vy: Math.sin(angle) * FIREBALL_SPEED, r, life: 220, maxLife: 220, dissipating: false, dissipateTimer: 0, trail: [] });
+  const speed = 6.5;
+  fireballsPlayer.push({ x: cx + Math.cos(angle) * 20, y: cy + Math.sin(angle) * 20, vx: Math.cos(angle) * FIREBALL_SPEED, vy: Math.sin(angle) * speed, r, life: 220, maxLife: 220, dissipating: false, dissipateTimer: 0, trail: [] });
   spawnParticles(cx, cy, '#ff8833', 6);
 }
 
@@ -283,11 +285,24 @@ export function damagePlayer(amount, killerType = null) {
     playSfx('shield_block');
     spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#88ccff', 8);
   }
+  
+  // Apply damage to overshield first, then HP
+  if (player.overshield > 0) {
+    const overshieldDamage = Math.min(dmg, player.overshield);
+    player.overshield -= overshieldDamage;
+    dmg -= overshieldDamage;
+  }
   player.hp -= dmg;
+  
   player.invincible = 60;
   if (killerType) player._lastKillerType = killerType;
   updateHUD();
   if (player.hp <= 0) killPlayer('damage');
+}
+
+export function addOvershield(amount) {
+  player.overshield = Math.min(player.overshield + amount, player.maxOvershield);
+  updateHUD();
 }
 
 export function killPlayer(cause) {
