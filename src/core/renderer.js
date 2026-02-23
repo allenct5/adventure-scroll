@@ -367,10 +367,10 @@ export let buffIconPositions = [];
 
 // Buff descriptions for tooltips
 const BUFF_DESCRIPTIONS = {
-  speed:    '+25% Movement Speed',
-  atkspeed: '−20% Attack Cooldown',
-  fortify:  'Damage Reduction',
-  berserk:  'Increased Damage',
+  speed:    'Your movement speed is increased by 25%.',
+  atkspeed: 'Attack speed cooldown reduced by 20%.',
+  fortify:  'Attacks deal 25% less damage to you.',
+  berserk:  'Increases all damage you deal by 30%.',
   revive:   'Soul Bind Active',
 };
 
