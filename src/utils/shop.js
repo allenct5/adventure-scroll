@@ -16,6 +16,7 @@ export const SHOP_ITEMS = [
   { id: 'berserker',   name: 'Berserker Rage',      cost: 15,  icon: '👹', limit: 1, tooltip: 'Increases all damage you deal by 30% for the duration of the next level.' },
   { id: 'soulBind',    name: 'Soul Bind',           cost: 20,  icon: '💀', limit: 1, tooltip: 'Binds your soul to life. If you take lethal damage, you are instantly revived on the nearest ground with 50% of your max HP, surrounded by a glowing halo.' },
   { id: 'cardio',      name: 'Cardio',                cost: 20,  icon: '❤️', limit: 1, tooltip: 'Grants you 5 HP regeneration per second for this level and all future levels.' },
+  { id: 'pureWater',   name: 'Pure Water',            cost: 20,  icon: '💧', limit: 1, tooltip: 'Increases your mana regeneration by 5 per 10 seconds for this level and all future levels.' },
   // WIP items intentionally omitted until implemented
 ];
 
@@ -122,6 +123,7 @@ export function buyItem(item) {
     case 'pu_speed':  player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 10); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 10); msg.textContent = 'Attack speed doubled for 10s!'; break;
     case 'berserker': player.damageMult = (player.damageMult || 1) * 1.3; msg.textContent = 'Berserker Rage — +30% damage this level!'; break;
     case 'cardio':    player.hpRegen += 5; msg.textContent = `HP Regen +5/s (Total: ${player.hpRegen}/s)`; break;
+    case 'pureWater': player.manaRegen += 5; msg.textContent = `Mana Regen +5/10s (Total: ${player.manaRegen}/10s)`; break;
   }
   playSfx('shop_purchase');
   updateHUD();

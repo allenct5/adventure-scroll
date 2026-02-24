@@ -121,6 +121,7 @@ export function createPlayer() {
     damageMult: 1,
     damageReduction: 0,  // fraction of damage to reduce (0.0 - 1.0)
     hpRegen: 0,  // HP regeneration per second
+    manaRegen: 0,  // mana regeneration per 10 seconds
     lastManaRegenTime: 0,
     lastStaminaRegenTime: 0,
     lastHpRegenTime: 0,
@@ -250,7 +251,9 @@ export function updatePlayer(dt) {
     const now = performance.now();
     if (player.lastManaRegenTime === 0) player.lastManaRegenTime = now;
     const timeSinceLast = now - player.lastManaRegenTime;
-    player.mana = Math.min(25, player.mana + (0.5 / 1000) * timeSinceLast);
+    const baseRegen = 0.5 / 1000;  // 0.5 mana per second
+    const purchasedRegen = (player.manaRegen / 10000);  // per 10 seconds to per millisecond
+    player.mana = Math.min(25, player.mana + (baseRegen + purchasedRegen) * timeSinceLast);
     player.lastManaRegenTime = now;
     updateHUD();
   }

@@ -30,6 +30,7 @@ export function updateHUD() {
     const manaPct = Math.max(0, player.mana / MAX_MANA) * 100;
     document.getElementById('mana-bar').style.width      = `${manaPct}%`;
     document.getElementById('mana-bar-text').textContent = `${Math.max(0, Math.ceil(player.mana))}/${MAX_MANA}`;
+    document.getElementById('mana-bar-regen').textContent = player.manaRegen > 0 ? `+${player.manaRegen}/10s` : '+0/10s';
   } else {
     manaWrap.style.display = 'none';
   }
