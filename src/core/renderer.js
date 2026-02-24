@@ -117,42 +117,7 @@ export function drawBackground() {
       ctx.fillStyle = '#5a6e8a';
       ctx.beginPath(); ctx.rect(wwx, wy+wh*0.25, ww, wh*0.75); ctx.arc(wwx+ww/2, wy+wh*0.25, ww/2, Math.PI, 0); ctx.fill();
     }
-    for (let i = 0; i < windowXs.length - 1; i++) {
-      const tx = (windowXs[i] + windowXs[i+1]) / 2 + 11, ty = 230;
-      const flicker1 = Math.sin(t * 4.3 + i * 2.1) * 0.3;
-      const flicker2 = Math.sin(t * 6.7 + i * 1.4) * 0.25;
-      const flicker3 = Math.sin(t * 2.1 + i * 0.8) * 0.2;
-      const flicker = 0.75 + flicker1 + flicker2 + flicker3;
-      const flickerSafe = Math.max(0.01, flicker);
 
-      const glow = ctx.createRadialGradient(tx, ty, 0, tx, ty, 70 * flickerSafe);
-      glow.addColorStop(0, `rgba(255,180,60,${0.25*flickerSafe})`);
-      glow.addColorStop(0.5, `rgba(255,100,20,${0.12*flickerSafe})`);
-      glow.addColorStop(1, 'rgba(255,50,0,0)');
-      ctx.fillStyle = glow; ctx.fillRect(tx-70, ty-70, 140, 140);
-
-      ctx.fillStyle = '#5a4020'; ctx.fillRect(tx-4, ty+8, 8, 20);
-      ctx.fillStyle = '#3a2810'; ctx.fillRect(tx-7, ty+6, 14, 6);
-
-      for (let layer = 0; layer < 2; layer++) {
-        const layerPhase = layer * 0.5;
-        const layerWave = Math.sin(t*5+i*1.2+layerPhase)*0.2 + Math.sin(t*3.1+i*0.7+layerPhase)*0.15;
-        const layerIntensity = 1.0 - layer * 0.4;
-        const baseHue = 120 + Math.sin(t*8+i*1.7+layerPhase)*50;
-        const flameHeight = Math.max(0.5, 12*flickerSafe + 4*layerWave);
-        const flameWidth = Math.max(0.5, 5 + Math.sin(t*3.3+i+layerPhase)*2.5);
-
-        ctx.fillStyle = `rgba(255,${Math.max(60,baseHue|0)},0,${0.7*layerIntensity})`;
-        ctx.beginPath();
-        ctx.ellipse(tx, ty-flameHeight, flameWidth, flameHeight, Math.sin(t*4+i+layerPhase)*0.4, 0, Math.PI*2);
-        ctx.fill();
-      }
-
-      ctx.fillStyle = 'rgba(255,240,120,0.9)';
-      ctx.beginPath();
-      ctx.ellipse(tx, ty-2, 2.5, Math.max(0.5, 5*flickerSafe), 0, 0, Math.PI*2);
-      ctx.fill();
-    }
 
   } else {
     // LAVA CAVE
