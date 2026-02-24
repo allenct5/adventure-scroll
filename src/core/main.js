@@ -167,7 +167,12 @@ function selectClass(cls) {
   document.getElementById('class-select').style.display = 'none';
   setPlayer(createPlayer());
   loadLevelForDifficulty(difficultyLevel);
+  clearCombatArrays();
+  clearParticles();
   populateEnemies();
+  resetDropTimes();
+  clearShopPurchased();
+  clearGroundHistory();
   setGameState('playing');
   updateHUD();
   updateMusicForDifficulty(difficultyLevel);
