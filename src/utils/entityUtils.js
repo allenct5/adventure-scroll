@@ -26,6 +26,14 @@ export function killEntity(entity, array, index) {
   if (index !== undefined && index >= 0) {
     array.splice(index, 1);
   }
+  
+  // If friendly, also remove from playerAllies to properly update summon count
+  if (entity.friendly) {
+    const allyIndex = playerAllies.indexOf(entity);
+    if (allyIndex !== -1) {
+      playerAllies.splice(allyIndex, 1);
+    }
+  }
 }
 
 /**

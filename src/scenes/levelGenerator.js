@@ -89,9 +89,9 @@ function generatePlatforms(rng, platformDensity) {
   const GROUND_H = 80;
   const platforms = [];
 
-  // Define 4 pit locations (evenly spaced across level, ~220px wide = jumpable)
+  // Define 4 pit locations (evenly spaced across level, ~140px wide = jumpable with current physics)
   const pitPositions = [300, 940, 1580, 2220];
-  const pitGaps = [520, 1160, 1800, 2440];
+  const pitGaps = [440, 1080, 1720, 2360];
 
   // Ground sections between pits
   const groundSections = [
@@ -186,8 +186,8 @@ function generateSpikes(rng, hazardDensity) {
   const spikeCount = Math.floor(5 * hazardDensity);
   for (let i = 0; i < spikeCount; i++) {
     const pitIndex = i % pitPositions.length;
-    const x = (i < pitPositions.length) ? pitGaps[pitIndex] - 60 : rng.nextInt(0, 5129);
-    const width = rng.nextInt(50, 90);
+    const x = (i < pitPositions.length) ? pitPositions[pitIndex] : rng.nextInt(0, 5129);
+    const width = 140;
 
     spikes.push({
       x: Math.max(0, Math.min(x, 5129 - width)),
@@ -209,21 +209,25 @@ function generateLavaZones(rng, hazardDensity, difficulty) {
   // Difficulty 5 (lava cave) has more lava
   if (difficulty === 5) {
     const lavaCount = Math.floor(3 + hazardDensity * 2);
+    const pitPositions = [300, 940, 1580, 2220];
     for (let i = 0; i < lavaCount; i++) {
+      const x = pitPositions[i % pitPositions.length];
       lavaZones.push({
-        x: rng.nextInt(0, 5000),
+        x,
         y: 452,
-        w: rng.nextInt(60, 100),
+        w: 140,
         h: 28,
       });
     }
   } else if (difficulty >= 3) {
     const lavaCount = Math.floor(2 * hazardDensity);
+    const pitPositions = [300, 940, 1580, 2220];
     for (let i = 0; i < lavaCount; i++) {
+      const x = pitPositions[i % pitPositions.length];
       lavaZones.push({
-        x: rng.nextInt(1000, 4000),
+        x,
         y: 452,
-        w: rng.nextInt(60, 80),
+        w: 140,
         h: 28,
       });
     }

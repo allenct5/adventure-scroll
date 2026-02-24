@@ -318,10 +318,14 @@ export function updateEnemies(dt) {
             e.jumpCooldown = Math.max(0, e.jumpCooldown - dt);
             const deadlyWallAhead = deadlyHazardAhead(e, moveDir);
             const onGroundPlatform = platforms.some(p => p.type === 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
+            const onFloatingPlatform = platforms.some(p => p.type !== 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
+            
+            // Pit detection: only check for pits on ground platforms, allow falling off floating platforms
             const pitWidth = e.onGround && onGroundPlatform ? measurePitAhead(e, moveDir) : 0;
             const pitAhead = pitWidth > 0;
+            
             if (pitAhead && e.onGround) {
-              // Back away from pit instead of trying to jump
+              // Back away from pit instead of trying to jump (only for ground platforms)
               e.vx = -moveDir * effectiveSpeed * 0.6;
             } else if (dist > 38 && !deadlyWallAhead && !pitAhead) {
               e.vx = moveDir * effectiveSpeed;
