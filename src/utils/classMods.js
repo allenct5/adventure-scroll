@@ -34,9 +34,22 @@ export const classMod_Cloudshaper = {
   },
 };
 
+export const classMod_Summoner = {
+  id: 'classMod_Summoner',
+  displayName: 'Summoner',
+  classRequired: 'mage',
+  description: 'Summon friendly allies to fight alongside you. Left-click: Wandering Orc. Right-click: Raised Skull.',
+  weaponOverride: 'staff',
+  weaponVariant: 'summoner',
+  spellOverrides: {
+    leftClick: null,  // Will be set by initializeClassMods()
+    rightClick: null, // Will be set by initializeClassMods()
+  },
+};
+
 // All available class mods, organized by class
 export const CLASS_MODS = {
-  mage: [classMod_Cloudshaper],
+  mage: [classMod_Cloudshaper, classMod_Summoner],
   archer: [],
   warrior: [],
 };
@@ -64,7 +77,10 @@ export function getClassModsForClass(classType) {
  * Initialize class mod spell overrides (must be called after player functions are loaded)
  * This avoids circular import issues by setting up spell function references after both modules are loaded.
  */
-export function initializeClassModSpellOverrides(shootLightningSpark, shootLightningBolt) {
+export function initializeClassModSpellOverrides(shootLightningSpark, shootLightningBolt, summonWanderingOrc, summonRaisedSkull) {
   classMod_Cloudshaper.spellOverrides.leftClick = shootLightningSpark;
   classMod_Cloudshaper.spellOverrides.rightClick = shootLightningBolt;
+  
+  classMod_Summoner.spellOverrides.leftClick = summonWanderingOrc;
+  classMod_Summoner.spellOverrides.rightClick = summonRaisedSkull;
 }

@@ -17,6 +17,8 @@ export const FIREBALL_SPEED    = 5.408;
 export const FIREBALL_COOLDOWN = 1100;
 export const STAFF_ORB_COOLDOWN = 600;
 export const LIGHTNING_BOLT_COOLDOWN = 3000;  // 3 seconds
+export const ORC_SUMMON_COOLDOWN = 1200;    // 1.2 seconds
+export const SKULL_SUMMON_COOLDOWN = 1200;  // 1.2 seconds
 
 export const BASE_SWORD_DAMAGE    = 40;
 export const BASE_ARROW_DAMAGE    = 30;

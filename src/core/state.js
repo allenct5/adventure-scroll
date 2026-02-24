@@ -19,6 +19,7 @@ export let merlinRandomAppearance = false; // 10% chance Merlin appears when mer
 
 export let player    = null; // set by player.js createPlayer()
 export let enemies   = [];
+export let playerAllies = [];  // Friendly summons (mage class mod)
 export let arrows    = [];
 export let fireballsPlayer = [];
 export let playerOrbs = [];
@@ -64,6 +65,7 @@ export function resetJackpotTime() { lastJackpotTime = -Infinity; }
 
 export function clearCombatArrays() {
   enemies.length = 0;
+  playerAllies.length = 0;
   arrows.length = 0;
   fireballsPlayer.length = 0;
   playerOrbs.length = 0;

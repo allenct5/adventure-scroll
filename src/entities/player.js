@@ -3,8 +3,8 @@
 import {
   GRAVITY, PLAYER_SPEED, JUMP_FORCE, SWORD_RANGE, SWORD_COOLDOWN,
   ARROW_SPEED, ARROW_COOLDOWN, FIREBALL_SPEED, FIREBALL_COOLDOWN,
-  STAFF_ORB_COOLDOWN, LIGHTNING_BOLT_COOLDOWN, BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE,
-  BASE_FIREBALL_DAMAGE, BASE_ORB_DAMAGE, BOMB_GRAVITY, BOMB_EXPLODE_RADIUS,
+  STAFF_ORB_COOLDOWN, LIGHTNING_BOLT_COOLDOWN, ORC_SUMMON_COOLDOWN, SKULL_SUMMON_COOLDOWN,
+  BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_FIREBALL_DAMAGE, BASE_ORB_DAMAGE, BOMB_GRAVITY, BOMB_EXPLODE_RADIUS,
   RARITY, rarityDamage, W, H, LEVEL_WIDTH,
 } from '../core/constants.js';
 import { platforms, spikes, lavaZones, checkpoint } from '../scenes/level.js';
@@ -12,7 +12,7 @@ import {
   player, setPlayer, playerClass, activeClassMod, cameraX, setCameraX,
   preModWeapon, preModWeaponRarity, setPreModWeapon, setPreModWeaponRarity,
   keys, mouseDown, mouseRightDown, mousePos,
-  arrows, fireballsPlayer, playerOrbs, playerBombs, enemies,
+  arrows, fireballsPlayer, playerOrbs, playerBombs, enemies, playerAllies,
   playerGroundHistory, clearGroundHistory, godMode, difficultyLevel,
   setGameState, setMouseRightDown, setActiveClassMod,
 } from '../core/state.js';
@@ -22,7 +22,7 @@ import { updateHUD, showGameOver } from '../utils/hud.js';
 import { playDeathMusic, playSfx } from '../utils/audio.js';
 import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
-import { ENEMY_DISPLAY_NAMES } from './enemies.js';
+import { ENEMY_DISPLAY_NAMES, spawnEnemy } from './enemies.js';
 import { getClassModById } from '../utils/classMods.js';
 
 import { ctx } from '../canvas.js';
@@ -295,6 +295,9 @@ export function swordAttack() {
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i];
     if (rectOverlap(hitRect, e)) {
+      // Skip friendly allies
+      if (e.friendly) continue;
+      
       e.hp -= rarityDamage(BASE_SWORD_DAMAGE, player.swordRarity) * player.damageMult;
       spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
       e.vx = player.facingRight ? 6 : -6;
@@ -437,6 +440,67 @@ export function shootLightningBolt() {
     boltHeight: 600,  // Tall rectangular damage field
     hitSomething: false,  // Flag to prevent multiple hits
   });
+}
+
+// --- SUMMONER SPELLS ---
+
+// Summon Wandering Orc (Summoner left-click)
+export function summonWanderingOrc() {
+  playSfx('orb_spell');
+  const cx = player.x + player.w / 2;
+  const cy = player.y + player.h / 2 - 1;
+  const angle = getAimAngle();
+  const staffTipDist = 28;
+  const summonX = cx + Math.cos(angle) * staffTipDist;
+  let summonY = cy + Math.sin(angle) * staffTipDist - 60;  // Spawn above ground to avoid falling through
+  
+  // Find ground below summoning point
+  for (const platform of platforms) {
+    if (platform.y >= summonY && platform.x < summonX + 30 && platform.x + platform.w > summonX - 30) {
+      summonY = Math.min(summonY, platform.y - 44);  // Position just above platform
+    }
+  }
+  
+  // Create friendly orc
+  const ally = spawnEnemy('outdoorOrc', summonX, summonY);
+  ally.friendly = true;
+  ally.aggroRange = 250;
+  ally.state = 'idle';
+  ally.spawnX = summonX;
+  ally.spawnY = summonY;
+  playerAllies.push(ally);
+  
+  spawnParticles(summonX, summonY, '#44dd44', 10);
+  spawnParticles(summonX, summonY, '#88ff88', 6);
+}
+
+// Summon Raised Skull (Summoner right-click)
+export function summonRaisedSkull() {
+  playSfx('fireball_spell');
+  const cx = player.x + player.w / 2;
+  const cy = player.y + player.h / 2 - 5;
+  const angle = getAimAngle();
+  const summonX = cx + Math.cos(angle) * 30;
+  let summonY = cy + Math.sin(angle) * 30 - 50;  // Spawn above ground
+  
+  // Find ground below summoning point
+  for (const platform of platforms) {
+    if (platform.y >= summonY && platform.x < summonX + 28 && platform.x + platform.w > summonX - 28) {
+      summonY = Math.min(summonY, platform.y - 28);  // Position just above platform
+    }
+  }
+  
+  // Create friendly skull
+  const ally = spawnEnemy('castleSkull', summonX, summonY);
+  ally.friendly = true;
+  ally.state = 'idle';
+  ally.spawnX = summonX;
+  ally.spawnY = summonY;
+  ally.aggroRange = 280;
+  playerAllies.push(ally);
+  
+  spawnParticles(summonX, summonY, '#ffcc00', 12);
+  spawnParticles(summonX, summonY, '#ff9900', 8);
 }
 
 // --- BOMB ---

@@ -4,7 +4,7 @@ import { GRAVITY, JUMP_FORCE, ENEMY_SPEED_BASE, W, H } from '../core/constants.j
 import { platforms, ENEMY_SPAWN_POINTS, SKULL_SPAWN_POINTS, PLAYER_START_PLATFORM } from '../scenes/level.js';
 import {
   player, playerClass, cameraX,
-  enemies, enemyProjectiles, difficultyLevel,
+  enemies, playerAllies, enemyProjectiles, difficultyLevel,
 } from '../core/state.js';
 import { rectOverlap, resolvePlayerPlatforms, hazardAhead, deadlyHazardAhead, measurePitAhead } from '../utils/collision.js';
 import { spawnParticles, spawnBloodParticles } from '../utils/particles.js';
@@ -103,25 +103,60 @@ export function populateEnemies() {
 }
 
 export function updateEnemies(dt) {
+  // Helper: Find nearest hostile enemy for friendly units
+  function findNearestHostileTarget(friendlyEnemy) {
+    let nearest = null;
+    let nearestDist = Infinity;
+    for (const e of enemies) {
+      if (e === friendlyEnemy || e.friendly) continue;  // Skip self and other friendlies
+      const dx = e.x - friendlyEnemy.x;
+      const dy = e.y - friendlyEnemy.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearest = e;
+      }
+    }
+    return nearest;
+  }
+
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i];
 
     // --- SKULL ---
     if (isSkull(e.type)) {
       e.sineTime += dt * 0.04;
-      const dx   = (player.x + player.w / 2) - (e.x + e.w / 2);
-      const dy   = (player.y + player.h / 2) - (e.y + e.h / 2);
+      
+      // Determine target: player if hostile, nearest enemy if friendly
+      let targetX, targetY, targetDist;
+      if (e.friendly) {
+        const target = findNearestHostileTarget(e);
+        if (target) {
+          targetX = target.x + target.w / 2;
+          targetY = target.y + target.h / 2;
+        } else {
+          targetX = e.spawnX;
+          targetY = e.spawnY;
+        }
+      } else {
+        targetX = player.x + player.w / 2;
+        targetY = player.y + player.h / 2;
+      }
+      
+      const dx = targetX - (e.x + e.w / 2);
+      const dy = targetY - (e.y + e.h / 2);
       const dist = Math.hypot(dx, dy);
-      if (e.state === 'idle' && e.idleTimer <= 0 && dist < e.aggroRange && !player.dead) e.state = 'aggro';
-      if (e.state === 'aggro' && (dist > e.aggroRange + 60 || player.dead)) { e.state = 'idle'; e.idleTimer = 60; }
+      
+      if (e.state === 'idle' && e.idleTimer <= 0 && dist < e.aggroRange && (!player.dead || e.friendly)) e.state = 'aggro';
+      if (e.state === 'aggro' && (dist > e.aggroRange + 60 || (!e.friendly && player.dead))) { e.state = 'idle'; e.idleTimer = 60; }
       if (e.idleTimer > 0) e.idleTimer -= dt;
 
       if (e.knockbackTimer > 0) { e.knockbackTimer -= dt; e.vx *= 0.82; e.vy *= 0.82; }
       else if (e.state === 'idle') {
         const PATROL_RANGE = 120;
-        const targetX = e.spawnX + Math.sin(e.sineTime * 0.7 + e.sineOffset) * PATROL_RANGE;
-        const targetY = e.spawnY + Math.sin(e.sineTime * 1.4 + e.sineOffset) * 30;
-        e.vx += (targetX - e.x) * 0.04 * dt; e.vy += (targetY - e.y) * 0.04 * dt;
+        const patrolX = e.spawnX + Math.sin(e.sineTime * 0.7 + e.sineOffset) * PATROL_RANGE;
+        const patrolY = e.spawnY + Math.sin(e.sineTime * 1.4 + e.sineOffset) * 30;
+        e.vx += (patrolX - e.x) * 0.04 * dt; e.vy += (patrolY - e.y) * 0.04 * dt;
         e.vx *= 0.92; e.vy *= 0.92; e.facingRight = e.vx > 0;
       } else if (e.bouncing) {
         e.vx *= Math.pow(0.88, dt); e.vy *= Math.pow(0.88, dt);
@@ -133,7 +168,8 @@ export function updateEnemies(dt) {
         e.facingRight = dx > 0;
         if (dist < 36 && e.attackTimer <= 0) {
           e.attackTimer = 90;
-          if (player.invincible === 0) damagePlayer(Math.round(8 * Math.pow(1.2, difficultyLevel - 1)), e.type);
+          // Friendly skulls don't damage the player
+          if (!e.friendly && player.invincible === 0) damagePlayer(Math.round(8 * Math.pow(1.2, difficultyLevel - 1)), e.type);
           const BOUNCE_SPEED = 5.5;
           e.vx = -(dx / mag) * BOUNCE_SPEED; e.vy = -(dy / mag) * BOUNCE_SPEED - 1.5;
           e.bouncing = true; e.bounceTimer = 45;
@@ -151,16 +187,34 @@ export function updateEnemies(dt) {
 
     // --- GROUND ENEMIES ---
     e.vy += GRAVITY * 1.7 * dt;
-    const dx   = player.x - e.x;
+    
+    // Determine target for hostile vs friendly
+    let targetX, targetY, targetEntity;
+    if (e.friendly) {
+      targetEntity = findNearestHostileTarget(e);
+      if (targetEntity) {
+        targetX = targetEntity.x;
+        targetY = targetEntity.y;
+      } else {
+        targetX = e.spawnX;
+        targetY = e.spawnY;
+      }
+    } else {
+      targetX = player.x;
+      targetY = player.y;
+      targetEntity = player;
+    }
+    
+    const dx   = targetX - e.x;
     const dist = Math.abs(dx);
     const enemyScreenX  = e.x - cameraX;
     const playerOnScreen = (player.x - cameraX) > -50 && (player.x - cameraX) < W + 50;
     const enemyOnScreen  = enemyScreenX > -100 && enemyScreenX < W + 100;
     const meleeAggroRange = 180;
     const canAggro = isOrc(e.type) ? (dist < meleeAggroRange && enemyOnScreen) : (playerOnScreen && enemyOnScreen);
-    if (e.state === 'idle' && e.idleTimer <= 0 && canAggro && !player.dead) e.state = 'aggro';
-    const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && enemyOnScreen) : playerOnScreen;
-    if (e.state === 'aggro' && (!stillAggro || player.dead)) { e.state = 'idle'; e.idleTimer = 60; }
+    if (e.state === 'idle' && e.idleTimer <= 0 && canAggro && (!player.dead || e.friendly)) e.state = 'aggro';
+    const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && enemyOnScreen) : (playerOnScreen && !(!e.friendly && player.dead));
+    if (e.state === 'aggro' && (!stillAggro || (!e.friendly && player.dead))) { e.state = 'idle'; e.idleTimer = 60; }
 
     if (e.knockbackTimer > 0) { e.knockbackTimer -= dt; e.vx *= 0.85; }
     else {
@@ -172,7 +226,7 @@ export function updateEnemies(dt) {
           e.vx = e.patrolDir * PATROL_SPEED; e.facingRight = e.patrolDir > 0;
         }
       } else {
-        if (!player.dead) {
+        if (!player.dead || e.friendly) {
           const moveDir = dx > 0 ? 1 : -1;
           if (isOrc(e.type)) {
             // Enrage below threshold — set once and never unset
@@ -195,13 +249,14 @@ export function updateEnemies(dt) {
             } else if (dist > 38 && !deadlyWallAhead && !pitAhead) {
               e.vx = moveDir * effectiveSpeed;
             } else if (deadlyWallAhead) { e.vx *= 0.8; }
-            const playerFeetY = player.y + player.h;
-            const sameLevel   = playerFeetY > e.y - 10 && player.y < e.y + e.h + 10;
+            const targetFeetY = targetEntity.y + targetEntity.h;
+            const sameLevel   = targetFeetY > e.y - 10 && targetEntity.y < e.y + e.h + 10;
             if (dist < 42 && e.attackTimer <= 0 && sameLevel) {
               e.attackTimer = Math.round(112 * cooldownMult);
               const baseDmg = Math.round(12 * Math.pow(1.2, difficultyLevel - 1) * zoneBuffs.enemyDamageMult);
               playSfx('axe_attack');
-              if (player.invincible === 0) damagePlayer(baseDmg, e.type);
+              // Friendly orcs don't damage the player
+              if (!e.friendly && player.invincible === 0) damagePlayer(baseDmg, e.type);
             }
           } else {
             // Mage
@@ -214,9 +269,9 @@ export function updateEnemies(dt) {
             e.fireTimer -= dt;
             if (e.fireTimer <= 0 && dist < e.aggroRange) {
               e.fireTimer = 150;
-              const dy2 = (player.y + player.h / 2) - (e.y + e.h / 2);
+              const dy2 = (targetY + targetEntity.h / 2) - (e.y + e.h / 2);
               const mag  = Math.sqrt(dx * dx + dy2 * dy2) || 1;
-              enemyProjectiles.push({ x: e.x+e.w/2, y: e.y+e.h/2, vx: moveDir*5*(Math.abs(dx)/mag), vy: dy2/mag*5, life: 100, r: 7, killerType: e.type });
+              enemyProjectiles.push({ x: e.x+e.w/2, y: e.y+e.h/2, vx: moveDir*5*(Math.abs(dx)/mag), vy: dy2/mag*5, life: 100, r: 7, killerType: e.type, friendly: e.friendly });
               playSfx('orb_spell');
             }
           }
@@ -274,7 +329,10 @@ export function updateEnemies(dt) {
       continue;
     }
     if (!player.dead && player.invincible === 0 && rectOverlap({x:p.x-3,y:p.y-3,w:6,h:6}, player)) {
-      damagePlayer(Math.round(18 * Math.pow(1.2, difficultyLevel - 1)), p.killerType || null);
+      // Friendly projectiles don't damage the player
+      if (!p.friendly) {
+        damagePlayer(Math.round(18 * Math.pow(1.2, difficultyLevel - 1)), p.killerType || null);
+      }
       playSfx('orb_hit'); spawnParticles(p.x, p.y, projectileColor, 8); enemyProjectiles.splice(i, 1);
     }
   }

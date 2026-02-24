@@ -31,6 +31,9 @@ export function updateArrows(dt) {
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
       if (!remove && rectOverlap({x: a.x - 4, y: a.y - 4, w: 8, h: 8}, e)) {
+        // Skip friendly allies
+        if (e.friendly) continue;
+        
         e.hp -= rarityDamage(BASE_ARROW_DAMAGE, player.bowRarity) * player.damageMult;
         spawnBloodParticles(a.x, a.y); playSfx('sword_attack'); remove = true;
         if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
@@ -74,6 +77,9 @@ export function updatePlayerOrbs(dt) {
       if (rectOverlap({x: o.x - o.r, y: o.y - o.r, w: o.r * 2, h: o.r * 2}, e)) {
         // Check if this projectile has already hit this enemy (for piercing)
         if (o.hitEnemies && o.hitEnemies.has(j)) continue;
+        
+        // Skip friendly allies
+        if (e.friendly) continue;
         
         // Use custom damage if provided (from class mods), otherwise use default
         const dmg = o.damage ?? rarityDamage(BASE_ORB_DAMAGE, player.staffRarity);
@@ -138,7 +144,7 @@ export function updateFireballs(dt) {
         isHit = rectOverlap(collisionRect, e);
       }
       
-      if (isHit) {
+      if (isHit && !e.friendly) {  // Skip friendly allies
         // Lightning bolt dissipates on first enemy contact
         if (f.isLightningBolt) {
           if (!f.hitSomething) {
