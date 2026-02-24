@@ -187,7 +187,7 @@ export function updateEnemies(dt) {
                   const skillDmg = Math.round(8 * Math.pow(1.2, difficultyLevel - 1));
                   summon.hp -= skillDmg;
                   playSfx('axe_attack');
-                  if (summon.hp <= 0) { spawnBloodParticles(summon.x+summon.w/2, summon.y); tryDropPowerup(summon.x+summon.w/2, summon.y); dropCoin(summon.x+summon.w/2, summon.y); playerAllies.splice(playerAllies.indexOf(summon), 1); enemies.splice(enemies.indexOf(summon), 1); }
+                  if (summon.hp <= 0) { spawnBloodParticles(summon.x+summon.w/2, summon.y); playerAllies.splice(playerAllies.indexOf(summon), 1); enemies.splice(enemies.indexOf(summon), 1); }
                   summonHit = true;
                   break;
                 }
@@ -205,12 +205,12 @@ export function updateEnemies(dt) {
       if (e.attackTimer > 0) e.attackTimer -= dt;
       if (e.burnTimer > 0) {
         e.burnTimer -= dt; e.hp -= e.burnDps * dt;
-        if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y+e.h/2); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; }
+        if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y+e.h/2); if (!e.friendly) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); } if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; }
       }
       e.x += e.vx * dt; e.y += e.vy * dt;
       // Environmental damage (spikes, lava) for all enemies including summons
-      for (const s of spikes) { if (rectOverlap(e, {x:s.x,y:s.y,w:s.w,h:s.h})) { e.hp -= 35; spawnBloodParticles(e.x+e.w/2, e.y); if (e.hp <= 0) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
-      for (const l of lavaZones) { if (rectOverlap(e, l)) { e.hp -= 999; if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
+      for (const s of spikes) { if (rectOverlap(e, {x:s.x,y:s.y,w:s.w,h:s.h})) { e.hp -= 35; spawnBloodParticles(e.x+e.w/2, e.y); if (e.hp <= 0) { if (!e.friendly) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); } if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
+      for (const l of lavaZones) { if (rectOverlap(e, l)) { e.hp -= 999; if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); if (!e.friendly) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); } if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
       if (e.y > H + 100 || e.y < -200) { if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; }
       continue;
     }
@@ -303,7 +303,7 @@ export function updateEnemies(dt) {
                     const sameEnemyLevel = summonFeetY > e.y - 10 && summon.y < e.y + e.h + 10;
                     if (summonDist < 42 && sameEnemyLevel) {
                       summon.hp -= baseDmg;
-                      if (summon.hp <= 0) { spawnBloodParticles(summon.x+summon.w/2, summon.y); tryDropPowerup(summon.x+summon.w/2, summon.y); dropCoin(summon.x+summon.w/2, summon.y); playerAllies.splice(playerAllies.indexOf(summon), 1); enemies.splice(enemies.indexOf(summon), 1); }
+                      if (summon.hp <= 0) { spawnBloodParticles(summon.x+summon.w/2, summon.y); playerAllies.splice(playerAllies.indexOf(summon), 1); enemies.splice(enemies.indexOf(summon), 1); }
                       summonHit = true;
                       break;
                     }
@@ -339,13 +339,13 @@ export function updateEnemies(dt) {
     if (e.attackTimer > 0) e.attackTimer -= dt;
     if (e.burnTimer > 0) {
       e.burnTimer -= dt; e.hp -= e.burnDps * dt;
-      if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; }
+      if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); if (!e.friendly) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); } if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; }
     }
     e.x += e.vx * dt; e.y += e.vy * dt;
     resolvePlayerPlatforms(e);
     // Environmental damage (spikes, lava) for all enemies including summons
-    for (const s of spikes) { if (rectOverlap(e, {x:s.x,y:s.y,w:s.w,h:s.h})) { e.hp -= 35; spawnBloodParticles(e.x+e.w/2, e.y); if (e.hp <= 0) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
-    for (const l of lavaZones) { if (rectOverlap(e, l)) { e.hp -= 999; if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
+    for (const s of spikes) { if (rectOverlap(e, {x:s.x,y:s.y,w:s.w,h:s.h})) { e.hp -= 35; spawnBloodParticles(e.x+e.w/2, e.y); if (e.hp <= 0) { if (!e.friendly) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); } if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
+    for (const l of lavaZones) { if (rectOverlap(e, l)) { e.hp -= 999; if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); if (!e.friendly) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); } if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
     if (e.y > H + 100) { if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); }
   }
 

@@ -83,7 +83,6 @@ function drawScene() {
   
   drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
   drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
-  applyVignette();
   drawBuffIcons();
   if (statsActive) drawDebugStats();
 }
