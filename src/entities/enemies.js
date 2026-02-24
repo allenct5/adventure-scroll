@@ -168,8 +168,15 @@ export function updateEnemies(dt) {
         e.facingRight = dx > 0;
         if (dist < 36 && e.attackTimer <= 0) {
           e.attackTimer = 90;
-          // Friendly skulls don't damage the player
-          if (!e.friendly && player.invincible === 0) damagePlayer(Math.round(8 * Math.pow(1.2, difficultyLevel - 1)), e.type);
+          // Friendly skulls damage enemies, hostile skulls damage the player
+          if (e.friendly && targetEntity && targetEntity !== player) {
+            const skillDmg = Math.round(8 * player.summonDamageMult);
+            targetEntity.hp -= skillDmg;
+            playSfx('axe_attack');
+            if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); enemies.splice(enemies.indexOf(targetEntity), 1); }
+          } else if (!e.friendly && player.invincible === 0) {
+            damagePlayer(Math.round(8 * Math.pow(1.2, difficultyLevel - 1)), e.type);
+          }
           const BOUNCE_SPEED = 5.5;
           e.vx = -(dx / mag) * BOUNCE_SPEED; e.vy = -(dy / mag) * BOUNCE_SPEED - 1.5;
           e.bouncing = true; e.bounceTimer = 45;
@@ -178,10 +185,13 @@ export function updateEnemies(dt) {
       if (e.attackTimer > 0) e.attackTimer -= dt;
       if (e.burnTimer > 0) {
         e.burnTimer -= dt; e.hp -= e.burnDps * dt;
-        if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y+e.h/2); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); enemies.splice(i, 1); continue; }
+        if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y+e.h/2); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; }
       }
       e.x += e.vx * dt; e.y += e.vy * dt;
-      if (e.y > H + 100 || e.y < -200) { enemies.splice(i, 1); continue; }
+      // Environmental damage (spikes, lava) for all enemies including summons
+      for (const s of spikes) { if (rectOverlap(e, {x:s.x,y:s.y,w:s.w,h:s.h})) { e.hp -= 35; spawnBloodParticles(e.x+e.w/2, e.y); if (e.hp <= 0) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
+      for (const l of lavaZones) { if (rectOverlap(e, l)) { e.hp -= 999; if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
+      if (e.y > H + 100 || e.y < -200) { if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; }
       continue;
     }
 
@@ -257,8 +267,13 @@ export function updateEnemies(dt) {
                 ? Math.round(12 * player.summonDamageMult)
                 : Math.round(12 * Math.pow(1.2, difficultyLevel - 1) * zoneBuffs.enemyDamageMult);
               playSfx('axe_attack');
-              // Friendly orcs don't damage the player
-              if (!e.friendly && player.invincible === 0) damagePlayer(baseDmg, e.type);
+              // Friendly orcs damage enemies, hostile orcs damage the player
+              if (e.friendly && targetEntity && targetEntity !== player) {
+                targetEntity.hp -= baseDmg;
+                if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); enemies.splice(enemies.indexOf(targetEntity), 1); }
+              } else if (!e.friendly && player.invincible === 0) {
+                damagePlayer(baseDmg, e.type);
+              }
             }
           } else {
             // Mage
@@ -285,11 +300,14 @@ export function updateEnemies(dt) {
     if (e.attackTimer > 0) e.attackTimer -= dt;
     if (e.burnTimer > 0) {
       e.burnTimer -= dt; e.hp -= e.burnDps * dt;
-      if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); enemies.splice(i, 1); continue; }
+      if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; }
     }
     e.x += e.vx * dt; e.y += e.vy * dt;
     resolvePlayerPlatforms(e);
-    if (e.y > H + 100) enemies.splice(i, 1);
+    // Environmental damage (spikes, lava) for all enemies including summons
+    for (const s of spikes) { if (rectOverlap(e, {x:s.x,y:s.y,w:s.w,h:s.h})) { e.hp -= 35; spawnBloodParticles(e.x+e.w/2, e.y); if (e.hp <= 0) { tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
+    for (const l of lavaZones) { if (rectOverlap(e, l)) { e.hp -= 999; if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); continue; } } }
+    if (e.y > H + 100) { if (e.friendly) playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(i, 1); }
   }
 
   // Enemy projectiles
@@ -330,11 +348,22 @@ export function updateEnemies(dt) {
       }
       continue;
     }
-    if (!player.dead && player.invincible === 0 && rectOverlap({x:p.x-3,y:p.y-3,w:6,h:6}, player)) {
-      // Friendly projectiles don't damage the player
-      if (!p.friendly) {
-        damagePlayer(Math.round(18 * Math.pow(1.2, difficultyLevel - 1)), p.killerType || null);
+    // Friendly projectiles (from summons) damage enemies
+    if (p.friendly) {
+      for (let j = enemies.length - 1; j >= 0; j--) {
+        const e = enemies[j];
+        if (!e.friendly && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
+          const dmg = Math.round(18 * player.summonDamageMult);
+          e.hp -= dmg;
+          spawnBloodParticles(p.x, p.y);
+          if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); enemies.splice(j, 1); }
+          playSfx('orb_hit'); spawnParticles(p.x, p.y, projectileColor, 8); enemyProjectiles.splice(i, 1); break;
+        }
       }
+      continue;
+    }
+    if (!player.dead && player.invincible === 0 && rectOverlap({x:p.x-3,y:p.y-3,w:6,h:6}, player)) {
+      damagePlayer(Math.round(18 * Math.pow(1.2, difficultyLevel - 1)), p.killerType || null);
       playSfx('orb_hit'); spawnParticles(p.x, p.y, projectileColor, 8); enemyProjectiles.splice(i, 1);
     }
   }

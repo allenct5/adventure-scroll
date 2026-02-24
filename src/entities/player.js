@@ -188,7 +188,7 @@ export function updatePlayer(dt) {
   if (player.y > H + 100) { killPlayer('pit'); return; }
 
   for (const s of spikes)    { if (rectOverlap(player, {x:s.x,y:s.y,w:s.w,h:s.h}) && player.invincible === 0) damagePlayer(35, 'environment'); }
-  for (const l of lavaZones) { if (rectOverlap(player, l) && player.invincible === 0) damagePlayer(2, 'environment'); }
+  for (const l of lavaZones) { if (rectOverlap(player, l) && player.invincible === 0) damagePlayer(999, 'environment'); }
 
   if (rectOverlap(player, checkpoint)) triggerCheckpoint();
 
@@ -479,14 +479,20 @@ export function summonWanderingOrc() {
   }
   
   playSfx('orb_spell');
-  const cx = player.x + player.w / 2;
-  const cy = player.y + player.h / 2 - 1;
-  const angle = getAimAngle();
-  const staffTipDist = 28;
-  const summonX = cx + Math.cos(angle) * staffTipDist;
-  let summonY = cy + Math.sin(angle) * staffTipDist - 60;  // Spawn above ground to avoid falling through
   
-  // Find ground below summoning point
+  // Spawn at cursor position (convert from screen space to world space)
+  let summonX = mousePos.x + cameraX;
+  let summonY = mousePos.y - 30;  // Spawn 30 pixels above cursor in screen space
+  
+  // Bounds checking - prevent spawning way outside the level
+  if (summonX < -100 || summonX > LEVEL_WIDTH + 100) {
+    return false;  // Cursor is too far outside horizontal bounds
+  }
+  if (summonY < -200 || summonY > H + 200) {
+    return false;  // Cursor is too far outside vertical bounds
+  }
+  
+  // Find ground below summoning point (keep orc above platforms)
   for (const platform of platforms) {
     if (platform.y >= summonY && platform.x < summonX + 30 && platform.x + platform.w > summonX - 30) {
       summonY = Math.min(summonY, platform.y - 44);  // Position just above platform
@@ -501,6 +507,7 @@ export function summonWanderingOrc() {
   ally.spawnX = summonX;
   ally.spawnY = summonY;
   playerAllies.push(ally);
+  enemies.push(ally);  // Add to enemies array so it gets updated and drawn
   
   spawnParticles(summonX, summonY, '#44dd44', 10);
   spawnParticles(summonX, summonY, '#88ff88', 6);
@@ -521,13 +528,20 @@ export function summonRaisedSkull() {
   }
   
   playSfx('fireball_spell');
-  const cx = player.x + player.w / 2;
-  const cy = player.y + player.h / 2 - 5;
-  const angle = getAimAngle();
-  const summonX = cx + Math.cos(angle) * 30;
-  let summonY = cy + Math.sin(angle) * 30 - 50;  // Spawn above ground
   
-  // Find ground below summoning point
+  // Spawn at cursor position (convert from screen space to world space)
+  let summonX = mousePos.x + cameraX;
+  let summonY = mousePos.y - 30;  // Spawn 30 pixels above cursor in screen space
+  
+  // Bounds checking - prevent spawning way outside the level
+  if (summonX < -100 || summonX > LEVEL_WIDTH + 100) {
+    return false;  // Cursor is too far outside horizontal bounds
+  }
+  if (summonY < -200 || summonY > H + 200) {
+    return false;  // Cursor is too far outside vertical bounds
+  }
+  
+  // Find ground below summoning point (keep skull above platforms)
   for (const platform of platforms) {
     if (platform.y >= summonY && platform.x < summonX + 28 && platform.x + platform.w > summonX - 28) {
       summonY = Math.min(summonY, platform.y - 28);  // Position just above platform
@@ -542,6 +556,7 @@ export function summonRaisedSkull() {
   ally.spawnY = summonY;
   ally.aggroRange = 280;
   playerAllies.push(ally);
+  enemies.push(ally);  // Add to enemies array so it gets updated and drawn
   
   spawnParticles(summonX, summonY, '#ffcc00', 12);
   spawnParticles(summonX, summonY, '#ff9900', 8);
