@@ -244,9 +244,9 @@ canvas.addEventListener('mousedown', e => {
   const taliesiY = merchant.y + merchant.h - npcTaliesin.h;
   if (activeEvent === 'taliesin' && mx >= taliesiX && mx <= taliesiX + npcTaliesin.w && my >= taliesiY && my <= taliesiY + npcTaliesin.h) {
     const playerCx   = player.x + player.w / 2;
-    const taliesinCx = taliesiX + npcTaliesin.w / 2;
+    const taliesinCx = merchant.x + merchant.w / 2;
     const playerFeetY = player.y + player.h;
-    const taliesinFeetY = taliesiY + npcTaliesin.h;
+    const taliesinFeetY = merchant.y + merchant.h;
     const proximityX = Math.abs(playerCx - taliesinCx) < 120;
     const proximityY = Math.abs(playerFeetY - taliesinFeetY) < 120;
     if (proximityX && proximityY) { showFateScreen(); return; }
@@ -387,6 +387,11 @@ function hideFateScreen() {
   document.getElementById('fate-screen').classList.remove('visible');
   setGameState('playing');
 }
+
+document.getElementById('fate-close').addEventListener('click', () => {
+  playSfx('button_press');
+  hideFateScreen();
+});
 
 // --- PAUSE VOLUME SLIDERS ---
 document.getElementById('game-volume-slider').addEventListener('input', e => {
