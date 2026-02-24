@@ -99,8 +99,9 @@ export function populateEnemies() {
     const resolvedType = sp.type === 'melee' ? orcType
                        : sp.type === 'mage'  ? mageType
                        : sp.type;
-    // Use spawn Y if provided (e.g., on floating platforms), otherwise spawn at ground level
-    const spawnY = sp.y !== undefined ? sp.y : 472;
+    // Use spawn Y if provided (e.g., on floating platforms), adjusted for entity height
+    // Otherwise spawn on ground platform (y=400, minus 44px entity height = 356)
+    const spawnY = sp.y !== undefined ? sp.y - 44 : 356;
     enemies.push(spawnEnemy(resolvedType, sp.x, spawnY));
   }
   const skullCount = difficultyLevel === 3 ? 4 : difficultyLevel === 4 ? 6 : difficultyLevel >= 5 ? 8 : 0;
