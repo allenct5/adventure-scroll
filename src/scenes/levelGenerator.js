@@ -117,7 +117,7 @@ function generatePlatforms(rng, platformDensity) {
   // Add merchant platform at fixed location
   platforms.push({
     x: 4149,
-    y: 230,
+    y: 260,
     w: 160,
     h: 18,
     type: 'platform',

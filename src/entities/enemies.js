@@ -78,7 +78,7 @@ export function spawnEnemy(type = 'outdoorOrc', spawnX = 100, spawnY = 350, staf
     speed: ENEMY_SPEED_BASE + Math.random() * 0.35,
     onGround: false, type,
     attackTimer: 0, fireTimer: isMageType ? 150 : 9999,
-    aggroRange: isMageType ? 500 : isSkullType ? 500 : 220,
+    aggroRange: isMageType ? 500 : isSkullType ? 500 : 132,
     facingRight: false,
     state: 'idle', spawnX, spawnY,
     idleTimer: 60, patrolDir: Math.random() < 0.5 ? 1 : -1,
@@ -99,8 +99,8 @@ export function populateEnemies() {
     const resolvedType = sp.type === 'melee' ? orcType
                        : sp.type === 'mage'  ? mageType
                        : sp.type;
-    // Use spawn Y if provided (e.g., on floating platforms), otherwise default to 50
-    const spawnY = sp.y !== undefined ? sp.y : 50;
+    // Use spawn Y if provided (e.g., on floating platforms), otherwise spawn at ground level
+    const spawnY = sp.y !== undefined ? sp.y : 472;
     enemies.push(spawnEnemy(resolvedType, sp.x, spawnY));
   }
   const skullCount = difficultyLevel === 3 ? 4 : difficultyLevel === 4 ? 6 : difficultyLevel >= 5 ? 8 : 0;
@@ -282,7 +282,7 @@ export function updateEnemies(dt) {
     const enemyScreenX  = e.x - cameraX;
     const playerOnScreen = (player.x - cameraX) > -50 && (player.x - cameraX) < W + 50;
     const enemyOnScreen  = enemyScreenX > -100 && enemyScreenX < W + 100;
-    const meleeAggroRange = 360;
+    const meleeAggroRange = 216;
     // Friendly units aggro to nearest hostile target if in range; hostile units aggro if player is visible OR a summon is nearby
     let hasSummonNearby = false;
     if (!e.friendly) {
