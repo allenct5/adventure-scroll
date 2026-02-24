@@ -242,20 +242,56 @@ export function updateEnemies(dt) {
         targetY = player.y;
       }
     } else {
-      targetX = player.x;
-      targetY = player.y;
-      targetEntity = player;
+      // For hostile enemies: target nearest summon if in range, otherwise target player
+      let nearestSummon = null;
+      let nearestSummonDist = Infinity;
+      for (const ally of enemies) {
+        if (ally.friendly) {
+          const summonDx = ally.x - e.x;
+          const summonDy = ally.y - e.y;
+          const summonDist = Math.hypot(summonDx, summonDy);
+          if (summonDist < nearestSummonDist && summonDist < 400) {
+            nearestSummonDist = summonDist;
+            nearestSummon = ally;
+          }
+        }
+      }
+      if (nearestSummon) {
+        targetEntity = nearestSummon;
+        targetX = nearestSummon.x;
+        targetY = nearestSummon.y;
+      } else {
+        targetEntity = player;
+        targetX = player.x;
+        targetY = player.y;
+      }
     }
     
     const dx   = targetX - e.x;
-    const dist = Math.abs(dx);
+    const dy   = targetY - e.y;
+    const dist = Math.hypot(dx, dy);
     const enemyScreenX  = e.x - cameraX;
     const playerOnScreen = (player.x - cameraX) > -50 && (player.x - cameraX) < W + 50;
     const enemyOnScreen  = enemyScreenX > -100 && enemyScreenX < W + 100;
     const meleeAggroRange = 180;
-    const canAggro = isOrc(e.type) ? (dist < meleeAggroRange && enemyOnScreen) : (playerOnScreen && enemyOnScreen);
+    // Friendly units aggro to nearest hostile target if in range; hostile units aggro if player is visible OR a summon is nearby
+    let hasSummonNearby = false;
+    if (!e.friendly) {
+      for (const ally of enemies) {
+        if (ally.friendly) {
+          const allyDx = ally.x - e.x;
+          const allyDy = ally.y - e.y;
+          const allyDist = Math.hypot(allyDx, allyDy);
+          if (allyDist < meleeAggroRange) {
+            hasSummonNearby = true;
+            break;
+          }
+        }
+      }
+    }
+    const canAggro = isOrc(e.type) ? (dist < meleeAggroRange && enemyOnScreen) : ((playerOnScreen || (hasSummonNearby && enemyOnScreen)) && enemyOnScreen);
     if (e.state === 'idle' && e.idleTimer <= 0 && canAggro && (!player.dead || e.friendly)) e.state = 'aggro';
-    const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && enemyOnScreen) : (playerOnScreen && !(!e.friendly && player.dead));
+    const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && enemyOnScreen) : ((playerOnScreen || hasSummonNearby) && !(!e.friendly && player.dead));
     if (e.state === 'aggro' && (!stillAggro || (!e.friendly && player.dead))) { e.state = 'idle'; e.idleTimer = 60; }
 
     if (e.knockbackTimer > 0) { e.knockbackTimer -= dt; e.vx *= 0.85; }
@@ -590,62 +626,6 @@ export function drawEnemies() {
       ctx.fillStyle = burnGrad; ctx.fillRect(sx, e.y, e.w, e.h);
       if (Math.random() < 0.25) spawnParticles(e.x + Math.random() * e.w, e.y + Math.random() * e.h * 0.5, Math.random() < 0.5 ? '#ff4400' : '#ff8800', 1);
       ctx.restore();
-    }
-
-    // Friendly unit outline — custom shape that hugs the procedural model
-    if (e.friendly) {
-      ctx.strokeStyle = '#44ff44';
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.8 + Math.sin(Date.now() * 0.008) * 0.2;  // Pulsing glow
-      ctx.beginPath();
-
-      if (isSkull(e.type)) {
-        // Skull outline: arc for the top half, bezier for the jaw, rectangle for teeth
-        const cx = sx + e.w / 2;
-        const cy = e.y + e.h / 2;
-        const skullW = e.w / 2 + 2;  // ~11 + 2 for outline
-        const skullH = e.h / 2 + 2;  // ~11 + 2 for outline
-
-        // Top arc (skull dome)
-        ctx.arc(cx, cy - 2, skullW, Math.PI, 0, false);
-        // Right side bezier curve for jaw
-        ctx.bezierCurveTo(cx + skullW, cy + 6, cx + 7, cy + 10, cx, cy + 10);
-        // Left side bezier curve for jaw (mirror)
-        ctx.bezierCurveTo(cx - 7, cy + 10, cx - skullW, cy + 6, cx - skullW, cy - 2);
-        ctx.closePath();
-      } else if (isOrc(e.type)) {
-        // Orc outline: head box, body box, with connected curves
-        const headX = sx + 5;
-        const headY = e.y;
-        const headW = e.w - 10;
-        const headH = 14;
-        const bodyX = sx + 3;
-        const bodyY = e.y + 12;
-        const bodyW = e.w - 6;
-        const bodyH = e.h - 12;
-
-        // Top-left corner of head
-        ctx.moveTo(headX, headY);
-        // Top of head
-        ctx.lineTo(headX + headW, headY);
-        // Top-right to body
-        ctx.lineTo(bodyX + bodyW, bodyY);
-        // Right side of body
-        ctx.lineTo(bodyX + bodyW, bodyY + bodyH);
-        // Bottom of body
-        ctx.lineTo(bodyX, bodyY + bodyH);
-        // Left side of body
-        ctx.lineTo(bodyX, bodyY);
-        // Back to top-left of head
-        ctx.lineTo(headX, headY);
-        ctx.closePath();
-      } else {
-        // Mage outline: simple rect (they have robe that extends)
-        ctx.rect(sx - 1, e.y - 1, e.w + 2, e.h + 2);
-      }
-
-      ctx.stroke();
-      ctx.globalAlpha = 1;
     }
 
     drawEnemyHpBar(sx, e);
