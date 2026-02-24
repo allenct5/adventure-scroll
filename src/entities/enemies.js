@@ -73,7 +73,7 @@ export function spawnEnemy(type = 'outdoorOrc', spawnX = 100, spawnY = 350) {
     speed: ENEMY_SPEED_BASE + Math.random() * 0.35,
     onGround: false, type,
     attackTimer: 0, fireTimer: isMageType ? 150 : 9999,
-    aggroRange: isMageType ? 500 : isSkullType ? 300 : 220,
+    aggroRange: isMageType ? 500 : isSkullType ? 500 : 220,
     facingRight: false,
     state: 'idle', spawnX, spawnY,
     idleTimer: 60, patrolDir: Math.random() < 0.5 ? 1 : -1,
@@ -292,23 +292,10 @@ export function updateEnemies(dt) {
       }
     }
     
-    // For ground-based melee units (orcs), check if aggro would require moving into an IMMINENT pit
-    // Skulls don't need this check since they fly
-    // Only consider pits that are very close to falling into them
-    let wouldFallIntoPit = false;
-    if (isOrc(e.type) && dist < meleeAggroRange && e.onGround) {
-      const moveDir = dx > 0 ? 1 : -1;
-      const onGroundPlatform = platforms.some(p => p.type === 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
-      if (onGroundPlatform) {
-        const pitWidth = measurePitAhead(e, moveDir);
-        // Only consider it dangerous if immediately about to fall off (pit very close and wide enough)
-        wouldFallIntoPit = pitWidth > 40;
-      }
-    }
-    
-    const canAggro = isOrc(e.type) ? (dist < meleeAggroRange && enemyOnScreen && !wouldFallIntoPit) : ((playerOnScreen || (hasSummonNearby && enemyOnScreen)) && enemyOnScreen);
-    if (e.state === 'idle' && e.idleTimer <= 0 && canAggro && (!player.dead || e.friendly)) e.state = 'aggro';
-    const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && enemyOnScreen && !wouldFallIntoPit) : ((playerOnScreen || hasSummonNearby) && !(!e.friendly && player.dead));
+    // Orcs aggro if player is in range and visible; pit avoidance happens during movement, not as aggro gate
+    const canAggro = isOrc(e.type) ? (dist < meleeAggroRange && playerOnScreen && enemyOnScreen) : ((playerOnScreen || (hasSummonNearby && enemyOnScreen)) && enemyOnScreen);
+    if (e.state === 'idle' && canAggro && (!player.dead || e.friendly)) e.state = 'aggro';
+    const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && playerOnScreen && enemyOnScreen) : ((playerOnScreen || hasSummonNearby) && !(!e.friendly && player.dead));
     if (e.state === 'aggro' && (!stillAggro || (!e.friendly && player.dead))) { e.state = 'idle'; e.idleTimer = 60; }
 
     if (e.knockbackTimer > 0) { e.knockbackTimer -= dt; e.vx *= 0.85; }
@@ -316,7 +303,7 @@ export function updateEnemies(dt) {
       if (e.state === 'idle') {
         if (e.idleTimer > 0) { e.idleTimer--; e.vx *= 0.8; }
         else {
-          const PATROL_SPEED = e.speed * 0.45;
+          const PATROL_SPEED = e.speed * 0.585;
           if (e.onGround && hazardAhead(e, e.patrolDir)) { e.patrolDir *= -1; e.x += e.patrolDir * 16; }
           e.vx = e.patrolDir * PATROL_SPEED; e.facingRight = e.patrolDir > 0;
         }
@@ -334,21 +321,22 @@ export function updateEnemies(dt) {
             const effectiveSpeed = e.speed * speedMult * aggroBonus;
 
             e.jumpCooldown = Math.max(0, e.jumpCooldown - dt);
-            const deadlyWallAhead = deadlyHazardAhead(e, moveDir);
+            // Recalculate direction towards target (handles player movement)
+            const currentDx = targetX - e.x;
+            const currentMoveDir = currentDx > 0 ? 1 : -1;
+            const deadlyWallAhead = deadlyHazardAhead(e, currentMoveDir);
             const onGroundPlatform = platforms.some(p => p.type === 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
             const onFloatingPlatform = platforms.some(p => p.type !== 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
             
-            // Pit detection: only check for pits on ground platforms, allow falling off floating platforms
-            // Only retreat if about to fall off (pit is wide and immediate)
-            const pitWidth = e.onGround && onGroundPlatform ? measurePitAhead(e, moveDir) : 0;
-            const pitAhead = pitWidth > 40;
-            
-            if (pitAhead && e.onGround) {
-              // Back away from pit instead of trying to jump (only for ground platforms)
-              e.vx = -moveDir * effectiveSpeed * 0.6;
-            } else if (dist > 38 && !deadlyWallAhead && !pitAhead) {
-              e.vx = moveDir * effectiveSpeed;
-            } else if (deadlyWallAhead) { e.vx *= 0.8; }
+            // During aggro, pursue fearlessly toward target unless blocked by deadly hazards (spikes/lava)
+            // Pit avoidance is for patrol mode only, not during aggressive pursuit
+            if (deadlyWallAhead) {
+              // Stop if facing deadly hazard (spikes/lava)
+              e.vx = 0;
+            } else {
+              // Move toward target without pit fear during aggro
+              e.vx = currentMoveDir * effectiveSpeed;
+            }
             const targetFeetY = targetEntity.y + targetEntity.h;
             const sameLevel   = targetFeetY > e.y - 10 && targetEntity.y < e.y + e.h + 10;
             if (dist < 42 && e.attackTimer <= 0 && sameLevel) {
