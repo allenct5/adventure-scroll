@@ -304,10 +304,10 @@ function generateEnemySpawns(rng, difficulty, platforms) {
   const spawns = [];
   const pitPositions = [300, 940, 1580, 2220];
   const pitGaps = [520, 1160, 1800, 2440];
-  const MAX_ENEMIES_PER_ZONE = 3;
+  const MAX_ENEMIES_PER_ZONE = 5;
 
   // Spawn count increases with difficulty
-  const spawnCount = 10 + Math.floor(difficulty * 2);
+  const spawnCount = 15 + Math.floor(difficulty * 3);
   const enemyTypes = ['melee', 'mage'];
 
   // Define safe zones for spawning (skip first zone since it's a pit)

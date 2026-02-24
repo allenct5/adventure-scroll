@@ -291,9 +291,22 @@ export function updateEnemies(dt) {
         }
       }
     }
-    const canAggro = isOrc(e.type) ? (dist < meleeAggroRange && enemyOnScreen) : ((playerOnScreen || (hasSummonNearby && enemyOnScreen)) && enemyOnScreen);
+    
+    // For ground-based melee units (orcs), check if aggro would require moving into a pit
+    // Skulls don't need this check since they fly
+    let wouldFallIntoPit = false;
+    if (isOrc(e.type) && dist < meleeAggroRange && e.onGround) {
+      const moveDir = dx > 0 ? 1 : -1;
+      const onGroundPlatform = platforms.some(p => p.type === 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
+      if (onGroundPlatform) {
+        const pitWidth = measurePitAhead(e, moveDir);
+        wouldFallIntoPit = pitWidth > 0;
+      }
+    }
+    
+    const canAggro = isOrc(e.type) ? (dist < meleeAggroRange && enemyOnScreen && !wouldFallIntoPit) : ((playerOnScreen || (hasSummonNearby && enemyOnScreen)) && enemyOnScreen);
     if (e.state === 'idle' && e.idleTimer <= 0 && canAggro && (!player.dead || e.friendly)) e.state = 'aggro';
-    const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && enemyOnScreen) : ((playerOnScreen || hasSummonNearby) && !(!e.friendly && player.dead));
+    const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && enemyOnScreen && !wouldFallIntoPit) : ((playerOnScreen || hasSummonNearby) && !(!e.friendly && player.dead));
     if (e.state === 'aggro' && (!stillAggro || (!e.friendly && player.dead))) { e.state = 'idle'; e.idleTimer = 60; }
 
     if (e.knockbackTimer > 0) { e.knockbackTimer -= dt; e.vx *= 0.85; }
