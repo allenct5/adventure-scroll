@@ -329,8 +329,9 @@ export function updateEnemies(dt) {
               e.enraged = true;
             }
             const speedMult   = (e.enraged ? ENRAGE_SPEED_MULT : 1) * zoneBuffs.enemySpeedMult;
+            const aggroBonus = e.state === 'aggro' ? 1.4 : 1;  // 40% speed increase when aggroing
             const cooldownMult = (e.enraged ? ENRAGE_COOLDOWN_MULT : 1) * zoneBuffs.enemyAttackSpeedMult;
-            const effectiveSpeed = e.speed * speedMult;
+            const effectiveSpeed = e.speed * speedMult * aggroBonus;
 
             e.jumpCooldown = Math.max(0, e.jumpCooldown - dt);
             const deadlyWallAhead = deadlyHazardAhead(e, moveDir);
@@ -412,6 +413,25 @@ export function updateEnemies(dt) {
     }
     e.x += e.vx * dt; e.y += e.vy * dt;
     resolvePlayerPlatforms(e);
+    
+    // Hostile melee enemies pass through each other, but don't pass through summons
+    if (!e.friendly && (isOrc(e.type) || isSkull(e.type))) {
+      for (let j = 0; j < enemies.length; j++) {
+        if (i === j) continue;
+        const other = enemies[j];
+        // Only separate if the other is a friendly summon; hostile enemies pass through each other
+        if (other.friendly && rectOverlap(e, other)) {
+          const dx = (e.x + e.w / 2) - (other.x + other.w / 2);
+          const dy = (e.y + e.h / 2) - (other.y + other.h / 2);
+          const dist = Math.hypot(dx, dy) || 1;
+          const minDist = (e.w + other.w) / 2 + 2;
+          const pushDist = (minDist - dist) / 2;
+          e.x += (dx / dist) * pushDist;
+          e.y += (dy / dist) * pushDist;
+        }
+      }
+    }
+    
     // Environmental damage (spikes, lava) for all enemies including summons
     let hazardKilled = false;
     for (const s of spikes) { 
