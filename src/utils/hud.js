@@ -9,6 +9,7 @@ export function updateHUD() {
   const hpPct = Math.max(0, player.hp / player.maxHp) * 100;
   document.getElementById('health-bar').style.width       = `${hpPct}%`;
   document.getElementById('health-bar-text').textContent  = `${Math.max(0, Math.ceil(player.hp))}/${player.maxHp}`;
+  document.getElementById('health-bar-regen').textContent = player.hpRegen > 0 ? `+${player.hpRegen} HP/s` : '+0 HP/s';
   
   const overshieldPct = Math.max(0, player.overshield / player.maxOvershield) * 100;
   document.getElementById('overshield-bar').style.width       = `${overshieldPct}%`;

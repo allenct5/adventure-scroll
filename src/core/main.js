@@ -129,6 +129,7 @@ function resetLevel() {
     damageMult: (player.damageMult > 1 && !player.berserkerUsed) ? player.damageMult : 1,
     berserkerUsed: (player.damageMult > 1 && !player.berserkerUsed),
     damageReduction: player.damageReduction,
+    hpRegen: player.hpRegen,
   };
 
   setPlayer(createPlayer());

@@ -120,6 +120,10 @@ export function createPlayer() {
     bombs: 0,
     damageMult: 1,
     damageReduction: 0,  // fraction of damage to reduce (0.0 - 1.0)
+    hpRegen: 0,  // HP regeneration per second
+    lastManaRegenTime: 0,
+    lastStaminaRegenTime: 0,
+    lastHpRegenTime: 0,
   };
   if (playerClass === 'warrior') { p.weapon = 'sword'; p.swordRarity = 1; p.hp = 120; p.maxHp = 120; p.damageReduction = 0.10; }
   else if (playerClass === 'archer') { p.weapon = 'bow'; p.bowRarity = 1; p.bombs = 5; p.hp = 100; p.maxHp = 100; p.damageReduction = 0.05; }
@@ -210,20 +214,20 @@ export function updatePlayer(dt) {
 
   if (player.weapon === 'staff' && mouseRightDown && player.staffTimer <= 0) {
     const classMod = getActiveClassMod();
-    const manaCost = classMod?.id === 'classMod_Cloudshaper' ? 10 : 5;
+    const manaCost = classMod?.id === 'classMod_Cloudshaper' ? 8 : 5;
     if (player.mana >= manaCost) {
-      player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
+      // Lightning Bolt has its own cooldown
       if (classMod && classMod.spellOverrides?.rightClick) {
-        // Lightning Bolt has its own cooldown
         if (classMod.id === 'classMod_Cloudshaper' && player.lightningBoltTimer > 0) {
-          // Can't fire - still on cooldown
-        } else {
-          classMod.spellOverrides.rightClick();
-          if (classMod.id === 'classMod_Cloudshaper') player.lightningBoltTimer = LIGHTNING_BOLT_COOLDOWN;
+          // Can't fire - still on cooldown, don't consume mana
+          return;
         }
+        classMod.spellOverrides.rightClick();
+        if (classMod.id === 'classMod_Cloudshaper') player.lightningBoltTimer = LIGHTNING_BOLT_COOLDOWN;
       } else {
         shootFireball();
       }
+      player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
       player.mana -= manaCost; updateHUD();
     }
   }
@@ -232,20 +236,38 @@ export function updatePlayer(dt) {
     setMouseRightDown(false);
   }
 
+  // HP Regen
+  if (player.hpRegen > 0 && player.hp < player.maxHp) {
+    const now = performance.now();
+    if (player.lastHpRegenTime === 0) player.lastHpRegenTime = now;
+    const timeSinceLast = now - player.lastHpRegenTime;
+    player.hp = Math.min(player.maxHp, player.hp + (player.hpRegen / 1000) * timeSinceLast);
+    player.lastHpRegenTime = now;
+    updateHUD();
+  }
+
   if (playerClass === 'mage' && player.mana < 25) {
-    player.mana = Math.min(25, player.mana + (0.5 / 60) * dt);
+    const now = performance.now();
+    if (player.lastManaRegenTime === 0) player.lastManaRegenTime = now;
+    const timeSinceLast = now - player.lastManaRegenTime;
+    player.mana = Math.min(25, player.mana + (0.5 / 1000) * timeSinceLast);
+    player.lastManaRegenTime = now;
     updateHUD();
   }
   if (playerClass === 'warrior' && !player.dead) {
     const wantsBlock = mouseRightDown && player.stamina > 0;
     player.blocking  = wantsBlock;
+    const now = performance.now();
+    if (player.lastStaminaRegenTime === 0) player.lastStaminaRegenTime = now;
+    
     if (player.blocking) {
-      player.stamina = Math.max(0, player.stamina - (20 / 60) * dt);
-      player.staminaRegenDelay = 60;
+      player.stamina = Math.max(0, player.stamina - (20 / 1000) * (now - player.lastStaminaRegenTime));
+      player.staminaRegenDelay = 600; // 600ms instead of 60 frame-based units
     } else {
       if (player.staminaRegenDelay > 0) player.staminaRegenDelay -= dt;
-      else player.stamina = Math.min(100, player.stamina + (20 / 60) * dt);
+      else player.stamina = Math.min(100, player.stamina + (20 / 1000) * (now - player.lastStaminaRegenTime));
     }
+    player.lastStaminaRegenTime = now;
   } else { player.blocking = false; }
 
   setCameraX(Math.max(0, Math.min(player.x - W / 3, LEVEL_WIDTH - W)));
