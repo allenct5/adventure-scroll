@@ -1,7 +1,7 @@
 // enemies.js — Enemy spawn, AI update, and drawing.
 
 import { GRAVITY, JUMP_FORCE, ENEMY_SPEED_BASE, W, H } from '../core/constants.js';
-import { platforms, ENEMY_SPAWN_POINTS, SKULL_SPAWN_POINTS, PLAYER_START_PLATFORM } from '../scenes/level.js';
+import { platforms, spikes, lavaZones, ENEMY_SPAWN_POINTS, SKULL_SPAWN_POINTS, PLAYER_START_PLATFORM } from '../scenes/level.js';
 import {
   player, playerClass, cameraX,
   enemies, playerAllies, enemyProjectiles, difficultyLevel,
@@ -127,20 +127,22 @@ export function updateEnemies(dt) {
     if (isSkull(e.type)) {
       e.sineTime += dt * 0.04;
       
-      // Determine target: player if hostile, nearest enemy if friendly
+      // Determine target: player if hostile, nearest enemy if friendly (otherwise follow player)
       let targetX, targetY, targetDist;
+      let targetEntity = null;  // Store the actual target reference for attack code
       if (e.friendly) {
-        const target = findNearestHostileTarget(e);
-        if (target) {
-          targetX = target.x + target.w / 2;
-          targetY = target.y + target.h / 2;
+        targetEntity = findNearestHostileTarget(e);
+        if (targetEntity) {
+          targetX = targetEntity.x + targetEntity.w / 2;
+          targetY = targetEntity.y + targetEntity.h / 2;
         } else {
-          targetX = e.spawnX;
-          targetY = e.spawnY;
+          targetX = player.x + player.w / 2;
+          targetY = player.y + player.h / 2;
         }
       } else {
         targetX = player.x + player.w / 2;
         targetY = player.y + player.h / 2;
+        targetEntity = player;  // Hostile skulls target the player
       }
       
       const dx = targetX - (e.x + e.w / 2);
@@ -168,14 +170,32 @@ export function updateEnemies(dt) {
         e.facingRight = dx > 0;
         if (dist < 36 && e.attackTimer <= 0) {
           e.attackTimer = 90;
-          // Friendly skulls damage enemies, hostile skulls damage the player
+          // Friendly skulls damage enemies, hostile skulls damage the player or summons
           if (e.friendly && targetEntity && targetEntity !== player) {
             const skillDmg = Math.round(8 * player.summonDamageMult);
             targetEntity.hp -= skillDmg;
             playSfx('axe_attack');
             if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); enemies.splice(enemies.indexOf(targetEntity), 1); }
-          } else if (!e.friendly && player.invincible === 0) {
-            damagePlayer(Math.round(8 * Math.pow(1.2, difficultyLevel - 1)), e.type);
+          } else if (!e.friendly) {
+            // Hostile skulls try to damage summons first, then player
+            let summonHit = false;
+            for (const summon of enemies) {
+              if (summon.friendly) {
+                const sx = summon.x + summon.w / 2, sy = summon.y + summon.h / 2;
+                const summonDist = Math.hypot(sx - (e.x + e.w / 2), sy - (e.y + e.h / 2));
+                if (summonDist < 36) {
+                  const skillDmg = Math.round(8 * Math.pow(1.2, difficultyLevel - 1));
+                  summon.hp -= skillDmg;
+                  playSfx('axe_attack');
+                  if (summon.hp <= 0) { spawnBloodParticles(summon.x+summon.w/2, summon.y); tryDropPowerup(summon.x+summon.w/2, summon.y); dropCoin(summon.x+summon.w/2, summon.y); playerAllies.splice(playerAllies.indexOf(summon), 1); enemies.splice(enemies.indexOf(summon), 1); }
+                  summonHit = true;
+                  break;
+                }
+              }
+            }
+            if (!summonHit && player.invincible === 0) {
+              damagePlayer(Math.round(8 * Math.pow(1.2, difficultyLevel - 1)), e.type);
+            }
           }
           const BOUNCE_SPEED = 5.5;
           e.vx = -(dx / mag) * BOUNCE_SPEED; e.vy = -(dy / mag) * BOUNCE_SPEED - 1.5;
@@ -198,7 +218,7 @@ export function updateEnemies(dt) {
     // --- GROUND ENEMIES ---
     e.vy += GRAVITY * 1.7 * dt;
     
-    // Determine target for hostile vs friendly
+    // Determine target for hostile vs friendly (if friendly with no target, follow player)
     let targetX, targetY, targetEntity;
     if (e.friendly) {
       targetEntity = findNearestHostileTarget(e);
@@ -206,8 +226,8 @@ export function updateEnemies(dt) {
         targetX = targetEntity.x;
         targetY = targetEntity.y;
       } else {
-        targetX = e.spawnX;
-        targetY = e.spawnY;
+        targetX = player.x;
+        targetY = player.y;
       }
     } else {
       targetX = player.x;
@@ -254,8 +274,9 @@ export function updateEnemies(dt) {
             const pitAhead = pitWidth > 0;
             if (pitAhead && e.onGround && e.jumpCooldown <= 0) {
               const jumpVy = JUMP_FORCE * 0.9, g = GRAVITY * 1.7, airTime = (-2 * jumpVy) / g;
-              const requiredVx = (pitWidth * 1.2) / airTime;
-              e.vy = jumpVy; e.vx = moveDir * Math.max(requiredVx, effectiveSpeed * 1.2); e.jumpCooldown = 70; playSfx('jump_sound');
+              // Enemy needs to clear the entire pit width + their own body width to land safely
+              const requiredVx = ((pitWidth + e.w + 8) * 1.15) / airTime;
+              e.vy = jumpVy; e.vx = moveDir * Math.max(requiredVx, effectiveSpeed * 1.5); e.jumpCooldown = 70; playSfx('jump_sound');
             } else if (dist > 38 && !deadlyWallAhead && !pitAhead) {
               e.vx = moveDir * effectiveSpeed;
             } else if (deadlyWallAhead) { e.vx *= 0.8; }
@@ -267,12 +288,30 @@ export function updateEnemies(dt) {
                 ? Math.round(12 * player.summonDamageMult)
                 : Math.round(12 * Math.pow(1.2, difficultyLevel - 1) * zoneBuffs.enemyDamageMult);
               playSfx('axe_attack');
-              // Friendly orcs damage enemies, hostile orcs damage the player
+              // Friendly orcs damage enemies, hostile orcs damage the player or summons
               if (e.friendly && targetEntity && targetEntity !== player) {
                 targetEntity.hp -= baseDmg;
                 if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); enemies.splice(enemies.indexOf(targetEntity), 1); }
-              } else if (!e.friendly && player.invincible === 0) {
-                damagePlayer(baseDmg, e.type);
+              } else if (!e.friendly) {
+                // Hostile orcs try to damage summons first, then player
+                let summonHit = false;
+                for (const summon of enemies) {
+                  if (summon.friendly) {
+                    const sx = summon.x + summon.w / 2, sy = summon.y + summon.h / 2;
+                    const summonDist = Math.abs((summon.x + summon.w / 2) - e.x);
+                    const summonFeetY = summon.y + summon.h;
+                    const sameEnemyLevel = summonFeetY > e.y - 10 && summon.y < e.y + e.h + 10;
+                    if (summonDist < 42 && sameEnemyLevel) {
+                      summon.hp -= baseDmg;
+                      if (summon.hp <= 0) { spawnBloodParticles(summon.x+summon.w/2, summon.y); tryDropPowerup(summon.x+summon.w/2, summon.y); dropCoin(summon.x+summon.w/2, summon.y); playerAllies.splice(playerAllies.indexOf(summon), 1); enemies.splice(enemies.indexOf(summon), 1); }
+                      summonHit = true;
+                      break;
+                    }
+                  }
+                }
+                if (!summonHit && player.invincible === 0) {
+                  damagePlayer(baseDmg, e.type);
+                }
               }
             }
           } else {
@@ -361,6 +400,19 @@ export function updateEnemies(dt) {
         }
       }
       continue;
+    }
+    // Hostile projectiles (from enemies) damage summons
+    if (!p.friendly) {
+      for (let j = enemies.length - 1; j >= 0; j--) {
+        const e = enemies[j];
+        if (e.friendly && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
+          const dmg = Math.round(18 * Math.pow(1.2, difficultyLevel - 1));
+          e.hp -= dmg;
+          spawnBloodParticles(p.x, p.y);
+          if (e.hp <= 0) { spawnBloodParticles(e.x+e.w/2, e.y); tryDropPowerup(e.x+e.w/2, e.y); dropCoin(e.x+e.w/2, e.y); playerAllies.splice(playerAllies.indexOf(e), 1); enemies.splice(j, 1); }
+          playSfx('orb_hit'); spawnParticles(p.x, p.y, projectileColor, 8); enemyProjectiles.splice(i, 1); break;
+        }
+      }
     }
     if (!player.dead && player.invincible === 0 && rectOverlap({x:p.x-3,y:p.y-3,w:6,h:6}, player)) {
       damagePlayer(Math.round(18 * Math.pow(1.2, difficultyLevel - 1)), p.killerType || null);
@@ -519,12 +571,59 @@ export function drawEnemies() {
       ctx.restore();
     }
 
-    // Friendly unit outline
+    // Friendly unit outline — custom shape that hugs the procedural model
     if (e.friendly) {
       ctx.strokeStyle = '#44ff44';
       ctx.lineWidth = 2;
       ctx.globalAlpha = 0.8 + Math.sin(Date.now() * 0.008) * 0.2;  // Pulsing glow
-      ctx.strokeRect(sx - 1, e.y - 1, e.w + 2, e.h + 2);
+      ctx.beginPath();
+
+      if (isSkull(e.type)) {
+        // Skull outline: arc for the top half, bezier for the jaw, rectangle for teeth
+        const cx = sx + e.w / 2;
+        const cy = e.y + e.h / 2;
+        const skullW = e.w / 2 + 2;  // ~11 + 2 for outline
+        const skullH = e.h / 2 + 2;  // ~11 + 2 for outline
+
+        // Top arc (skull dome)
+        ctx.arc(cx, cy - 2, skullW, Math.PI, 0, false);
+        // Right side bezier curve for jaw
+        ctx.bezierCurveTo(cx + skullW, cy + 6, cx + 7, cy + 10, cx, cy + 10);
+        // Left side bezier curve for jaw (mirror)
+        ctx.bezierCurveTo(cx - 7, cy + 10, cx - skullW, cy + 6, cx - skullW, cy - 2);
+        ctx.closePath();
+      } else if (isOrc(e.type)) {
+        // Orc outline: head box, body box, with connected curves
+        const headX = sx + 5;
+        const headY = e.y;
+        const headW = e.w - 10;
+        const headH = 14;
+        const bodyX = sx + 3;
+        const bodyY = e.y + 12;
+        const bodyW = e.w - 6;
+        const bodyH = e.h - 12;
+
+        // Top-left corner of head
+        ctx.moveTo(headX, headY);
+        // Top of head
+        ctx.lineTo(headX + headW, headY);
+        // Top-right to body
+        ctx.lineTo(bodyX + bodyW, bodyY);
+        // Right side of body
+        ctx.lineTo(bodyX + bodyW, bodyY + bodyH);
+        // Bottom of body
+        ctx.lineTo(bodyX, bodyY + bodyH);
+        // Left side of body
+        ctx.lineTo(bodyX, bodyY);
+        // Back to top-left of head
+        ctx.lineTo(headX, headY);
+        ctx.closePath();
+      } else {
+        // Mage outline: simple rect (they have robe that extends)
+        ctx.rect(sx - 1, e.y - 1, e.w + 2, e.h + 2);
+      }
+
+      ctx.stroke();
       ctx.globalAlpha = 1;
     }
 
