@@ -9,8 +9,8 @@ defeatMusic.loop = false;
 defeatMusic.volume = 0.1;
 
 let currentTrack = null;
-export let gameVolume = 1.0;
-let musicVolume = 0.1;
+export let gameVolume = 0.5;
+let musicVolume = 0.05;
 
 export function setMusicVolume(v) {
   musicVolume = v;

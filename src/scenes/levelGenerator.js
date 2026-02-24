@@ -89,9 +89,9 @@ function generatePlatforms(rng, platformDensity) {
   const GROUND_H = 80;
   const platforms = [];
 
-  // Define 4 pit locations (evenly spaced across level)
-  const pitPositions = [320, 1064, 2109, 3419];
-  const pitGaps = [744, 1004, 2454, 3809];
+  // Define 4 pit locations (evenly spaced across level, ~220px wide = jumpable)
+  const pitPositions = [300, 940, 1580, 2220];
+  const pitGaps = [520, 1160, 1800, 2440];
 
   // Ground sections between pits
   const groundSections = [
@@ -179,8 +179,8 @@ function generateFloatingPlatforms(rng, count, pitPositions, pitGaps) {
  */
 function generateSpikes(rng, hazardDensity) {
   const spikes = [];
-  const pitPositions = [320, 1064, 2109, 3419];
-  const pitGaps = [744, 1004, 2454, 3809];
+  const pitPositions = [300, 940, 1580, 2220];
+  const pitGaps = [520, 1160, 1800, 2440];
 
   // Place spikes near pit edges
   const spikeCount = Math.floor(5 * hazardDensity);
@@ -237,17 +237,16 @@ function generateLavaZones(rng, hazardDensity, difficulty) {
  */
 function generateEnemySpawns(rng, difficulty) {
   const spawns = [];
-  const pitPositions = [320, 1064, 2109, 3419];
-  const pitGaps = [744, 1004, 2454, 3809];
+  const pitPositions = [300, 940, 1580, 2220];
+  const pitGaps = [520, 1160, 1800, 2440];
   const PLAYER_START_PLATFORM = { x: 0, w: 320 };
 
   // Spawn count increases with difficulty
   const spawnCount = 10 + Math.floor(difficulty * 2);
   const enemyTypes = ['melee', 'mage'];
 
-  // Define safe zones for spawning
+  // Define safe zones for spawning (skip first zone since it's a pit)
   const safeZones = [
-    { x: PLAYER_START_PLATFORM.w, w: pitPositions[0] - PLAYER_START_PLATFORM.w },
     { x: pitGaps[0], w: pitPositions[1] - pitGaps[0] },
     { x: pitGaps[1], w: pitPositions[2] - pitGaps[1] },
     { x: pitGaps[2], w: pitPositions[3] - pitGaps[2] },
