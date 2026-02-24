@@ -275,7 +275,7 @@ export function updateEnemies(dt) {
     const enemyScreenX  = e.x - cameraX;
     const playerOnScreen = (player.x - cameraX) > -50 && (player.x - cameraX) < W + 50;
     const enemyOnScreen  = enemyScreenX > -100 && enemyScreenX < W + 100;
-    const meleeAggroRange = 180;
+    const meleeAggroRange = 360;
     // Friendly units aggro to nearest hostile target if in range; hostile units aggro if player is visible OR a summon is nearby
     let hasSummonNearby = false;
     if (!e.friendly) {
@@ -292,15 +292,17 @@ export function updateEnemies(dt) {
       }
     }
     
-    // For ground-based melee units (orcs), check if aggro would require moving into a pit
+    // For ground-based melee units (orcs), check if aggro would require moving into an IMMINENT pit
     // Skulls don't need this check since they fly
+    // Only consider pits that are very close to falling into them
     let wouldFallIntoPit = false;
     if (isOrc(e.type) && dist < meleeAggroRange && e.onGround) {
       const moveDir = dx > 0 ? 1 : -1;
       const onGroundPlatform = platforms.some(p => p.type === 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
       if (onGroundPlatform) {
         const pitWidth = measurePitAhead(e, moveDir);
-        wouldFallIntoPit = pitWidth > 0;
+        // Only consider it dangerous if immediately about to fall off (pit very close and wide enough)
+        wouldFallIntoPit = pitWidth > 40;
       }
     }
     
@@ -336,8 +338,9 @@ export function updateEnemies(dt) {
             const onFloatingPlatform = platforms.some(p => p.type !== 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
             
             // Pit detection: only check for pits on ground platforms, allow falling off floating platforms
+            // Only retreat if about to fall off (pit is wide and immediate)
             const pitWidth = e.onGround && onGroundPlatform ? measurePitAhead(e, moveDir) : 0;
-            const pitAhead = pitWidth > 0;
+            const pitAhead = pitWidth > 40;
             
             if (pitAhead && e.onGround) {
               // Back away from pit instead of trying to jump (only for ground platforms)
