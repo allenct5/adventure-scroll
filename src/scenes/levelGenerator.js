@@ -349,8 +349,10 @@ function generateEnemySpawns(rng, difficulty, platforms) {
 
     // 60% chance to spawn on ground, 40% chance on floating platform
     if (rng.next() < 0.6) {
-      // Spawn on ground
-      x = zone.x + rng.nextInt(20, Math.max(zone.w - 40, zone.x + 40));
+      // Spawn on ground - stay within zone boundaries [zone.x + 20, zone.x + zone.w - 40]
+      const minOffset = 20;
+      const maxOffset = Math.max(zone.w - 40, minOffset);
+      x = zone.x + rng.nextInt(minOffset, maxOffset);
     } else {
       // Try to spawn on a floating platform within this zone
       const platformsInZone = floatingPlatforms.filter(
@@ -358,11 +360,16 @@ function generateEnemySpawns(rng, difficulty, platforms) {
       );
       if (platformsInZone.length > 0) {
         const platform = rng.pick(platformsInZone);
-        x = platform.x + rng.nextInt(10, Math.max(platform.w - 20, platform.x + 20));
+        // Spawn on platform - stay within platform boundaries [platform.x + 10, platform.x + platform.w - 10]
+        const minOffset = 10;
+        const maxOffset = Math.max(platform.w - 10, minOffset);
+        x = platform.x + rng.nextInt(minOffset, maxOffset);
         y = platform.y;
       } else {
         // No platform in zone, spawn on ground
-        x = zone.x + rng.nextInt(20, Math.max(zone.w - 40, zone.x + 40));
+        const minOffset = 20;
+        const maxOffset = Math.max(zone.w - 40, minOffset);
+        x = zone.x + rng.nextInt(minOffset, maxOffset);
       }
     }
 
