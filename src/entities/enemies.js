@@ -94,7 +94,9 @@ export function populateEnemies() {
     const resolvedType = sp.type === 'melee' ? orcType
                        : sp.type === 'mage'  ? mageType
                        : sp.type;
-    enemies.push(spawnEnemy(resolvedType, sp.x, 50));
+    // Use spawn Y if provided (e.g., on floating platforms), otherwise default to 50
+    const spawnY = sp.y !== undefined ? sp.y : 50;
+    enemies.push(spawnEnemy(resolvedType, sp.x, spawnY));
   }
   const skullCount = difficultyLevel === 3 ? 4 : difficultyLevel === 4 ? 6 : difficultyLevel >= 5 ? 8 : 0;
   for (let i = 0; i < skullCount; i++) {
