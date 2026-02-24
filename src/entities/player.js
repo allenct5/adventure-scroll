@@ -22,7 +22,7 @@ import { updateHUD, showMessage, showGameOver } from '../utils/hud.js';
 import { playDeathMusic, playSfx } from '../utils/audio.js';
 import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
-import { ENEMY_DISPLAY_NAMES, spawnEnemy } from './enemies.js';
+import { ENEMY_DISPLAY_NAMES, spawnEnemy, isOrc } from './enemies.js';
 import { getClassModById } from '../utils/classMods.js';
 
 import { ctx } from '../canvas.js';
@@ -467,7 +467,49 @@ export function shootLightningBolt() {
 
 // Summon Wandering Orc (Summoner left-click)
 export function summonWanderingOrc() {
-  // Check if we've hit the summon limit
+  // First, check if there's an existing friendly Orc alive
+  let existingOrc = null;
+  for (const ally of playerAllies) {
+    if (isOrc(ally.type) && ally.friendly && ally.hp > 0) {
+      existingOrc = ally;
+      break;
+    }
+  }
+  
+  playSfx('orb_spell');
+  
+  // Get target position (cursor location)
+  let targetX = mousePos.x + cameraX;
+  let targetY = mousePos.y - 30;  // Spawn 30 pixels above cursor in screen space
+  
+  // Bounds checking - prevent teleport/spawn way outside the level
+  if (targetX < -100 || targetX > LEVEL_WIDTH + 100) {
+    return false;  // Cursor is too far outside horizontal bounds
+  }
+  if (targetY < -200 || targetY > H + 200) {
+    return false;  // Cursor is too far outside vertical bounds
+  }
+  
+  // Find ground below target point (keep orc above platforms)
+  for (const platform of platforms) {
+    if (platform.y >= targetY && platform.x < targetX + 30 && platform.x + platform.w > targetX - 30) {
+      targetY = Math.min(targetY, platform.y - 44);  // Position just above platform
+    }
+  }
+  
+  // If an existing Orc is alive, teleport it instead of creating a new one
+  if (existingOrc) {
+    existingOrc.x = targetX;
+    existingOrc.y = targetY;
+    existingOrc.vx = 0;  // Clear velocity on teleport
+    existingOrc.vy = 0;
+    existingOrc.state = 'idle';  // Reset to idle state
+    spawnParticles(targetX, targetY, '#44dd44', 10);
+    spawnParticles(targetX, targetY, '#88ff88', 6);
+    return true;
+  }
+  
+  // No existing Orc, so create a new one (if under summon limit)
   if (playerAllies.length >= player.summonLimit) {
     // Show message only if 3+ seconds have passed since last message
     const now = Date.now();
@@ -478,39 +520,18 @@ export function summonWanderingOrc() {
     return false;
   }
   
-  playSfx('orb_spell');
-  
-  // Spawn at cursor position (convert from screen space to world space)
-  let summonX = mousePos.x + cameraX;
-  let summonY = mousePos.y - 30;  // Spawn 30 pixels above cursor in screen space
-  
-  // Bounds checking - prevent spawning way outside the level
-  if (summonX < -100 || summonX > LEVEL_WIDTH + 100) {
-    return false;  // Cursor is too far outside horizontal bounds
-  }
-  if (summonY < -200 || summonY > H + 200) {
-    return false;  // Cursor is too far outside vertical bounds
-  }
-  
-  // Find ground below summoning point (keep orc above platforms)
-  for (const platform of platforms) {
-    if (platform.y >= summonY && platform.x < summonX + 30 && platform.x + platform.w > summonX - 30) {
-      summonY = Math.min(summonY, platform.y - 44);  // Position just above platform
-    }
-  }
-  
   // Create friendly orc
-  const ally = spawnEnemy('outdoorOrc', summonX, summonY);
+  const ally = spawnEnemy('outdoorOrc', targetX, targetY, player.staffRarity);
   ally.friendly = true;
   ally.aggroRange = 250;
   ally.state = 'idle';
-  ally.spawnX = summonX;
-  ally.spawnY = summonY;
+  ally.spawnX = targetX;
+  ally.spawnY = targetY;
   playerAllies.push(ally);
   enemies.push(ally);  // Add to enemies array so it gets updated and drawn
   
-  spawnParticles(summonX, summonY, '#44dd44', 10);
-  spawnParticles(summonX, summonY, '#88ff88', 6);
+  spawnParticles(targetX, targetY, '#44dd44', 10);
+  spawnParticles(targetX, targetY, '#88ff88', 6);
   return true;
 }
 
@@ -549,7 +570,7 @@ export function summonRaisedSkull() {
   }
   
   // Create friendly skull
-  const ally = spawnEnemy('castleSkull', summonX, summonY);
+  const ally = spawnEnemy('castleSkull', summonX, summonY, player.staffRarity);
   ally.friendly = true;
   ally.state = 'idle';
   ally.spawnX = summonX;

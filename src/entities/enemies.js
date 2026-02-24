@@ -1,6 +1,6 @@
 // enemies.js — Enemy spawn, AI update, and drawing.
 
-import { GRAVITY, JUMP_FORCE, ENEMY_SPEED_BASE, W, H } from '../core/constants.js';
+import { GRAVITY, JUMP_FORCE, ENEMY_SPEED_BASE, W, H, rarityDamage } from '../core/constants.js';
 import { platforms, spikes, lavaZones, ENEMY_SPAWN_POINTS, SKULL_SPAWN_POINTS, PLAYER_START_PLATFORM } from '../scenes/level.js';
 import {
   player, playerClass, cameraX,
@@ -59,17 +59,22 @@ export function isSkull(type) {
   return type === 'castleSkull' || type === 'evilSkull';
 }
 
-export function spawnEnemy(type = 'outdoorOrc', spawnX = 100, spawnY = 350) {
+export function spawnEnemy(type = 'outdoorOrc', spawnX = 100, spawnY = 350, staffRarity = 1) {
   const isMageType  = isMage(type);
   const isSkullType = isSkull(type);
   const baseHp      = isMageType ? 60 : isSkullType ? 40 : 80;
+  // Apply staff rarity scaling for friendly summons only
+  const hpWithRarity = Math.round(baseHp * (1 + (staffRarity - 1) * 0.2));
+  // Only apply difficulty scaling if not a friendly summon (i.e., staffRarity = 1 means it's a regular enemy)
+  const isSummon = staffRarity > 1;
+  const finalHp = isSummon ? hpWithRarity : Math.round(hpWithRarity * Math.pow(1.2, difficultyLevel - 1));
   return {
     x: spawnX, y: spawnY,
     w: isMageType ? 26 : isSkullType ? 28 : 30,
     h: isMageType ? 44 : isSkullType ? 28 : 44,
     vx: 0, vy: 0,
-    hp:    Math.round(baseHp * Math.pow(1.2, difficultyLevel - 1)),
-    maxHp: Math.round(baseHp * Math.pow(1.2, difficultyLevel - 1)),
+    hp:    finalHp,
+    maxHp: finalHp,
     speed: ENEMY_SPEED_BASE + Math.random() * 0.35,
     onGround: false, type,
     attackTimer: 0, fireTimer: isMageType ? 150 : 9999,
@@ -172,10 +177,11 @@ export function updateEnemies(dt) {
         e.vy = (dy / mag) * AGGRO_SPEED + Math.sin(e.sineTime * 2.2 + e.sineOffset) * 1.2;
         e.facingRight = dx > 0;
         if (dist < 36 && e.attackTimer <= 0) {
-          e.attackTimer = 90;
+          const attackSpeedMult = (e.friendly && player.staffRarity >= 3) ? 0.833 : 1;  // 20% faster = 1/1.2
+          e.attackTimer = 90 * attackSpeedMult;
           // Friendly skulls damage enemies, hostile skulls damage the player or summons
           if (e.friendly && targetEntity && targetEntity !== player) {
-            const skillDmg = Math.round(8 * player.summonDamageMult);
+            const skillDmg = Math.round(rarityDamage(12, player.staffRarity) * player.summonDamageMult);
             targetEntity.hp -= skillDmg;
             playSfx('axe_attack');
             if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); enemies.splice(enemies.indexOf(targetEntity), 1); }
@@ -240,6 +246,7 @@ export function updateEnemies(dt) {
         targetX = targetEntity.x;
         targetY = targetEntity.y;
       } else {
+        targetEntity = player;
         targetX = player.x;
         targetY = player.y;
       }
@@ -340,9 +347,10 @@ export function updateEnemies(dt) {
             const targetFeetY = targetEntity.y + targetEntity.h;
             const sameLevel   = targetFeetY > e.y - 10 && targetEntity.y < e.y + e.h + 10;
             if (dist < 42 && e.attackTimer <= 0 && sameLevel) {
-              e.attackTimer = Math.round(112 * cooldownMult);
+              const attackSpeedMult = (e.friendly && player.staffRarity >= 3) ? 0.833 : 1;  // 20% faster = 1/1.2
+              e.attackTimer = Math.round(112 * cooldownMult * attackSpeedMult);
               const baseDmg = e.friendly
-                ? Math.round(12 * player.summonDamageMult)
+                ? Math.round(rarityDamage(16, player.staffRarity) * player.summonDamageMult)
                 : Math.round(12 * Math.pow(1.2, difficultyLevel - 1) * zoneBuffs.enemyDamageMult);
               playSfx('axe_attack');
               // Friendly orcs damage enemies, hostile orcs damage the player or summons
@@ -479,7 +487,7 @@ export function updateEnemies(dt) {
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
         if (!e.friendly && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
-          const dmg = Math.round(18 * player.summonDamageMult);
+          const dmg = Math.round(rarityDamage(18, player.staffRarity) * player.summonDamageMult);
           e.hp -= dmg;
           spawnBloodParticles(p.x, p.y);
           if (e.hp <= 0) { killEntity(e, enemies, j); }
