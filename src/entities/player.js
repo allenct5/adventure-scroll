@@ -386,7 +386,7 @@ export function shootLightningSpark() {
     r: 6,  // Medium-sized lightning ball
     life: 150, maxLife: 150,  // Longer life to compensate for slower speed
     portalLife: 25,
-    damage: 30,  // Damage per pierced enemy
+    damage: rarityDamage(30, player.staffRarity),  // Damage per pierced enemy (scales with staffRarity)
     isSpark: true,  // Flag to identify as lightning spark for rendering
     hitEnemies: new Set(),  // Track which enemies this spark has hit for piercing
   });
@@ -402,7 +402,7 @@ export function shootLightningBolt() {
   // Lightning Bolt: violent bolt crashes down from top of screen at cursor x position
   const targetX = mousePos.x + cameraX;
   const startY = -50;
-  const damage = 60;
+  const damage = rarityDamage(60, player.staffRarity);  // Scales with staffRarity
   
   // Find the impact Y by checking for terrain (both ground and floating platforms) below cursor
   let impactY = H + 50;  // Default to bottom of screen if no terrain
