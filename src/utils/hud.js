@@ -55,7 +55,7 @@ export function updateHUD() {
   document.getElementById('coin-count').textContent = player.coins;
 }
 
-export function showMessage(main, sub, color) {
+export function showMessage(main, sub, color, durationMs = null) {
   const mt = document.getElementById('message-text');
   const ms = document.getElementById('message-sub');
   mt.textContent       = main;
@@ -64,6 +64,11 @@ export function showMessage(main, sub, color) {
   ms.textContent       = sub;
   mt.style.opacity     = '1';
   ms.style.opacity     = '1';
+  
+  // Auto-hide after specified duration
+  if (durationMs !== null) {
+    setTimeout(hideMessage, durationMs);
+  }
 }
 
 export function hideMessage() {

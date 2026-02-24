@@ -1,7 +1,7 @@
 // shop.js — Shop data, open/close, render, and purchase logic.
 
 import { RARITY, BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_ORB_DAMAGE, rarityDamage } from '../core/constants.js';
-import { player, playerClass, setShopOpen, setGameState, setMouseDown, setLastTime } from '../core/state.js';
+import { player, playerClass, activeClassMod, setShopOpen, setGameState, setMouseDown, setLastTime } from '../core/state.js';
 import { updateHUD } from './hud.js';
 import { playSfx } from './audio.js';
 
@@ -10,7 +10,8 @@ export const SHOP_ITEMS = [
   { id: 'maxHp1',      name: 'Vitality Tonic',     cost: 5,   icon: '❤️', limit: 1, tooltip: 'Increases your maximum HP by 10, and heals you for 20 HP right now.' },
   { id: 'swordUp1',    name: 'Sharpen Blade',       cost: 10,  icon: '⚔️', limit: 1, tooltip: 'dynamic_sword' },
   { id: 'bowUp1',      name: 'Recurve String',      cost: 10,  icon: '🏹', limit: 1, tooltip: 'dynamic_bow' },
-  { id: 'staffUp1',    name: 'Arcane Focus',        cost: 10,  icon: '🧙', limit: 1, tooltip: 'dynamic_staff' },
+  { id: 'staffUp1',    name: 'Arcane Focus',        cost: 10,  icon: '🧙', limit: 1, tooltip: 'dynamic_staff', classExclude: 'summoner' },
+  { id: 'necronomicon', name: 'Necronomicon',       cost: 10,  icon: '📖', limit: 1, tooltip: 'Increases your summon damage by 20%.', classRestrict: 'summoner' },
   { id: 'fullHeal',    name: 'Elixir of Life',      cost: 10,  icon: '🍶', limit: 1, tooltip: 'Restores your HP to full immediately.' },
   { id: 'fortify',     name: 'Iron Skin',           cost: 12,  icon: '🛡️', limit: 1, tooltip: 'Reduces all incoming damage by 25% for the duration of the next level.' },
   { id: 'berserker',   name: 'Berserker Rage',      cost: 15,  icon: '👹', limit: 1, tooltip: 'Increases all damage you deal by 30% for the duration of the next level.' },
@@ -64,6 +65,8 @@ export function renderShopGrid() {
     if (item.id === 'swordUp1' && playerClass !== 'warrior') continue;
     if (item.id === 'bowUp1'   && playerClass !== 'archer')  continue;
     if (item.id === 'staffUp1' && playerClass !== 'mage')    continue;
+    if (item.classExclude && activeClassMod?.id === `classMod_${item.classExclude.charAt(0).toUpperCase() + item.classExclude.slice(1)}`) continue;
+    if (item.classRestrict && (!activeClassMod || !activeClassMod.id.includes(item.classRestrict.charAt(0).toUpperCase() + item.classRestrict.slice(1)))) continue;
 
     const purchased  = shopPurchased[item.id] || 0;
     const soldOut    = purchased >= item.limit;
@@ -124,6 +127,7 @@ export function buyItem(item) {
     case 'berserker': player.damageMult = (player.damageMult || 1) * 1.3; msg.textContent = 'Berserker Rage — +30% damage this level!'; break;
     case 'cardio':    player.hpRegen += 0.5; msg.textContent = `HP Regen +5/10s (Total: ${(player.hpRegen * 10).toFixed(1)}/10s)`; break;
     case 'pureWater': player.manaRegen += 5; msg.textContent = `Mana Regen +0.5/s (Total: ${(player.manaRegen / 10).toFixed(1)}/s)`; break;
+    case 'necronomicon': player.summonDamageMult *= 1.2; msg.textContent = `Summon damage +20% (Total: ${Math.round(player.summonDamageMult * 100)}%)`; break;
   }
   playSfx('shop_purchase');
   updateHUD();

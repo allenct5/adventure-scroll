@@ -18,7 +18,7 @@ import {
 } from '../core/state.js';
 import { rectOverlap, resolvePlayerPlatforms } from '../utils/collision.js';
 import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from '../utils/particles.js';
-import { updateHUD, showGameOver } from '../utils/hud.js';
+import { updateHUD, showMessage, showGameOver } from '../utils/hud.js';
 import { playDeathMusic, playSfx } from '../utils/audio.js';
 import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
@@ -119,6 +119,9 @@ export function createPlayer() {
     stamina: 100, staminaRegenDelay: 0,
     bombs: 0,
     damageMult: 1,
+    summonDamageMult: 1,  // Damage multiplier for summoned allies (affected by Necronomicon)
+    summonLimit: 2,  // Maximum number of summoned allies (Orc + Skull combined)
+    lastSummonLimitMessageTime: 0,  // Cooldown for displaying summon limit message
     damageReduction: 0,  // fraction of damage to reduce (0.0 - 1.0)
     hpRegen: 0,  // HP regeneration per second
     manaRegen: 0,  // mana regeneration per 10 seconds
@@ -206,7 +209,21 @@ export function updatePlayer(dt) {
       player.staffOrbTimer = applyCooldown(STAFF_ORB_COOLDOWN);
       const classMod = getActiveClassMod();
       if (classMod && classMod.spellOverrides?.leftClick) {
-        classMod.spellOverrides.leftClick();
+        // Summoner spells cost mana
+        const manaCost = classMod.id === 'classMod_Summoner' ? 10 : 0;
+        if (player.mana >= manaCost) {
+          const spellSuccess = classMod.spellOverrides.leftClick();
+          if (spellSuccess !== false) {
+            player.mana -= manaCost;
+            updateHUD();
+          } else {
+            // Spell failed (e.g., at summon limit), refund the cooldown
+            player.staffOrbTimer = 0;
+          }
+        } else {
+          // Not enough mana, refund the cooldown
+          player.staffOrbTimer = 0;
+        }
       } else {
         shootStaffOrb();
       }
@@ -215,21 +232,25 @@ export function updatePlayer(dt) {
 
   if (player.weapon === 'staff' && mouseRightDown && player.staffTimer <= 0) {
     const classMod = getActiveClassMod();
-    const manaCost = classMod?.id === 'classMod_Cloudshaper' ? 8 : 5;
+    const manaCost = classMod?.id === 'classMod_Cloudshaper' ? 8 : classMod?.id === 'classMod_Summoner' ? 5 : 5;
     if (player.mana >= manaCost) {
       // Lightning Bolt has its own cooldown
+      let spellSuccess = true;
       if (classMod && classMod.spellOverrides?.rightClick) {
         if (classMod.id === 'classMod_Cloudshaper' && player.lightningBoltTimer > 0) {
           // Can't fire - still on cooldown, don't consume mana
           return;
         }
-        classMod.spellOverrides.rightClick();
+        spellSuccess = classMod.spellOverrides.rightClick() !== false;
         if (classMod.id === 'classMod_Cloudshaper') player.lightningBoltTimer = LIGHTNING_BOLT_COOLDOWN;
       } else {
         shootFireball();
       }
-      player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
-      player.mana -= manaCost; updateHUD();
+      // Only consume mana and set cooldown if spell actually succeeded
+      if (spellSuccess) {
+        player.staffTimer = applyCooldown(FIREBALL_COOLDOWN);
+        player.mana -= manaCost; updateHUD();
+      }
     }
   }
   if (player.weapon === 'bow' && mouseRightDown && player.bombs > 0) {
@@ -446,6 +467,17 @@ export function shootLightningBolt() {
 
 // Summon Wandering Orc (Summoner left-click)
 export function summonWanderingOrc() {
+  // Check if we've hit the summon limit
+  if (playerAllies.length >= player.summonLimit) {
+    // Show message only if 3+ seconds have passed since last message
+    const now = Date.now();
+    if (now - player.lastSummonLimitMessageTime >= 3000) {
+      showMessage('SUMMON LIMIT REACHED', `You can only summon ${player.summonLimit} allies at once.`, '#ff8844', 3000);
+      player.lastSummonLimitMessageTime = now;
+    }
+    return false;
+  }
+  
   playSfx('orb_spell');
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2 - 1;
@@ -472,10 +504,22 @@ export function summonWanderingOrc() {
   
   spawnParticles(summonX, summonY, '#44dd44', 10);
   spawnParticles(summonX, summonY, '#88ff88', 6);
+  return true;
 }
 
 // Summon Raised Skull (Summoner right-click)
 export function summonRaisedSkull() {
+  // Check if we've hit the summon limit
+  if (playerAllies.length >= player.summonLimit) {
+    // Show message only if 3+ seconds have passed since last message
+    const now = Date.now();
+    if (now - player.lastSummonLimitMessageTime >= 3000) {
+      showMessage('SUMMON LIMIT REACHED', `You can only summon ${player.summonLimit} allies at once.`, '#ff8844', 3000);
+      player.lastSummonLimitMessageTime = now;
+    }
+    return false;
+  }
+  
   playSfx('fireball_spell');
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2 - 5;
@@ -501,6 +545,7 @@ export function summonRaisedSkull() {
   
   spawnParticles(summonX, summonY, '#ffcc00', 12);
   spawnParticles(summonX, summonY, '#ff9900', 8);
+  return true;
 }
 
 // --- BOMB ---

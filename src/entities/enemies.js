@@ -253,7 +253,9 @@ export function updateEnemies(dt) {
             const sameLevel   = targetFeetY > e.y - 10 && targetEntity.y < e.y + e.h + 10;
             if (dist < 42 && e.attackTimer <= 0 && sameLevel) {
               e.attackTimer = Math.round(112 * cooldownMult);
-              const baseDmg = Math.round(12 * Math.pow(1.2, difficultyLevel - 1) * zoneBuffs.enemyDamageMult);
+              const baseDmg = e.friendly
+                ? Math.round(12 * player.summonDamageMult)
+                : Math.round(12 * Math.pow(1.2, difficultyLevel - 1) * zoneBuffs.enemyDamageMult);
               playSfx('axe_attack');
               // Friendly orcs don't damage the player
               if (!e.friendly && player.invincible === 0) damagePlayer(baseDmg, e.type);
@@ -486,6 +488,15 @@ export function drawEnemies() {
       ctx.fillStyle = burnGrad; ctx.fillRect(sx, e.y, e.w, e.h);
       if (Math.random() < 0.25) spawnParticles(e.x + Math.random() * e.w, e.y + Math.random() * e.h * 0.5, Math.random() < 0.5 ? '#ff4400' : '#ff8800', 1);
       ctx.restore();
+    }
+
+    // Friendly unit outline
+    if (e.friendly) {
+      ctx.strokeStyle = '#44ff44';
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.8 + Math.sin(Date.now() * 0.008) * 0.2;  // Pulsing glow
+      ctx.strokeRect(sx - 1, e.y - 1, e.w + 2, e.h + 2);
+      ctx.globalAlpha = 1;
     }
 
     drawEnemyHpBar(sx, e);

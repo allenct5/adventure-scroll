@@ -25,7 +25,7 @@ export const classMod_Cloudshaper = {
   id: 'classMod_Cloudshaper',
   displayName: 'Cloudshaper',
   classRequired: 'mage',
-  description: 'Transform your orbs into lightning sparks and your fireball into a massive lightning bolt.',
+  description: 'Harness the power of lightning, bending it to your will.',
   weaponOverride: 'staff',
   weaponVariant: 'cloudshaper',
   spellOverrides: {
@@ -38,7 +38,7 @@ export const classMod_Summoner = {
   id: 'classMod_Summoner',
   displayName: 'Summoner',
   classRequired: 'mage',
-  description: 'Summon friendly allies to fight alongside you. Left-click: Wandering Orc. Right-click: Raised Skull.',
+  description: 'Raise the fallen to wreak havoc in your name.',
   weaponOverride: 'staff',
   weaponVariant: 'summoner',
   spellOverrides: {
