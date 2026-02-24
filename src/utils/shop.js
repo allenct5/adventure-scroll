@@ -123,7 +123,7 @@ export function buyItem(item) {
     case 'pu_speed':  player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 10); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 10); msg.textContent = 'Attack speed doubled for 10s!'; break;
     case 'berserker': player.damageMult = (player.damageMult || 1) * 1.3; msg.textContent = 'Berserker Rage — +30% damage this level!'; break;
     case 'cardio':    player.hpRegen += 5; msg.textContent = `HP Regen +5/s (Total: ${player.hpRegen}/s)`; break;
-    case 'pureWater': player.manaRegen += 5; msg.textContent = `Mana Regen +5/10s (Total: ${player.manaRegen}/10s)`; break;
+    case 'pureWater': player.manaRegen += 5; msg.textContent = `Mana Regen +0.5/s (Total: ${(player.manaRegen / 10).toFixed(1)}/s)`; break;
   }
   playSfx('shop_purchase');
   updateHUD();
