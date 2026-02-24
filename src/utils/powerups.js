@@ -103,7 +103,7 @@ export function updatePowerups(dt) {
       powerups.splice(i, 1);
     }
   }
-  if (powerups.length > 0) console.debug(`[Powerups] ${powerups.length} active on ground`);
+  // Debug: Uncomment to monitor powerups: console.debug(`[Powerups] ${powerups.length} active on ground`);
 }
 
 // ---------------------------------------------------------------------------

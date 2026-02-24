@@ -5,15 +5,16 @@ import {
   PLAYER_SPEED, SWORD_COOLDOWN, ARROW_COOLDOWN, STAFF_ORB_COOLDOWN,
   BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_FIREBALL_DAMAGE, rarityDamage,
 } from './constants.js';
-import { platforms, spikes, lavaZones, checkpoint, merchant } from '../scenes/level.js';
+import { platforms, spikes, lavaZones, checkpoint, merchant, getEnvironment } from '../scenes/level.js';
 import { cameraX, difficultyLevel, player, playerClass } from './state.js';
 
 import { ctx } from '../canvas.js';
 
 export function drawBackground() {
   const t = Date.now() * 0.001;
+  const environment = getEnvironment();
 
-  if (difficultyLevel <= 2) {
+  if (environment === 'outdoor') {
     // OUTDOOR
     const sky = ctx.createLinearGradient(0, 0, 0, H);
     sky.addColorStop(0, '#1a3a6e'); sky.addColorStop(0.5, '#3d6fa8'); sky.addColorStop(0.8, '#c97c3a'); sky.addColorStop(1, '#e8a055');
@@ -87,7 +88,7 @@ export function drawBackground() {
     }
     ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
 
-  } else if (difficultyLevel <= 4) {
+  } else if (environment === 'castle') {
     // CASTLE INTERIOR
     const wall = ctx.createLinearGradient(0, 0, 0, H);
     wall.addColorStop(0, '#1a1510'); wall.addColorStop(0.5, '#2a2018'); wall.addColorStop(1, '#0e0c08');

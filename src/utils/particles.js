@@ -9,10 +9,6 @@ export function spawnParticles(x, y, color, count = 8) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
     const spd   = 1 + Math.random() * 4;
-    // If at cap, overwrite the oldest slot instead of splicing
-    if (particles.length >= MAX_PARTICLES) {
-      particles.shift();
-    }
     particles.push({
       x, y,
       vx: Math.cos(angle) * spd,
@@ -22,6 +18,10 @@ export function spawnParticles(x, y, color, count = 8) {
       color,
       size: 2 + Math.random() * 3,
     });
+  }
+  // Trim to cap after all particles added (single operation instead of repeated shifts)
+  if (particles.length > MAX_PARTICLES) {
+    particles.splice(0, particles.length - MAX_PARTICLES);
   }
 }
 

@@ -16,6 +16,7 @@ import { dropCoin } from './coins.js';
 import { damagePlayer } from '../entities/player.js';
 import { updateHUD } from './hud.js';
 import { playSfx } from './audio.js';
+import { killEntity } from './entityUtils.js';
 
 import { ctx } from '../canvas.js';
 
@@ -36,7 +37,7 @@ export function updateArrows(dt) {
         
         e.hp -= rarityDamage(BASE_ARROW_DAMAGE, player.bowRarity) * player.damageMult;
         spawnBloodParticles(a.x, a.y); playSfx('sword_attack'); remove = true;
-        if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
+        if (e.hp <= 0) { killEntity(e, enemies, j); }
         break;
       }
     }
@@ -90,7 +91,7 @@ export function updatePlayerOrbs(dt) {
         if (o.hitEnemies) o.hitEnemies.add(j);
         else playerOrbs.splice(i, 1);  // Remove if not a piercing projectile
         
-        if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
+        if (e.hp <= 0) { killEntity(e, enemies, j); }
       }
     }
   }
@@ -155,7 +156,7 @@ export function updateFireballs(dt) {
             spawnParticles(f.x, f.y, '#00ccff', 20); spawnParticles(f.x, f.y, '#ffffff', 10);
             playSfx('fireball_explode');
             f.vx = 0; f.vy = 0; f.dissipating = true; f.dissipateTimer = 15;
-            if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
+            if (e.hp <= 0) { killEntity(e, enemies, j); }
           }
           break;
         } else {
@@ -165,7 +166,7 @@ export function updateFireballs(dt) {
           e.burnTimer = 300; e.burnDps = 20 / 300;
           spawnParticles(f.x, f.y, '#ff4400', 10); f.dissipating = true; f.dissipateTimer = 20; f.trail = []; playSfx('fireball_explode');
           spawnBloodParticles(e.x + e.w / 2, e.y);
-          if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y); tryDropPowerup(e.x + e.w / 2, e.y); dropCoin(e.x + e.w / 2, e.y); enemies.splice(j, 1); }
+          if (e.hp <= 0) { killEntity(e, enemies, j); }
           break;
         }
       }
@@ -196,7 +197,7 @@ function explodeBomb(b) {
     if (Math.hypot((e.x + e.w / 2) - b.x, (e.y + e.h / 2) - b.y) <= BOMB_EXPLODE_RADIUS) {
       e.hp -= rarityDamage(30, player.bowRarity) * player.damageMult;
       spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
-      if (e.hp <= 0) { spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2); tryDropPowerup(e.x + e.w / 2, e.y + e.h / 2); dropCoin(e.x + e.w / 2, e.y + e.h / 2); enemies.splice(j, 1); }
+      if (e.hp <= 0) { killEntity(e, enemies, j); }
     }
   }
   for (let k = 0; k < 3; k++) spawnParticles(b.x, b.y, '#ff6600', 8);

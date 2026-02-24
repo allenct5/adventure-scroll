@@ -1,7 +1,7 @@
 // main.js — Game loop, input handling, game-state transitions, UI wiring.
 
 import { W, H } from './constants.js';
-import { merchant } from '../scenes/level.js';
+import { merchant, loadLevelForDifficulty } from '../scenes/level.js';
 import {
   gameState, setGameState, godMode, setGodMode,
   player, setPlayer, playerClass, setPlayerClass,
@@ -100,6 +100,7 @@ function resetLevel() {
   playSfx('checkpoint_continue');
   setZoneCount(zoneCount + 1);
   setDifficultyLevel(Math.min(5, 1 + Math.floor((zoneCount + 1) / 3)));
+  loadLevelForDifficulty(difficultyLevel);
   applyZoneBuffs();
   
   // Select the random event for this level
@@ -149,7 +150,9 @@ function resetLevel() {
 function respawnPlayer() {
   clearGroundHistory();
   setPlayer(createPlayer());
-  setZoneCount(0); setDifficultyLevel(1);
+  setZoneCount(0); 
+  setDifficultyLevel(1);
+  loadLevelForDifficulty(1);
   setActiveClassMod(null); setPreModWeapon(null); setPreModWeaponRarity(null);
   setActiveEvent(null);
   document.getElementById('difficulty-value').textContent = '1';
@@ -163,6 +166,7 @@ function selectClass(cls) {
   setPlayerClass(cls);
   document.getElementById('class-select').style.display = 'none';
   setPlayer(createPlayer());
+  loadLevelForDifficulty(difficultyLevel);
   populateEnemies();
   setGameState('playing');
   updateHUD();
@@ -443,7 +447,9 @@ document.querySelectorAll('.cheat-diff').forEach(btn => {
   btn.addEventListener('click', () => {
     playSfx('button_press');
     const level = parseInt(btn.dataset.diff);
-    setDifficultyLevel(level); setZoneCount((level - 1) * 3);
+    setDifficultyLevel(level); 
+    setZoneCount((level - 1) * 3);
+    loadLevelForDifficulty(level);
     document.getElementById('difficulty-value').textContent = level;
     populateEnemies();
     updateMusicForDifficulty(level);
