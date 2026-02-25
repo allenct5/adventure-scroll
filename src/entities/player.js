@@ -633,7 +633,7 @@ export function shootRapidFireBolts() {
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
-  const BOLT_DAMAGE = rarityDamage(20, player.bowRarity);
+  const BOLT_DAMAGE = rarityDamage(15, player.bowRarity);
   const BLEED_CHANCE = 0.40;  // 40% chance to apply bleed
   
   // Fire three bolts in quick succession, no spread
@@ -666,7 +666,24 @@ export function shootKineticBolt() {
   const RADIUS = 400;
   const DAMAGE = rarityDamage(30, player.bowRarity);
   const KNOCKBACK_FORCE = 12;
+  const aimAngle = getAimAngle();
+  const CONE_SPREAD = Math.PI / 6;  // ±30 degrees for the cone
   
+  // Spawn cone of fiery gunpowder particles radiating outward
+  const CONE_DISTANCES = [100, 200, 300, 350];  // Create depth/distance effect
+  CONE_DISTANCES.forEach(distance => {
+    // Spray particles across the cone at this distance
+    for (let i = 0; i < 6; i++) {
+      const coneAngle = aimAngle + (Math.random() - 0.5) * CONE_SPREAD * 2;
+      const px = cx + Math.cos(coneAngle) * distance;
+      const py = cy + Math.sin(coneAngle) * distance;
+      const colors = ['#ff6633', '#ff8833', '#ffaa00', '#ffdd00'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      spawnParticles(px, py, color, 3);
+    }
+  });
+  
+  // Center burst particles
   spawnParticles(cx, cy, '#ffff00', 15);
   spawnParticles(cx, cy, '#ffaa00', 10);
   
