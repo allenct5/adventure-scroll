@@ -574,6 +574,7 @@ export function summonRaisedSkull() {
     existingSkull.vx = 0;  // Clear velocity on teleport
     existingSkull.vy = 0;
     existingSkull.state = 'idle';  // Reset to idle state
+    existingSkull.idleTimer = 60;  // Reset idle timer to prevent immediate aggro
     spawnParticles(targetX, targetY, '#ffcc00', 12);
     spawnParticles(targetX, targetY, '#ff9900', 8);
     return true;

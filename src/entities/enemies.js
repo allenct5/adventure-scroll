@@ -189,7 +189,8 @@ export function updateEnemies(dt) {
           } else if (!e.friendly) {
             // Hostile skulls try to damage summons first, then player
             let summonHit = false;
-            for (let si = 0; si < enemies.length; si++) {
+            // Use backward iteration to safely handle array removal during loop
+            for (let si = enemies.length - 1; si >= 0; si--) {
               const summon = enemies[si];
               if (summon.friendly) {
                 const sx = summon.x + summon.w / 2, sy = summon.y + summon.h / 2;
@@ -361,7 +362,8 @@ export function updateEnemies(dt) {
               } else if (!e.friendly) {
                 // Hostile orcs try to damage summons first, then player
                 let summonHit = false;
-                for (let si = 0; si < enemies.length; si++) {
+                // Use backward iteration to safely handle array removal during loop
+                for (let si = enemies.length - 1; si >= 0; si--) {
                   const summon = enemies[si];
                   if (summon.friendly) {
                     const sx = summon.x + summon.w / 2, sy = summon.y + summon.h / 2;
