@@ -663,7 +663,7 @@ export function shootKineticBolt() {
   playSfx('bow_attack');
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2;
-  const RADIUS = 400;
+  const RADIUS = 300;
   const DAMAGE = rarityDamage(30, player.bowRarity);
   const KNOCKBACK_FORCE = 12;
   const aimAngle = getAimAngle();
@@ -687,7 +687,7 @@ export function shootKineticBolt() {
   spawnParticles(cx, cy, '#ffff00', 15);
   spawnParticles(cx, cy, '#ffaa00', 10);
   
-  // Find and damage all enemies within radius
+  // Find and damage all enemies within radius and cone angle
   for (let i = 0; i < enemies.length; i++) {
     const e = enemies[i];
     if (!e || e.friendly) continue;  // Skip friendly allies
@@ -697,27 +697,35 @@ export function shootKineticBolt() {
     const dist = Math.hypot(dx, dy);
     
     if (dist <= RADIUS) {
-      // Apply damage
-      e.hp -= DAMAGE * player.damageMult;
+      // Check if enemy is within the cone angle
+      const enemyAngle = Math.atan2(dy, dx);
+      const angleDiff = Math.abs(aimAngle - enemyAngle);
+      // Handle angle wraparound (angles are circular)
+      const normalizedDiff = Math.min(angleDiff, Math.PI * 2 - angleDiff);
       
-      // Apply knockback
-      if (dist > 0) {
-        const knockbackAngle = Math.atan2(dy, dx);
-        e.vx = Math.cos(knockbackAngle) * KNOCKBACK_FORCE;
-        e.vy = Math.sin(knockbackAngle) * KNOCKBACK_FORCE * 0.5;  // Less vertical knockback
-        e.knockbackTimer = 12;
-      }
-      
-      // Spawn particles at hit location
-      spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
-      
-      // Check if enemy died
-      if (e.hp <= 0) {
+      if (normalizedDiff <= CONE_SPREAD) {
+        // Apply damage
+        e.hp -= DAMAGE * player.damageMult;
+        
+        // Apply knockback
+        if (dist > 0) {
+          const knockbackAngle = Math.atan2(dy, dx);
+          e.vx = Math.cos(knockbackAngle) * KNOCKBACK_FORCE;
+          e.vy = Math.sin(knockbackAngle) * KNOCKBACK_FORCE * 0.5;  // Less vertical knockback
+          e.knockbackTimer = 12;
+        }
+        
+        // Spawn particles at hit location
         spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
-        tryDropPowerup(e.x + e.w / 2, e.y);
-        dropCoin(e.x + e.w / 2, e.y);
-        enemies.splice(i, 1);
-        i--;
+        
+        // Check if enemy died
+        if (e.hp <= 0) {
+          spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
+          tryDropPowerup(e.x + e.w / 2, e.y);
+          dropCoin(e.x + e.w / 2, e.y);
+          enemies.splice(i, 1);
+          i--;
+        }
       }
     }
   }
