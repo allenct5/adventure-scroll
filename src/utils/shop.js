@@ -15,8 +15,8 @@ export const SHOP_ITEMS = [
   { id: 'fortify',     name: 'Iron Skin',           cost: 12,  icon: '🛡️', limit: 1, tooltip: 'Reduces all incoming damage by 25% for the duration of the next level.' },
   { id: 'berserker',   name: 'Berserker Rage',      cost: 15,  icon: '👹', limit: 1, tooltip: 'Increases all damage you deal by 30% for the duration of the next level.' },
   { id: 'soulBind',    name: 'Soul Bind',           cost: 20,  icon: '💀', limit: 1, tooltip: 'Binds your soul to life. If you take lethal damage, you are instantly revived on the nearest ground with 50% of your max HP, surrounded by a glowing halo.' },
-  { id: 'cardio',      name: 'Cardio',                cost: 20,  icon: '❤️', limit: 1, tooltip: 'Increases your health regeneration by 5 per 10 seconds until death.' },
-  { id: 'pureWater',   name: 'Pure Water',            cost: 20,  icon: '💧', limit: 1, tooltip: 'Increases your mana regeneration by 5 per 10 seconds until death.' },
+  { id: 'cardio',      name: 'Cardio',                cost: 20,  icon: '❤️', limit: 1, tooltip: 'Increases your Health regeneration by 0.5 / sec.' },
+  { id: 'pureWater',   name: 'Pure Water',            cost: 20,  icon: '💧', limit: 1, tooltip: 'Increases your Mana regeneration by 0.5 / sec.' },
   { id: 'necronomicon', name: 'Necronomicon',       cost: 10,  icon: '📖', limit: 1, tooltip: 'Increases your summon damage by 20%.', classRestrict: 'summoner' },
   // WIP items intentionally omitted until implemented
 ];
