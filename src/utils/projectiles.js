@@ -3,6 +3,7 @@
 import {
   BASE_ARROW_DAMAGE, BASE_CROSSBOW_DAMAGE, BASE_ORB_DAMAGE, BASE_FIREBALL_DAMAGE,
   BOMB_GRAVITY, BOMB_EXPLODE_RADIUS, rarityDamage, W,
+  FIREBALL_TRAIL_MAX_LENGTH, BOMB_TRAIL_MAX_LENGTH, FIREBALL_DISSIPATE_CHANCE,
 } from '../core/constants.js';
 import { platforms } from '../scenes/level.js';
 import {
@@ -17,6 +18,7 @@ import { damagePlayer } from '../entities/player.js';
 import { updateHUD } from './hud.js';
 import { playSfx } from './audio.js';
 import { killEntity } from './entityUtils.js';
+import { releaseProjectile, releaseFireball, releaseBomb } from './objectPool.js';  // Phase 3b: Object pooling
 
 import { ctx } from '../canvas.js';
 
@@ -44,7 +46,11 @@ export function updateArrows(dt) {
     for (const p of platforms) {
       if (!remove && rectOverlap({x: a.x, y: a.y, w: 4, h: 4}, p)) { remove = true; spawnSparkParticles(a.x, a.y); }
     }
-    if (remove) arrows.splice(i, 1);
+    if (remove) {
+      // Phase 3b: Return arrow to pool for reuse
+      const removed = arrows.splice(i, 1);
+      if (removed.length > 0) releaseProjectile(removed[0]);
+    }
   }
 }
 
@@ -58,7 +64,11 @@ export function updateCrossbowBolts(dt) {
       b.delayTimer -= dt;
       b.life -= dt;
       let remove = b.life <= 0;
-      if (remove) crossbowBolts.splice(i, 1);
+      if (remove) {
+        // Phase 3b: Return bolt to pool for reuse
+        const removed = crossbowBolts.splice(i, 1);
+        if (removed.length > 0) releaseProjectile(removed[0]);
+      }
       continue;  // Skip movement and collision checks while delayed
     }
     
@@ -92,7 +102,11 @@ export function updateCrossbowBolts(dt) {
     for (const p of platforms) {
       if (!remove && rectOverlap({x: b.x - 5, y: b.y - 5, w: 10, h: 10}, p)) { remove = true; spawnSparkParticles(b.x, b.y); }
     }
-    if (remove) crossbowBolts.splice(i, 1);
+    if (remove) {
+      // Phase 3b: Return bolt to pool for reuse
+      const removed = crossbowBolts.splice(i, 1);
+      if (removed.length > 0) releaseProjectile(removed[0]);
+    }
   }
 }
 
@@ -104,7 +118,12 @@ export function updatePlayerOrbs(dt) {
     o.x += o.vx * dt; o.y += o.vy * dt; 
     if (!o.isSpark) o.vy += 0.05 * dt;  // Lightning spark travels in straight line, no gravity
     o.life -= dt;
-    if (o.life <= 0) { playerOrbs.splice(i, 1); continue; }
+    if (o.life <= 0) {
+      // Phase 3b: Return orb to pool for reuse
+      const removed = playerOrbs.splice(i, 1);
+      if (removed.length > 0) releaseProjectile(removed[0]);
+      continue;
+    }
     const oRect = {x: o.x - o.r, y: o.y - o.r, w: o.r * 2, h: o.r * 2};
     let hitTerrain = false;
     for (const p of platforms) { if (rectOverlap(oRect, p)) { hitTerrain = true; break; } }
@@ -137,7 +156,11 @@ export function updatePlayerOrbs(dt) {
         
         // Mark this enemy as hit (for piercing spells)
         if (o.hitEnemies) o.hitEnemies.add(j);
-        else playerOrbs.splice(i, 1);  // Remove if not a piercing projectile
+        else {
+          // Phase 3b: Return orb to pool for reuse
+          const removed = playerOrbs.splice(i, 1);
+          if (removed.length > 0) releaseProjectile(removed[0]);
+        }
         
         if (e.hp <= 0) { killEntity(e, enemies, j); }
       }
@@ -151,17 +174,29 @@ export function updateFireballs(dt) {
     const f = fireballsPlayer[i];
     if (f.dissipating) {
       f.dissipateTimer -= dt; f.r = Math.max(0, f.r - 0.5 * dt);
-      if (Math.random() < 0.33) spawnParticles(f.x, f.y, Math.random() < 0.5 ? '#ff6600' : '#aaaaaa', 2);
-      if (f.dissipateTimer <= 0) { fireballsPlayer.splice(i, 1); }
+      if (Math.random() < FIREBALL_DISSIPATE_CHANCE) {
+        const dissipateColor = Math.random() < 0.5 ? '#ff6600' : '#aaaaaa';
+        spawnParticles(f.x, f.y, dissipateColor, 2);
+      }
+      if (f.dissipateTimer <= 0) {
+        // Phase 3b: Return fireball to pool for reuse
+        const removed = fireballsPlayer.splice(i, 1);
+        if (removed.length > 0) releaseFireball(removed[0]);
+      }
       continue;
     }
     f.x += f.vx * dt; f.y += f.vy * dt; f.vy += (f.isLightningBolt ? 0 : 0.0575) * dt; f.life -= dt;
-    if (f.life <= 0) { fireballsPlayer.splice(i, 1); continue; }
+    if (f.life <= 0) {
+      // Phase 3b: Return fireball to pool for reuse
+      const removed = fireballsPlayer.splice(i, 1);
+      if (removed.length > 0) releaseFireball(removed[0]);
+      continue;
+    }
     if (f.trail) {
-      f.trail.push({x: f.x, y: f.y, age: 0});
+      f.trailIndex = f.trailIndex ?? 0;
+      f.trail[f.trailIndex] = {x: f.x, y: f.y, age: 0};
+      f.trailIndex = (f.trailIndex + 1) % FIREBALL_TRAIL_MAX_LENGTH;  // Circular buffer
       for (const t of f.trail) t.age += dt;
-      // Guard against spikes: keep trail bounded
-      while (f.trail.length > 18) f.trail.shift();
     }
     const fRect = f.isLightningBolt 
       ? {x: f.x - f.r, y: 0, w: f.r * 2, h: f.y}  // Lightning bolt from top of screen to impact
@@ -226,12 +261,21 @@ export function updateFireballs(dt) {
 export function updateBombs(dt) {
   for (let i = playerBombs.length - 1; i >= 0; i--) {
     const b = playerBombs[i];
-    if (b.exploded) { b.explodeTimer -= dt; if (b.explodeTimer <= 0) playerBombs.splice(i, 1); continue; }
+    if (b.exploded) {
+      b.explodeTimer -= dt;
+      if (b.explodeTimer <= 0) {
+        // Phase 3b: Return bomb to pool for reuse
+        const removed = playerBombs.splice(i, 1);
+        if (removed.length > 0) releaseBomb(removed[0]);
+      }
+      continue;
+    }
     b.vx *= Math.pow(0.995, dt); b.vy += BOMB_GRAVITY * dt;
     b.x  += b.vx * dt; b.y  += b.vy * dt; b.life -= dt;
-    b.trail.push({x: b.x, y: b.y, age: 0});
+    b.trailIndex = b.trailIndex ?? 0;
+    b.trail[b.trailIndex] = {x: b.x, y: b.y, age: 0};
+    b.trailIndex = (b.trailIndex + 1) % BOMB_TRAIL_MAX_LENGTH;  // Circular buffer
     for (const t of b.trail) t.age++;
-    while (b.trail.length > 14) b.trail.shift();
     const bRect = {x: b.x - b.r, y: b.y - b.r, w: b.r * 2, h: b.r * 2};
     let hitTerrain = false;
     for (const p of platforms) { if (rectOverlap(bRect, p)) { hitTerrain = true; break; } }

@@ -1,6 +1,7 @@
 // level.js — Level data management: generates or loads levels dynamically
 
 import { generateLevel } from './levelGenerator.js';
+import { initializeSpatialGrid } from '../utils/collision.js';  // Phase 3a: Spatial partitioning
 
 let currentLevel = null;
 
@@ -80,6 +81,9 @@ function updateExportedArrays() {
     .filter((_, i) => i % 2 === 0)
     .map(spawn => ({ x: spawn.x, type: 'skull' }));
   SKULL_SPAWN_POINTS.push(...skullSpawns);
+  
+  // Phase 3a: Rebuild spatial grid for new level obstacles
+  initializeSpatialGrid();
 }
 
 // Initialize default level on module load

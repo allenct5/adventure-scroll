@@ -16,8 +16,8 @@ import {
   playerGroundHistory, clearGroundHistory, godMode, difficultyLevel,
   setGameState, setMouseRightDown, setActiveClassMod,
 } from '../core/state.js';
-import { rectOverlap, resolvePlayerPlatforms } from '../utils/collision.js';
-import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from '../utils/particles.js';
+import { rectOverlap, resolvePlayerPlatforms, adjustPositionAbovePlatforms } from '../utils/collision.js';
+import { spawnParticles, spawnBloodParticles, spawnSparkParticles, spawnDualParticles } from '../utils/particles.js';
 import { updateHUD, showMessage, showGameOver } from '../utils/hud.js';
 import { playDeathMusic, playSfx } from '../utils/audio.js';
 import { tryDropPowerup } from '../utils/powerups.js';
@@ -512,25 +512,36 @@ export function shootLightningBolt() {
 
 // --- SUMMONER SPELLS ---
 
-// Summon Wandering Orc (Summoner left-click)
-export function summonWanderingOrc() {
-  // First, check if there's an existing friendly Orc alive
-  let existingOrc = null;
-  const alliesCount = playerAllies.length;
-  for (let a = 0; a < alliesCount; a++) {
+// Generic summon ally helper function (Phase 2 consolidation)
+function summonAlly(config) {
+  const {
+    allyType,           // Type of ally to summon ('outdoorOrc', 'castleSkull')
+    checkPredicate,     // Function to check for existing ally
+    soundEffect,        // Sound to play
+    particleColor1,     // Primary particle color
+    particleColor2,     // Secondary particle color
+    particleCount1,     // Primary particle count
+    particleCount2,     // Secondary particle count
+    aggroRange,         // Aggro range for this ally type
+    heightOffset,       // Height offset for platform positioning (e.g., 44 for orc, 28 for skull)
+  } = config;
+
+  // Check for existing friendly ally of this type
+  let existingAlly = null;
+  for (let a = 0; a < playerAllies.length; a++) {
     const ally = playerAllies[a];
-    if (ally && isOrc(ally.type) && ally.friendly && ally.hp > 0) {
-      existingOrc = ally;
+    if (ally && checkPredicate(ally) && ally.friendly && ally.hp > 0) {
+      existingAlly = ally;
       break;
     }
   }
-  
-  playSfx('orb_spell');
-  
+
+  playSfx(soundEffect);
+
   // Get target position (cursor location)
   let targetX = mousePos.x + cameraX;
   let targetY = mousePos.y - 30;  // Spawn 30 pixels above cursor in screen space
-  
+
   // Bounds checking - prevent teleport/spawn way outside the level
   if (targetX < -100 || targetX > LEVEL_WIDTH + 100) {
     return false;  // Cursor is too far outside horizontal bounds
@@ -538,127 +549,79 @@ export function summonWanderingOrc() {
   if (targetY < -200 || targetY > H + 200) {
     return false;  // Cursor is too far outside vertical bounds
   }
-  
-  // Find ground below target point (keep orc above platforms)
-  const platCount = platforms.length;
-  for (let p = 0; p < platCount; p++) {
-    const platform = platforms[p];
-    if (platform && platform.y >= targetY && platform.x < targetX + 30 && platform.x + platform.w > targetX - 30) {
-      targetY = Math.min(targetY, platform.y - 44);  // Position just above platform
+
+  // Find ground below target point using platform cache helper
+  targetY = adjustPositionAbovePlatforms(targetX, targetY, heightOffset);
+
+  // If an existing ally is alive, teleport it instead of creating a new one
+  if (existingAlly) {
+    existingAlly.x = targetX;
+    existingAlly.y = targetY;
+    existingAlly.vx = 0;  // Clear velocity on teleport
+    existingAlly.vy = 0;
+    existingAlly.state = 'idle';  // Reset to idle state
+    if (allyType === 'castleSkull') {
+      existingAlly.idleTimer = 60;  // Reset idle timer for skull to prevent immediate aggro
     }
-  }
-  
-  // If an existing Orc is alive, teleport it instead of creating a new one
-  if (existingOrc) {
-    existingOrc.x = targetX;
-    existingOrc.y = targetY;
-    existingOrc.vx = 0;  // Clear velocity on teleport
-    existingOrc.vy = 0;
-    existingOrc.state = 'idle';  // Reset to idle state
-    spawnParticles(targetX, targetY, '#44dd44', 10);
-    spawnParticles(targetX, targetY, '#88ff88', 6);
+    spawnDualParticles(targetX, targetY, particleColor1, particleCount1, particleColor2, particleCount2);
     return true;
   }
-  
-  // No existing Orc, so create a new one (if under summon limit)
+
+  // No existing ally, so create a new one (if under summon limit)
   if (playerAllies.length >= player.summonLimit) {
     // Show message only if 3+ seconds have passed since last message
-    const now = Date.now();
+    const now = performance.now();
     if (now - player.lastSummonLimitMessageTime >= 3000) {
       showMessage('SUMMON LIMIT REACHED', `You can only summon ${player.summonLimit} allies at once.`, '#ff8844', 3000);
       player.lastSummonLimitMessageTime = now;
     }
     return false;
   }
-  
-  // Create friendly orc
-  const ally = spawnEnemy('outdoorOrc', targetX, targetY, player.staffRarity);
+
+  // Create friendly ally
+  const ally = spawnEnemy(allyType, targetX, targetY, player.staffRarity);
   ally.friendly = true;
-  ally.aggroRange = 250;
+  ally.aggroRange = aggroRange;
   ally.state = 'idle';
   ally.spawnX = targetX;
   ally.spawnY = targetY;
   playerAllies.push(ally);
-  enemies.push(ally);  // Add to enemies array so it gets updated and drawn
-  
-  spawnParticles(targetX, targetY, '#44dd44', 10);
-  spawnParticles(targetX, targetY, '#88ff88', 6);
+  // TODO Phase 2: Remove double tracking - summons should only be in playerAllies, 
+  // with separate update/draw paths in place
+  enemies.push(ally);
+
+  spawnDualParticles(targetX, targetY, particleColor1, particleCount1, particleColor2, particleCount2);
   return true;
+}
+
+// Summon Wandering Orc (Summoner left-click)
+export function summonWanderingOrc() {
+  return summonAlly({
+    allyType: 'outdoorOrc',
+    checkPredicate: (ally) => isOrc(ally.type),
+    soundEffect: 'orb_spell',
+    particleColor1: '#44dd44',
+    particleColor2: '#88ff88',
+    particleCount1: 10,
+    particleCount2: 6,
+    aggroRange: 250,
+    heightOffset: 44,
+  });
 }
 
 // Summon Raised Skull (Summoner right-click)
 export function summonRaisedSkull() {
-  // First, check if there's an existing friendly Skull alive
-  let existingSkull = null;
-  const alliesCountSkull = playerAllies.length;
-  for (let a = 0; a < alliesCountSkull; a++) {
-    const ally = playerAllies[a];
-    if (ally && isSkull(ally.type) && ally.friendly && ally.hp > 0) {
-      existingSkull = ally;
-      break;
-    }
-  }
-  
-  playSfx('fireball_spell');
-  
-  // Get target position (cursor location)
-  let targetX = mousePos.x + cameraX;
-  let targetY = mousePos.y - 30;  // Spawn 30 pixels above cursor in screen space
-  
-  // Bounds checking - prevent teleport/spawn way outside the level
-  if (targetX < -100 || targetX > LEVEL_WIDTH + 100) {
-    return false;  // Cursor is too far outside horizontal bounds
-  }
-  if (targetY < -200 || targetY > H + 200) {
-    return false;  // Cursor is too far outside vertical bounds
-  }
-  
-  // Find ground below target point (keep skull above platforms)
-  const platCountSkull = platforms.length;
-  for (let p = 0; p < platCountSkull; p++) {
-    const platform = platforms[p];
-    if (platform && platform.y >= targetY && platform.x < targetX + 28 && platform.x + platform.w > targetX - 28) {
-      targetY = Math.min(targetY, platform.y - 28);  // Position just above platform
-    }
-  }
-  
-  // If an existing Skull is alive, teleport it instead of creating a new one
-  if (existingSkull) {
-    existingSkull.x = targetX;
-    existingSkull.y = targetY;
-    existingSkull.vx = 0;  // Clear velocity on teleport
-    existingSkull.vy = 0;
-    existingSkull.state = 'idle';  // Reset to idle state
-    existingSkull.idleTimer = 60;  // Reset idle timer to prevent immediate aggro
-    spawnParticles(targetX, targetY, '#ffcc00', 12);
-    spawnParticles(targetX, targetY, '#ff9900', 8);
-    return true;
-  }
-  
-  // No existing Skull, so create a new one (if under summon limit)
-  if (playerAllies.length >= player.summonLimit) {
-    // Show message only if 3+ seconds have passed since last message
-    const now = Date.now();
-    if (now - player.lastSummonLimitMessageTime >= 3000) {
-      showMessage('SUMMON LIMIT REACHED', `You can only summon ${player.summonLimit} allies at once.`, '#ff8844', 3000);
-      player.lastSummonLimitMessageTime = now;
-    }
-    return false;
-  }
-  
-  // Create friendly skull
-  const ally = spawnEnemy('castleSkull', targetX, targetY, player.staffRarity);
-  ally.friendly = true;
-  ally.state = 'idle';
-  ally.spawnX = targetX;
-  ally.spawnY = targetY;
-  ally.aggroRange = 280;
-  playerAllies.push(ally);
-  enemies.push(ally);  // Add to enemies array so it gets updated and drawn
-  
-  spawnParticles(targetX, targetY, '#ffcc00', 12);
-  spawnParticles(targetX, targetY, '#ff9900', 8);
-  return true;
+  return summonAlly({
+    allyType: 'castleSkull',
+    checkPredicate: (ally) => isSkull(ally.type),
+    soundEffect: 'fireball_spell',
+    particleColor1: '#ffcc00',
+    particleColor2: '#ff9900',
+    particleCount1: 12,
+    particleCount2: 8,
+    aggroRange: 280,
+    heightOffset: 28,
+  });
 }
 
 // --- ARCHER CLASS MOD SPELLS ---

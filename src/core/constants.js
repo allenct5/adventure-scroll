@@ -45,3 +45,29 @@ export const RARITY = {
 export function rarityDamage(baseDamage, rarity) {
   return Math.round(baseDamage * (1 + (rarity - 1) * 0.2));
 }
+
+// --- MAGIC NUMBER CONSTANTS - Extracted for maintainability ---
+
+// Trail and particle effects
+export const FIREBALL_TRAIL_MAX_LENGTH = 18;   // Max Trail points for fireballs before wrapping
+export const BOMB_TRAIL_MAX_LENGTH = 14;       // Max trail points for bombs before wrapping
+export const MAX_PARTICLES = 600;              // Max particles before trimming
+
+// Projectile behavior
+export const FIREBALL_DISSIPATE_CHANCE = 0.33;  // Chance to spawn dissipate particles per frame
+export const PARTICLE_SPAWN_COUNT_LARGE = 10;   // Large particle spawn on explosion
+export const PARTICLE_SPAWN_COUNT_MEDIUM = 8;   // Medium particle spawn
+export const PARTICLE_SPAWN_COUNT_SMALL = 5;    // Small particle spawn
+
+// Enemy behavior
+export const BURN_PARTICLE_SPAWN_CHANCE = 0.25;  // Chance to spawn burn particles per frame
+export const BURN_PARTICLE_SPAWN_COUNT = 1;      // Particles per burn spawn
+export const BLEED_PARTICLE_SPAWN_CHANCE = 0.15; // Chance to spawn bleed particles
+export const BLEED_PARTICLE_SPAWN_COUNT = 1;     // Particles per bleed spawn
+
+// Knockback physics
+export const KNOCKBACK_VELOCITY_MULT = 0.85;     // Knockback velocity decay per frame
+
+// Summon limits and timers
+export const SUMMON_LIMIT_MESSAGE_COOLDOWN = 3000;  // ms between showing "summon limit" message
+

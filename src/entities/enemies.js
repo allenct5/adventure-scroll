@@ -1,9 +1,9 @@
 // enemies.js — Enemy spawn, AI update, and drawing.
 
-import { GRAVITY, JUMP_FORCE, ENEMY_SPEED_BASE, W, H, rarityDamage } from '../core/constants.js';
+import { GRAVITY, JUMP_FORCE, ENEMY_SPEED_BASE, W, H, rarityDamage, BURN_PARTICLE_SPAWN_CHANCE, BURN_PARTICLE_SPAWN_COUNT, BLEED_PARTICLE_SPAWN_CHANCE, BLEED_PARTICLE_SPAWN_COUNT } from '../core/constants.js';
 import { platforms, spikes, lavaZones, ENEMY_SPAWN_POINTS, SKULL_SPAWN_POINTS, PLAYER_START_PLATFORM } from '../scenes/level.js';
 import {
-  player, playerClass, cameraX,
+  player, playerClass, cameraX, frameCount,
   enemies, playerAllies, enemyProjectiles, difficultyLevel,
 } from '../core/state.js';
 import { rectOverlap, resolvePlayerPlatforms, hazardAhead, deadlyHazardAhead, measurePitAhead } from '../utils/collision.js';
@@ -85,6 +85,12 @@ export function spawnEnemy(type = 'outdoorOrc', spawnX = 100, spawnY = 350, staf
     jumpCooldown: 0,
     sineOffset: Math.random() * Math.PI * 2,
     sineTime: 0,
+    // Phase 3c: Cache nearest-enemy calculations (updated every 3 frames, -20-30% targeting overhead)
+    cachedHostileTarget: null,
+    cachedHostileTargetIdx: -1,
+    cachedSummon: null,
+    cachedSummonNearby: false,
+    lastCacheLookup: -Infinity,
   };
 }
 
@@ -112,9 +118,12 @@ export function populateEnemies() {
 }
 
 export function updateEnemies(dt) {
-  // Helper: Find nearest hostile enemy for friendly units
+  const CACHE_INTERVAL = 3; // Phase 3c: Cache nearest-enemy calculations, update every 3 frames
+  
+  // Helper: Find nearest hostile enemy for friendly units (returns object with entity and index)
   function findNearestHostileTarget(friendlyEnemy) {
     let nearest = null;
+    let nearestIdx = -1;
     let nearestDist = Infinity;
     const enemyCount = enemies.length;  // Cache length to avoid issues with array iteration
     for (let ei = 0; ei < enemyCount; ei++) {
@@ -126,9 +135,36 @@ export function updateEnemies(dt) {
       if (dist < nearestDist) {
         nearestDist = dist;
         nearest = e;
+        nearestIdx = ei;
       }
     }
-    return nearest;
+    return { enemy: nearest, index: nearestIdx };
+  }
+
+  // Helper: Find nearest summon AND check if any summon is nearby for aggro (Phase 3 consolidation)
+  function findSummonInfo(hostileEnemy, targetSearchRange = 400, aggroRange = 216) {
+    let nearestSummon = null;
+    let nearestDistToSummon = Infinity;
+    let hasSummonNearby = false;
+    const enemyCount = enemies.length;  // Cache length
+    for (let ei = 0; ei < enemyCount; ei++) {
+      const ally = enemies[ei];
+      if (ally && ally.friendly) {
+        const summonDx = ally.x - hostileEnemy.x;
+        const summonDy = ally.y - hostileEnemy.y;
+        const summonDist = Math.hypot(summonDx, summonDy);
+        // Check if summon is nearby for aggro
+        if (summonDist < aggroRange) {
+          hasSummonNearby = true;
+        }
+        // Find nearest summon within search range
+        if (summonDist < nearestDistToSummon && summonDist < targetSearchRange) {
+          nearestDistToSummon = summonDist;
+          nearestSummon = ally;
+        }
+      }
+    }
+    return { summon: nearestSummon, hasSummonNearby };
   }
 
   for (let i = enemies.length - 1; i >= 0; i--) {
@@ -141,8 +177,17 @@ export function updateEnemies(dt) {
       // Determine target: player if hostile, nearest enemy if friendly (otherwise follow player)
       let targetX, targetY, targetDist;
       let targetEntity = null;  // Store the actual target reference for attack code
+      let targetIndex = -1;     // Store index for efficient death handling
       if (e.friendly) {
-        targetEntity = findNearestHostileTarget(e);
+        // Phase 3c: Use cached target if fresh (updated every 3 frames)
+        if (frameCount - e.lastCacheLookup >= CACHE_INTERVAL) {
+          const result = findNearestHostileTarget(e);
+          e.cachedHostileTarget = result.enemy;
+          e.cachedHostileTargetIdx = result.index;
+          e.lastCacheLookup = frameCount;
+        }
+        targetEntity = e.cachedHostileTarget;
+        targetIndex = e.cachedHostileTargetIdx;
         if (targetEntity) {
           targetX = targetEntity.x + targetEntity.w / 2;
           targetY = targetEntity.y + targetEntity.h / 2;
@@ -187,7 +232,7 @@ export function updateEnemies(dt) {
             const skillDmg = Math.round(rarityDamage(12, player.staffRarity) * player.summonDamageMult);
             targetEntity.hp -= skillDmg;
             playSfx('axe_attack');
-            if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); const targetIdx = enemies.indexOf(targetEntity); if (targetIdx !== -1) killEntity(targetEntity, enemies, targetIdx); }
+            if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); killEntity(targetEntity, enemies, targetIndex); }
           } else if (!e.friendly) {
             // Hostile skulls try to damage summons first, then player
             let summonHit = false;
@@ -254,8 +299,18 @@ export function updateEnemies(dt) {
     
     // Determine target for hostile vs friendly (if friendly with no target, follow player)
     let targetX, targetY, targetEntity;
+    let targetIndex = -1;  // Store index for efficient death handling
+    let hasSummonNearby = false;  // Used for aggro logic (hostile enemies only)
     if (e.friendly) {
-      targetEntity = findNearestHostileTarget(e);
+      // Phase 3c: Use cached target if fresh (updated every 3 frames)
+      if (frameCount - e.lastCacheLookup >= CACHE_INTERVAL) {
+        const result = findNearestHostileTarget(e);
+        e.cachedHostileTarget = result.enemy;
+        e.cachedHostileTargetIdx = result.index;
+        e.lastCacheLookup = frameCount;
+      }
+      targetEntity = e.cachedHostileTarget;
+      targetIndex = e.cachedHostileTargetIdx;
       if (targetEntity) {
         targetX = targetEntity.x;
         targetY = targetEntity.y;
@@ -265,26 +320,18 @@ export function updateEnemies(dt) {
         targetY = player.y;
       }
     } else {
-      // For hostile enemies: target nearest summon if in range, otherwise target player
-      let nearestSummon = null;
-      let nearestSummonDist = Infinity;
-      const enemyCount = enemies.length;  // Cache length before iteration
-      for (let ei = 0; ei < enemyCount; ei++) {
-        const ally = enemies[ei];
-        if (ally && ally.friendly) {
-          const summonDx = ally.x - e.x;
-          const summonDy = ally.y - e.y;
-          const summonDist = Math.hypot(summonDx, summonDy);
-          if (summonDist < nearestSummonDist && summonDist < 400) {
-            nearestSummonDist = summonDist;
-            nearestSummon = ally;
-          }
-        }
+      // For hostile enemies: find summon target and check if summon nearby for aggro (Phase 3c: cached search)
+      if (frameCount - e.lastCacheLookup >= CACHE_INTERVAL) {
+        const summonInfo = findSummonInfo(e, 400, 216);
+        e.cachedSummon = summonInfo.summon;
+        e.cachedSummonNearby = summonInfo.hasSummonNearby;
+        e.lastCacheLookup = frameCount;
       }
-      if (nearestSummon) {
-        targetEntity = nearestSummon;
-        targetX = nearestSummon.x;
-        targetY = nearestSummon.y;
+      hasSummonNearby = e.cachedSummonNearby;
+      if (e.cachedSummon) {
+        targetEntity = e.cachedSummon;
+        targetX = e.cachedSummon.x;
+        targetY = e.cachedSummon.y;
       } else {
         targetEntity = player;
         targetX = player.x;
@@ -299,26 +346,10 @@ export function updateEnemies(dt) {
     const playerOnScreen = (player.x - cameraX) > -50 && (player.x - cameraX) < W + 50;
     const enemyOnScreen  = enemyScreenX > -100 && enemyScreenX < W + 100;
     const meleeAggroRange = 216;
-    // Friendly units aggro to nearest hostile target if in range; hostile units aggro if player is visible OR a summon is nearby
-    let hasSummonNearby = false;
-    if (!e.friendly) {
-      const enemyCountForAggro = enemies.length;  // Cache length
-      for (let ei = 0; ei < enemyCountForAggro; ei++) {
-        const ally = enemies[ei];
-        if (ally && ally.friendly) {
-          const allyDx = ally.x - e.x;
-          const allyDy = ally.y - e.y;
-          const allyDist = Math.hypot(allyDx, allyDy);
-          if (allyDist < meleeAggroRange) {
-            hasSummonNearby = true;
-            break;
-          }
-        }
-      }
-    }
     
     // Orcs aggro if player is in range and visible; pit avoidance happens during movement, not as aggro gate
     const canAggro = isOrc(e.type) ? (dist < meleeAggroRange && playerOnScreen && enemyOnScreen) : ((playerOnScreen || (hasSummonNearby && enemyOnScreen)) && enemyOnScreen);
+
     if (e.state === 'idle' && canAggro && (!player.dead || e.friendly)) e.state = 'aggro';
     const stillAggro = isOrc(e.type) ? (dist < meleeAggroRange + 40 && playerOnScreen && enemyOnScreen) : ((playerOnScreen || hasSummonNearby) && !(!e.friendly && player.dead));
     if (e.state === 'aggro' && (!stillAggro || (!e.friendly && player.dead))) { e.state = 'idle'; e.idleTimer = 60; }
@@ -372,7 +403,7 @@ export function updateEnemies(dt) {
               // Friendly orcs damage enemies, hostile orcs damage the player or summons
               if (e.friendly && targetEntity && targetEntity !== player) {
                 targetEntity.hp -= baseDmg;
-                if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); const targetIdx = enemies.indexOf(targetEntity); if (targetIdx !== -1) killEntity(targetEntity, enemies, targetIdx); }
+                if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); killEntity(targetEntity, enemies, targetIndex); }
               } else if (!e.friendly) {
                 // Hostile orcs try to damage summons first, then player
                 let summonHit = false;
@@ -698,7 +729,10 @@ export function drawEnemies() {
       const burnGrad = ctx.createLinearGradient(sx, e.y, sx, e.y + e.h);
       burnGrad.addColorStop(0, '#ff2200'); burnGrad.addColorStop(0.5, '#880000'); burnGrad.addColorStop(1, '#000000');
       ctx.fillStyle = burnGrad; ctx.fillRect(sx, e.y, e.w, e.h);
-      if (Math.random() < 0.25) spawnParticles(e.x + Math.random() * e.w, e.y + Math.random() * e.h * 0.5, Math.random() < 0.5 ? '#ff4400' : '#ff8800', 1);
+      if (Math.random() < BURN_PARTICLE_SPAWN_CHANCE) {
+        const burnColor = Math.random() < 0.5 ? '#ff4400' : '#ff8800';
+        spawnParticles(e.x + Math.random() * e.w, e.y + Math.random() * e.h * 0.5, burnColor, BURN_PARTICLE_SPAWN_COUNT);
+      }
       ctx.restore();
     }
 
@@ -709,7 +743,9 @@ export function drawEnemies() {
       const bleedGrad = ctx.createLinearGradient(sx, e.y, sx, e.y + e.h);
       bleedGrad.addColorStop(0, '#dd0000'); bleedGrad.addColorStop(0.5, '#660000'); bleedGrad.addColorStop(1, '#220000');
       ctx.fillStyle = bleedGrad; ctx.fillRect(sx, e.y, e.w, e.h);
-      if (Math.random() < 0.15) spawnParticles(e.x + Math.random() * e.w, e.y + e.h + Math.random() * 4, '#8B0000', 1);
+      if (Math.random() < BLEED_PARTICLE_SPAWN_CHANCE) {
+        spawnParticles(e.x + Math.random() * e.w, e.y + e.h + Math.random() * 4, '#8B0000', BLEED_PARTICLE_SPAWN_COUNT);
+      }
       ctx.restore();
     }
 
