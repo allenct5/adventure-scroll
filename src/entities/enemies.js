@@ -272,7 +272,7 @@ export function updateEnemies(dt) {
       if (e.bleedTimer > 0) {
         e.bleedTimer -= dt;
         const isMoving = Math.hypot(e.vx, e.vy) > 0.1;
-        const bleedDam = e.bleedDps * dt * (isMoving ? 2 : 1);
+        const bleedDam = e.bleedDps * dt * (isMoving ? 1.5 : 1);
         e.hp -= bleedDam;
         if (e.hp <= 0) { killEntity(e, enemies, i); continue; }
       }

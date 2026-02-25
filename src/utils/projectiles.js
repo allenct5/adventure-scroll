@@ -121,8 +121,8 @@ export function updateCrossbowBolts(dt) {
           // Only apply bleed if not already active (no stacking multiple applications)
           if (!e.bleedTimer || e.bleedTimer <= 0) {
             e.bleedTimer = 300;  // 5 seconds of bleed duration
-            // Bleed DPS scales with weapon rarity: 10 + (rarity - 1) * 2, divided by duration
-            e.bleedDps = (10 + (player.bowRarity - 1) * 2) / 300;
+            // Bleed DPS scales with weapon rarity: 20 + (rarity - 1) * 4, divided by duration
+            e.bleedDps = (20 + (player.bowRarity - 1) * 4) / 300;
           }
         }
         
