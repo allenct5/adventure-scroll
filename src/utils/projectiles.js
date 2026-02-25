@@ -80,7 +80,10 @@ export function updateCrossbowBolts(dt) {
     }
     
     b.x += b.vx * dt; b.y += b.vy * dt;
-    b.vy += 0.06 * dt;
+    // Don't apply gravity to kinetic bolts (they fly straight)
+    if (!b.isKineticBolt) {
+      b.vy += 0.06 * dt;
+    }
     b.angle = Math.atan2(b.vy, b.vx);
     b.life -= dt;
     let remove = b.life <= 0;
@@ -95,15 +98,32 @@ export function updateCrossbowBolts(dt) {
         // Skip friendly allies
         if (e.friendly) continue;
         
+        // For kinetic bolts: skip if already hit this enemy
+        if (b.isKineticBolt && b.hitEnemies && b.hitEnemies.has(j)) continue;
+        
         // Use custom damage if provided by class mod, otherwise use default
         const damage = b.damage !== undefined ? b.damage : rarityDamage(BASE_CROSSBOW_DAMAGE, player.crossbowRarity);
         e.hp -= damage * player.damageMult;
         
-        // Apply bleed effect if this bolt has a bleed chance (scales with weapon rarity)
-        if (b.bleedChance !== undefined && Math.random() < b.bleedChance) {
-          e.bleedTimer = 300;  // 5 seconds of bleed duration
-          // Bleed DPS scales with weapon rarity: 10 + (rarity - 1) * 2
-          e.bleedDps = 10 + (player.bowRarity - 1) * 2;
+        // Track hit for kinetic bolts
+        if (b.isKineticBolt && b.hitEnemies) b.hitEnemies.add(j);
+        
+        // Apply knockback for kinetic bolts (crowd control)
+        if (b.isKineticBolt) {
+          const knockbackForce = 8;
+          e.vx = Math.cos(b.angle) * knockbackForce;
+          e.vy = Math.sin(b.angle) * knockbackForce * 0.5;  // Less vertical knockback
+          e.knockbackTimer = 12;
+        }
+        
+        // Apply bleed effect only for regular bolts (kinetic bolts don't apply bleed)
+        if (!b.isKineticBolt && b.bleedChance !== undefined && Math.random() < b.bleedChance) {
+          // Only apply bleed if not already active (no stacking multiple applications)
+          if (!e.bleedTimer || e.bleedTimer <= 0) {
+            e.bleedTimer = 300;  // 5 seconds of bleed duration
+            // Bleed DPS scales with weapon rarity: 10 + (rarity - 1) * 2, divided by duration
+            e.bleedDps = (10 + (player.bowRarity - 1) * 2) / 300;
+          }
         }
         
         spawnBloodParticles(b.x, b.y); playSfx('sword_attack');

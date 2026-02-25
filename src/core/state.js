@@ -27,6 +27,7 @@ export let playerOrbs = [];
 export let playerBombs = [];
 export let enemyProjectiles = [];
 export let particles = [];
+export let kineticBoltConeVisual = null;  // Temporary cone visual for Kinetic Bolt
 export let powerups  = [];
 export let coins     = [];
 
@@ -54,6 +55,7 @@ export function setDifficultyLevel(v) { difficultyLevel = v; }
 export function setShopOpen(v)        { shopOpen = v; }
 export function setActiveEvent(v)     { activeEvent = v; }
 export function setMerlinRandomAppearance(v) { merlinRandomAppearance = v; }
+export function setKineticBoltConeVisual(v) { kineticBoltConeVisual = v; }
 export function setPlayer(v)          { player = v; }
 export function setMouseDown(v)       { mouseDown = v; }
 export function setMouseRightDown(v)  { mouseRightDown = v; }

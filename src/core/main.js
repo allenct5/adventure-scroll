@@ -11,6 +11,7 @@ import {
   keys, setMouseDown, setMouseRightDown, mousePos,
   shopOpen, clearCombatArrays, clearGroundHistory, resetDropTimes, clearParticles, activeEvent, setActiveEvent,
   merlinRandomAppearance, setMerlinRandomAppearance,
+  kineticBoltConeVisual, setKineticBoltConeVisual,
 } from './state.js';
 import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn, applyClassMod, removeClassMod } from '../entities/player.js';
 import { populateEnemies, updateEnemies, drawEnemies } from '../entities/enemies.js';
@@ -22,7 +23,7 @@ import { updateParticles, drawParticles } from '../utils/particles.js';
 import { updateHUD, showMessage, hideMessage, showGameOver, hideGameOver } from '../utils/hud.js';
 import { openShop, closeShop, buyItem, clearShopPurchased, registerGameLoop } from '../utils/shop.js';
 import { applyZoneBuffs } from '../utils/powerups.js';
-import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats, buffIconPositions } from './renderer.js';
+import { drawBackground, drawPlatforms, drawHazards, drawCheckpoint, drawMerchant, drawBuffIcons, drawDebugStats, drawKineticBoltCone, buffIconPositions } from './renderer.js';
 import { canvas, ctx } from '../canvas.js';
 import { updateMusicForDifficulty, stopMusic, setMusicVolume, setGameVolume, playSfx } from '../utils/audio.js';
 import { loadSprites } from '../utils/sprites.js';
@@ -82,7 +83,7 @@ function drawScene() {
   }
   
   drawPowerups(); drawCoins(); drawSwordSwing(); drawAimIndicator();
-  drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles();
+  drawPlayer(); drawEnemies(); drawProjectiles(); drawParticles(); drawKineticBoltCone();
   drawBuffIcons();
   if (statsActive) drawDebugStats();
 }
@@ -213,6 +214,14 @@ function gameLoop(timestamp = 0) {
     updateHUD();
   }
   updateParticles(dt);
+
+  // Update kinetic bolt cone visual timer
+  if (kineticBoltConeVisual) {
+    kineticBoltConeVisual.duration -= dt;
+    if (kineticBoltConeVisual.duration <= 0) {
+      setKineticBoltConeVisual(null);
+    }
+  }
 
   drawScene();
 
@@ -430,14 +439,20 @@ document.getElementById('cheat-stats').addEventListener('click', () => {
 });
 document.getElementById('cheat-weapon-upgrade').addEventListener('click', () => {
   playSfx('button_press');
-  const w = player.weapon;
-  if      (w === 'sword') player.swordRarity = Math.min(5, player.swordRarity + 1);
-  else if (w === 'bow')   player.bowRarity   = Math.min(5, player.bowRarity   + 1);
-  else if (w === 'staff') player.staffRarity = Math.min(5, player.staffRarity + 1);
+  const weaponRarityMap = {
+    'sword': 'swordRarity',
+    'bow': 'bowRarity',
+    'crossbow': 'crossbowRarity',
+    'staff': 'staffRarity',
+  };
+  const rarityKey = weaponRarityMap[player.weapon];
+  if (rarityKey) {
+    player[rarityKey] = Math.min(5, player[rarityKey] + 1);
+  }
   updateHUD();
   const btn = document.getElementById('cheat-weapon-upgrade');
-  const cur = w === 'sword' ? player.swordRarity : w === 'bow' ? player.bowRarity : player.staffRarity;
-  btn.classList.toggle('active', cur >= 5);
+  const current = rarityKey ? player[rarityKey] : 0;
+  btn.classList.toggle('active', current >= 5);
   btn.style.boxShadow = '0 0 18px #00ff44';
   setTimeout(() => btn.style.boxShadow = '', 400);
 });

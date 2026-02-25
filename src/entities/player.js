@@ -633,7 +633,7 @@ export function shootRapidFireBolts() {
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
-  const BOLT_DAMAGE = rarityDamage(10, player.bowRarity);
+  const BOLT_DAMAGE = rarityDamage(15, player.bowRarity);
   const BLEED_CHANCE = 0.40;  // 40% chance to apply bleed
   
   // Fire three bolts in quick succession, no spread
@@ -694,19 +694,22 @@ export function shootKineticBolt() {
   
   // --- LARGE KINETIC BOLT (3x normal size, pierces enemies) ---
   const BOLT_SIZE = 15;  // 3x normal bolt radius (normal is ~5px)
-  const BOLT_DAMAGE = rarityDamage(45, player.bowRarity);
+  const BOLT_DAMAGE = 30;  // Base damage for crowd control
+  const BOLT_SPEED = 30;  // 3x faster than arrows (arrow speed is 10)
   
   const kineticBolt = {
     x: cx,
     y: cy,
-    vx: Math.cos(aimAngle) * CROSSBOW_SPEED * 1.1,  // Slightly faster than normal bolts
-    vy: Math.sin(aimAngle) * CROSSBOW_SPEED * 1.1,
+    vx: Math.cos(aimAngle) * BOLT_SPEED,
+    vy: Math.sin(aimAngle) * BOLT_SPEED,
     angle: aimAngle,
     life: 200,  // Longer lifetime than normal bolts
     hit: false,
     damage: BOLT_DAMAGE,
+    bleedChance: 0,  // No bleed effect for kinetic bolts
     isKineticBolt: true,  // Flag for special collision behavior
     size: BOLT_SIZE,
+    hitEnemies: new Set(),  // Track which enemies this bolt has already hit
   };
   crossbowBolts.push(kineticBolt);
 }

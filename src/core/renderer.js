@@ -6,7 +6,7 @@ import {
   BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_CROSSBOW_DAMAGE, BASE_FIREBALL_DAMAGE, rarityDamage,
 } from './constants.js';
 import { platforms, spikes, lavaZones, checkpoint, merchant, getEnvironment } from '../scenes/level.js';
-import { cameraX, difficultyLevel, player, playerClass } from './state.js';
+import { cameraX, difficultyLevel, player, playerClass, kineticBoltConeVisual } from './state.js';
 
 import { ctx } from '../canvas.js';
 
@@ -681,5 +681,32 @@ export function drawDebugStats() {
   ctx.fillText(`WEP DMG  : ${currWepDmg}`,                   panelX + 8, panelY + 65);
   ctx.fillText(`DMG RED  : ${dmgReductionPct}%`,             panelX + 8, panelY + 81);
 
+  ctx.restore();
+}
+
+export function drawKineticBoltCone() {
+  if (!kineticBoltConeVisual) return;
+  
+  const { x, y, aimAngle, coneSpread, radius } = kineticBoltConeVisual;
+  const leftEdge = aimAngle - coneSpread;
+  const rightEdge = aimAngle + coneSpread;
+  
+  // Draw two boundary lines (±30° from aim angle) at 50% opacity
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255, 200, 100, 0.5)';
+  ctx.lineWidth = 2;
+  
+  // Left boundary line
+  ctx.beginPath();
+  ctx.moveTo(x - cameraX, y);
+  ctx.lineTo(x - cameraX + Math.cos(leftEdge) * radius, y + Math.sin(leftEdge) * radius);
+  ctx.stroke();
+  
+  // Right boundary line
+  ctx.beginPath();
+  ctx.moveTo(x - cameraX, y);
+  ctx.lineTo(x - cameraX + Math.cos(rightEdge) * radius, y + Math.sin(rightEdge) * radius);
+  ctx.stroke();
+  
   ctx.restore();
 }
