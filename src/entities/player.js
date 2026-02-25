@@ -817,17 +817,17 @@ export function drawPlayer() {
 
     // === ARMS / HANDS (drawn before face so face is on top) ===
     // Left arm: back-side forearm visible at left edge, at staff-grip height
-    ctx.fillStyle = '#4a0088';
+    ctx.fillStyle = applyColorOverride('#4a0088', colorOverride);
     ctx.fillRect(0, 16, 6, 7);
-    ctx.fillStyle = '#6633aa';               // cuff
+    ctx.fillStyle = applyColorOverride('#6633aa', colorOverride);               // cuff
     ctx.fillRect(-1, 22, 7, 2);
     ctx.fillStyle = '#f5c070';               // hand
     ctx.fillRect(0, 24, 5, 4);
 
     // Right arm: front-side forearm at right edge, slightly higher
-    ctx.fillStyle = '#4a0088';
+    ctx.fillStyle = applyColorOverride('#4a0088', colorOverride);
     ctx.fillRect(player.w - 6, 14, 6, 7);
-    ctx.fillStyle = '#6633aa';               // cuff
+    ctx.fillStyle = applyColorOverride('#6633aa', colorOverride);               // cuff
     ctx.fillRect(player.w - 6, 20, 7, 2);
     ctx.fillStyle = '#f5c070';               // hand
     ctx.fillRect(player.w - 5, 22, 5, 4);

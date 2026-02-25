@@ -44,6 +44,9 @@ export const classMod_Cloudshaper = {
     // Hat colors: purple → deep blue
     '#2d0055': '#001155',  // hat brim
     '#1e0040': '#000a22',  // hat gradient top
+    // Arm sleeve colors: purple → deep blue
+    '#4a0088': '#0033cc',  // forearm
+    '#6633aa': '#0055ff',  // cuff
   },
   spellOverrides: {
     leftClick: null,  // Will be set by initializeClassMods()
@@ -67,6 +70,9 @@ export const classMod_Summoner = {
     // Hat colors: purple → crimson red
     '#2d0055': '#550000',  // hat brim
     '#1e0040': '#220000',  // hat gradient top
+    // Arm sleeve colors: purple → crimson red
+    '#4a0088': '#660000',  // forearm
+    '#6633aa': '#990000',  // cuff
   },
   spellOverrides: {
     leftClick: null,  // Will be set by initializeClassMods()
