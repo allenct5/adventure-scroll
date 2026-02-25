@@ -185,7 +185,7 @@ export function updateEnemies(dt) {
             const skillDmg = Math.round(rarityDamage(12, player.staffRarity) * player.summonDamageMult);
             targetEntity.hp -= skillDmg;
             playSfx('axe_attack');
-            if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); enemies.splice(enemies.indexOf(targetEntity), 1); }
+            if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); const targetIdx = enemies.indexOf(targetEntity); if (targetIdx !== -1) killEntity(targetEntity, enemies, targetIdx); }
           } else if (!e.friendly) {
             // Hostile skulls try to damage summons first, then player
             let summonHit = false;
