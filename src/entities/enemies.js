@@ -189,10 +189,11 @@ export function updateEnemies(dt) {
           } else if (!e.friendly) {
             // Hostile skulls try to damage summons first, then player
             let summonHit = false;
-            // Use backward iteration to safely handle array removal during loop
-            for (let si = enemies.length - 1; si >= 0; si--) {
+            // Check for nearby summons to attack (forward iteration to avoid nested backward loop issues)
+            for (let si = 0; si < enemies.length; si++) {
+              if (si === i) continue;  // Skip self
               const summon = enemies[si];
-              if (summon.friendly) {
+              if (summon && summon.friendly) {
                 const sx = summon.x + summon.w / 2, sy = summon.y + summon.h / 2;
                 const summonDist = Math.hypot(sx - (e.x + e.w / 2), sy - (e.y + e.h / 2));
                 if (summonDist < 36) {
@@ -358,14 +359,15 @@ export function updateEnemies(dt) {
               // Friendly orcs damage enemies, hostile orcs damage the player or summons
               if (e.friendly && targetEntity && targetEntity !== player) {
                 targetEntity.hp -= baseDmg;
-                if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); enemies.splice(enemies.indexOf(targetEntity), 1); }
+                if (targetEntity.hp <= 0) { spawnBloodParticles(targetEntity.x+targetEntity.w/2, targetEntity.y); tryDropPowerup(targetEntity.x+targetEntity.w/2, targetEntity.y); dropCoin(targetEntity.x+targetEntity.w/2, targetEntity.y); const targetIdx = enemies.indexOf(targetEntity); if (targetIdx !== -1) killEntity(targetEntity, enemies, targetIdx); }
               } else if (!e.friendly) {
                 // Hostile orcs try to damage summons first, then player
                 let summonHit = false;
-                // Use backward iteration to safely handle array removal during loop
-                for (let si = enemies.length - 1; si >= 0; si--) {
+                // Use forward iteration to safely handle array access (avoid nested backward loop)
+                for (let si = 0; si < enemies.length; si++) {
+                  if (si === i) continue;  // Skip self
                   const summon = enemies[si];
-                  if (summon.friendly) {
+                  if (summon && summon.friendly) {
                     const sx = summon.x + summon.w / 2, sy = summon.y + summon.h / 2;
                     const summonDist = Math.abs((summon.x + summon.w / 2) - e.x);
                     const summonFeetY = summon.y + summon.h;
@@ -415,8 +417,10 @@ export function updateEnemies(dt) {
     
     // Hostile melee enemies pass through each other, but don't pass through summons
     if (!e.friendly && (isOrc(e.type) || isSkull(e.type))) {
-      for (let j = 0; j < enemies.length; j++) {
+      const enemyCount = enemies.length;  // Cache length to prevent issues during iteration
+      for (let j = 0; j < enemyCount; j++) {
         if (i === j) continue;
+        if (j >= enemies.length) break;  // Safeguard in case array was modified
         const other = enemies[j];
         // Only separate if the other is a friendly summon; hostile enemies pass through each other
         if (other.friendly && rectOverlap(e, other)) {
