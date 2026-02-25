@@ -356,6 +356,9 @@ export function drawProjectiles() {
 
   // Crossbow bolts
   for (const b of crossbowBolts) {
+    // Skip rendering delayed rapid fire bolts
+    if (b.delayTimer !== undefined && b.delayTimer > 0) continue;
+    
     const sx = b.x - cameraX;
     ctx.save(); ctx.translate(sx, b.y); ctx.rotate(Math.atan2(b.vy, b.vx));
     

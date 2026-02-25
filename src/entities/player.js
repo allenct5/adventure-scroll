@@ -1324,12 +1324,12 @@ function drawCrossbow(sx) {
   ctx.fillStyle = '#6b4423';
   ctx.shadowColor = CrossbowRarityColor;
   ctx.shadowBlur = 8;
-  ctx.fillRect(-6, -4, 32, 8);  // Main stock body
+  ctx.fillRect(-16, -4, 32, 8);  // Main stock body
   ctx.shadowBlur = 0;
   
   // Stock highlight/wood grain
   ctx.fillStyle = '#8b5a2b';
-  ctx.fillRect(-5, -3, 30, 3);
+  ctx.fillRect(-15, -3, 30, 3);
   
   // Left limb (curved wood piece pulling the bowstring)
   ctx.strokeStyle = '#5a3a1a';
@@ -1337,15 +1337,15 @@ function drawCrossbow(sx) {
   ctx.shadowColor = CrossbowRarityColor;
   ctx.shadowBlur = 6;
   ctx.beginPath();
-  ctx.moveTo(0, -4);
-  ctx.quadraticCurveTo(-8, -10, -10, -12);  // Left limb curves outward and down
+  ctx.moveTo(10, -4);
+  ctx.quadraticCurveTo(18, -10, 20, -12);  // Left limb curves outward and down
   ctx.stroke();
   ctx.shadowBlur = 0;
   
   // Right limb (mirror of left)
   ctx.beginPath();
-  ctx.moveTo(0, 4);
-  ctx.quadraticCurveTo(-8, 10, -10, 12);  // Right limb curves outward and up
+  ctx.moveTo(10, 4);
+  ctx.quadraticCurveTo(18, 10, 20, 12);  // Right limb curves outward and up
   ctx.stroke();
   
   // Crossbow trigger mechanism (metal)
@@ -1353,10 +1353,10 @@ function drawCrossbow(sx) {
   ctx.shadowColor = CrossbowRarityColor;
   ctx.shadowBlur = 4;
   ctx.beginPath();
-  ctx.moveTo(8, -1);
-  ctx.lineTo(12, -2);
-  ctx.lineTo(12, 2);
-  ctx.lineTo(8, 1);
+  ctx.moveTo(2, -1);
+  ctx.lineTo(-2, -2);
+  ctx.lineTo(-2, 2);
+  ctx.lineTo(2, 1);
   ctx.closePath();
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -1365,17 +1365,17 @@ function drawCrossbow(sx) {
   ctx.strokeStyle = '#e6c8a0';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(-10, -12);
-  ctx.lineTo(20, 0);  // String goes to front
-  ctx.lineTo(-10, 12);
+  ctx.moveTo(20, -12);
+  ctx.lineTo(-10, 0);  // String goes to front
+  ctx.lineTo(20, 12);
   ctx.stroke();
   
   // Bowstring center (where bolt sits)
   ctx.strokeStyle = '#d4b896';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(-10, -12);
-  ctx.lineTo(-10, 12);
+  ctx.moveTo(20, -12);
+  ctx.lineTo(20, 12);
   ctx.stroke();
   
   // Crossbow bolt (nocked and ready to fire on the string)
@@ -1383,34 +1383,34 @@ function drawCrossbow(sx) {
   ctx.strokeStyle = '#a0673d';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(-12, 0);
-  ctx.lineTo(18, 0);
+  ctx.moveTo(22, 0);
+  ctx.lineTo(-8, 0);
   ctx.stroke();
   
   // Bolt head (pointed tip)
   ctx.fillStyle = '#666666';
   ctx.beginPath();
-  ctx.moveTo(18, 0);
-  ctx.lineTo(22, -2.5);
-  ctx.lineTo(22, 2.5);
+  ctx.moveTo(-8, 0);
+  ctx.lineTo(-12, -2.5);
+  ctx.lineTo(-12, 2.5);
   ctx.closePath();
   ctx.fill();
   
   // Bolt feathering (fletching at back)
   ctx.fillStyle = '#8b3a1f';
   ctx.beginPath();
-  ctx.moveTo(-12, 0);
-  ctx.lineTo(-15, -3);
-  ctx.lineTo(-15, 3);
+  ctx.moveTo(22, 0);
+  ctx.lineTo(25, -3);
+  ctx.lineTo(25, 3);
   ctx.closePath();
   ctx.fill();
   
   // Bolt feather highlight
   ctx.fillStyle = '#a84d2a';
   ctx.beginPath();
-  ctx.moveTo(-12, -1);
-  ctx.lineTo(-14, -2);
-  ctx.lineTo(-14, 0);
+  ctx.moveTo(22, -1);
+  ctx.lineTo(24, -2);
+  ctx.lineTo(24, 0);
   ctx.closePath();
   ctx.fill();
   

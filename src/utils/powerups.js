@@ -14,7 +14,7 @@
 import { POWERUP_DROP_COOLDOWN, W } from '../core/constants.js';
 import {
   player, playerClass, cameraX,
-  powerups, lastDropTime, difficultyLevel,
+  powerups, lastDropTime, difficultyLevel, activeClassMod,
 } from '../core/state.js';
 import { rectOverlap } from './collision.js';
 import { spawnParticles } from './particles.js';
@@ -72,7 +72,7 @@ export function tryDropPowerup(x, y) {
   else if (roll < 0.75) type = 'bomb';
   if (!type) return;
   if (type === 'mana' && playerClass !== 'mage')   return;
-  if (type === 'bomb' && playerClass !== 'archer') return;
+  if (type === 'bomb' && (playerClass !== 'archer' || activeClassMod === 'classMod_ManAtArms')) return;
   if (performance.now() - lastDropTime[type] < POWERUP_DROP_COOLDOWN) return;
   lastDropTime[type] = performance.now();
   powerups.push({ x: x - 12, y: y - 10, w: 24, h: 24, type, bobOffset: Math.random() * Math.PI * 2, createdAt: performance.now() });
