@@ -664,7 +664,7 @@ export function summonRaisedSkull() {
 // --- ARCHER CLASS MOD SPELLS ---
 
 // Rapid Fire (Man-at-Arms left-click)
-// Fires three crossbow bolts in quick succession (100ms between each)
+// Fires three crossbow bolts in quick succession (10ms between each)
 export function shootRapidFireBolts() {
   playSfx('bow_attack');
   const cx = player.x + player.w / 2;
@@ -686,7 +686,7 @@ export function shootRapidFireBolts() {
       damage: BOLT_DAMAGE,
       bleedChance: BLEED_CHANCE,
       isRapidFireBolt: true,
-      delayTimer: i * 100,  // 0ms, 100ms, 200ms delay before launch
+      delayTimer: i * 10,  // 0ms, 10ms, 20ms delay before launch
     };
     crossbowBolts.push(bolt);
   }
