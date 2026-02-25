@@ -63,6 +63,13 @@ export function updateCrossbowBolts(dt) {
     if (b.delayTimer !== undefined && b.delayTimer > 0) {
       b.delayTimer -= dt;
       b.life -= dt;
+      
+      // When delay just expired, reposition bolt to player's current position
+      if (b.delayTimer <= 0) {
+        b.x = player.x + player.w / 2;
+        b.y = player.y + player.h / 2 - 5;
+      }
+      
       let remove = b.life <= 0;
       if (remove) {
         // Phase 3b: Return bolt to pool for reuse
