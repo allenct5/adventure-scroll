@@ -10,7 +10,7 @@ export const SHOP_ITEMS = [
   { id: 'maxHp1',      name: 'Vitality Tonic',     cost: 5,   icon: '❤️', limit: 1, tooltip: 'Increases your maximum HP by 10, and heals you for 20 HP right now.' },
   { id: 'swordUp1',    name: 'Sharpen Blade',       cost: 10,  icon: '⚔️', limit: 1, tooltip: 'dynamic_sword' },
   { id: 'bowUp1',      name: 'Recurve String',      cost: 10,  icon: '🏹', limit: 1, tooltip: 'dynamic_bow' },
-  { id: 'staffUp1',    name: 'Arcane Focus',        cost: 10,  icon: '🧙', limit: 1, tooltip: 'dynamic_staff', classExclude: 'summoner' },
+  { id: 'staffUp1',    name: 'Arcane Focus',        cost: 10,  icon: '🧙', limit: 1, tooltip: 'Increases the damage of your staff abilities by 20%.', classExclude: 'summoner' },
   { id: 'fullHeal',    name: 'Elixir of Life',      cost: 10,  icon: '🍶', limit: 1, tooltip: 'Restores your HP to full immediately.' },
   { id: 'fortify',     name: 'Iron Skin',           cost: 12,  icon: '🛡️', limit: 1, tooltip: 'Reduces all incoming damage by 25% for the duration of the next level.' },
   { id: 'berserker',   name: 'Berserker Rage',      cost: 15,  icon: '👹', limit: 1, tooltip: 'Increases all damage you deal by 30% for the duration of the next level.' },
@@ -125,8 +125,8 @@ export function buyItem(item) {
     case 'soulBind':  player.revive = true; msg.textContent = 'Soul Bound — you will rise once!'; break;
     case 'pu_speed':  player.attackSpeedTimer = Math.max(player.attackSpeedTimer, 60 * 10); player.attackSpeedTimerMax = Math.max(player.attackSpeedTimerMax, 60 * 10); msg.textContent = 'Attack speed doubled for 10s!'; break;
     case 'berserker': player.damageMult = (player.damageMult || 1) * 1.3; msg.textContent = 'Berserker Rage — +30% damage this level!'; break;
-    case 'cardio':    player.hpRegen += 0.5; msg.textContent = `HP Regen +5/10s (Total: ${(player.hpRegen * 10).toFixed(1)}/10s)`; break;
-    case 'pureWater': player.manaRegen += 5; msg.textContent = `Mana Regen +0.5/s (Total: ${(player.manaRegen / 10).toFixed(1)}/s)`; break;
+    case 'cardio':    player.hpRegen += 0.5; msg.textContent = `HP Regen +5/10s`; break;
+    case 'pureWater': player.manaRegen += 5; msg.textContent = `Mana Regen +0.5/s`; break;
     case 'necronomicon': player.summonDamageMult *= 1.2; msg.textContent = `Summon damage +20% (Total: ${Math.round(player.summonDamageMult * 100)}%)`; break;
   }
   playSfx('shop_purchase');

@@ -7,11 +7,11 @@ import { ctx } from '../canvas.js';
 import { getSprite } from '../utils/sprites.js';
 
 export const npcMerlin = {w: 28, h: 44, showName: false};
-export const npcTaliesin = {w: 28, h: 44, showName: false};
+export const npcTaliesin = {w: 28, h: 44, showName: true};
 
 export const NPC_DISPLAY_NAMES = {
   npcMerlin: 'Magnificent Merlin',
-  npcTaliesin: 'Taliesin, Bard of Legend',
+  npcTaliesin: '[ WANNA PICK A CARD? ]',
   merlinRandomAppearance: "[ SHOP'S CLOSED! ]",
 };
 
@@ -319,7 +319,7 @@ export function drawNpcTaliesin() {
   // Name label
   if (npcTaliesin.showName) {
     const namePulse = 0.75 + Math.sin(Date.now() * 0.004) * 0.25;
-    ctx.fillStyle = `rgba(200,150,255,${namePulse})`; ctx.shadowColor = '#bb88ff'; ctx.shadowBlur = 8 * namePulse;
+    ctx.fillStyle = `rgba(255,220,80,${namePulse})`; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 8 * namePulse;
     ctx.font = 'bold 9px Share Tech Mono'; ctx.textAlign = 'center';
     ctx.fillText(NPC_DISPLAY_NAMES.npcTaliesin, sx + nw / 2, sy - 38);
     ctx.textAlign = 'left'; ctx.shadowBlur = 0;
