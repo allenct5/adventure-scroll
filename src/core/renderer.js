@@ -2,8 +2,8 @@
 
 import {
   W, H, LEVEL_WIDTH,
-  PLAYER_SPEED, SWORD_COOLDOWN, ARROW_COOLDOWN, STAFF_ORB_COOLDOWN,
-  BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_FIREBALL_DAMAGE, rarityDamage,
+  PLAYER_SPEED, SWORD_COOLDOWN, ARROW_COOLDOWN, CROSSBOW_COOLDOWN, STAFF_ORB_COOLDOWN,
+  BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_CROSSBOW_DAMAGE, BASE_FIREBALL_DAMAGE, rarityDamage,
 } from './constants.js';
 import { platforms, spikes, lavaZones, checkpoint, merchant, getEnvironment } from '../scenes/level.js';
 import { cameraX, difficultyLevel, player, playerClass } from './state.js';
@@ -637,19 +637,20 @@ export function drawBuffIcons() {
 export function drawDebugStats() {
   const isSword = player.weapon === 'sword';
   const isStaff = player.weapon === 'staff';
+  const isCrossbow = player.weapon === 'crossbow';
 
   // currMovSpd: base speed * speed boost multiplier
   const currMovSpd = PLAYER_SPEED * (player.speedBoostTimer > 0 ? 1.25 : 1);
 
   // currAttSpd: attacks per second. Timers decrement at 16 units/frame × 60fps = 960 units/sec.
   // Attack speed buff reduces the reset cooldown by ×0.8, so effective rate is ×1.25.
-  const baseCooldown = isSword ? SWORD_COOLDOWN : isStaff ? STAFF_ORB_COOLDOWN : ARROW_COOLDOWN;
+  const baseCooldown = isSword ? SWORD_COOLDOWN : isStaff ? STAFF_ORB_COOLDOWN : isCrossbow ? CROSSBOW_COOLDOWN : ARROW_COOLDOWN;
   const effectiveCooldown = player.attackSpeedTimer > 0 ? baseCooldown * 0.8 : baseCooldown;
   const currAttSpd = 960 / effectiveCooldown;
 
   // currWepDmg: rarity-scaled base damage × damage multiplier
-  const baseDmg = isSword ? BASE_SWORD_DAMAGE : isStaff ? BASE_FIREBALL_DAMAGE : BASE_ARROW_DAMAGE;
-  const rarity   = isSword ? player.swordRarity : isStaff ? player.staffRarity : player.bowRarity;
+  const baseDmg = isSword ? BASE_SWORD_DAMAGE : isStaff ? BASE_FIREBALL_DAMAGE : isCrossbow ? BASE_CROSSBOW_DAMAGE : BASE_ARROW_DAMAGE;
+  const rarity   = isSword ? player.swordRarity : isStaff ? player.staffRarity : isCrossbow ? player.crossbowRarity : player.bowRarity;
   const currWepDmg = Math.round(rarityDamage(baseDmg, rarity) * player.damageMult);
 
   // currDmgReduction: base reduction + fortified bonus + blocking bonus

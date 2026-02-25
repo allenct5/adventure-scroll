@@ -85,7 +85,7 @@ export const classMod_ManAtArms = {
   displayName: 'Man-at-Arms',
   classRequired: 'archer',
   description: 'Stick them, prick them, fill them full of holes.',
-  weaponOverride: null,  // Keeps bow weapon
+  weaponOverride: 'crossbow',
   spellOverrides: {
     leftClick: null,   // Will be set by initializeClassMods()
     rightClick: null,  // Will be set by initializeClassMods()

@@ -26,11 +26,12 @@ export function clearShopPurchased() { Object.keys(shopPurchased).forEach(k => d
 
 function generateUpgradeTooltip(baseValue, weaponType, currentRarity) {
   const rarityKey = weaponType === 'sword' ? 'sword' : weaponType === 'bow' ? 'bow' : 'staff';
-  const playerRarity = weaponType === 'sword' ? player.swordRarity : weaponType === 'bow' ? player.bowRarity : player.staffRarity;
+  const playerRarity = weaponType === 'sword' ? player.swordRarity : weaponType === 'bow' ? (player.weapon === 'crossbow' ? player.crossbowRarity : player.bowRarity) : player.staffRarity;
   const cur  = rarityDamage(baseValue, playerRarity);
   const next = rarityDamage(baseValue, Math.min(5, playerRarity + 1));
   const pct  = Math.round(((next - cur) / cur) * 100);
-  return `Increases ${weaponType} damage per ${weaponType === 'bow' ? 'arrow' : weaponType === 'staff' ? 'magic missile' : 'hit'} by ${pct}%.<br><span style="color:#ff5555;text-decoration:line-through">${cur}</span>&nbsp;→&nbsp;<strong style="color:#44ee66">${next}</strong>`;
+  const projType = weaponType === 'bow' ? (player.weapon === 'crossbow' ? 'bolt' : 'arrow') : weaponType === 'staff' ? 'magic missile' : 'hit';
+  return `Increases ${weaponType} damage per ${projType} by ${pct}%.<br><span style="color:#ff5555;text-decoration:line-through">${cur}</span>&nbsp;→&nbsp;<strong style="color:#44ee66">${next}</strong>`;
 }
 
 let _gameLoop = null;
@@ -117,7 +118,11 @@ export function buyItem(item) {
 
   switch (item.id) {
     case 'swordUp1':  player.swordRarity = Math.min(5, player.swordRarity + 1); msg.textContent = `Blade sharpened to ${RARITY[player.swordRarity].name}!`; break;
-    case 'bowUp1':    player.bowRarity   = Math.min(5, player.bowRarity   + 1); msg.textContent = `Bow upgraded to ${RARITY[player.bowRarity].name}!`;       break;
+    case 'bowUp1':
+      player.bowRarity = Math.min(5, player.bowRarity + 1);
+      if (player.weapon === 'crossbow') player.crossbowRarity = Math.min(5, player.crossbowRarity + 1);
+      msg.textContent = `${player.weapon === 'crossbow' ? 'Crossbow' : 'Bow'} upgraded to ${RARITY[player.bowRarity].name}!`;
+      break;
     case 'staffUp1':  player.staffRarity = Math.min(5, player.staffRarity + 1); msg.textContent = `Staff focused to ${RARITY[player.staffRarity].name}!`;     break;
     case 'fortify':   player.fortified = true; msg.textContent = 'Iron Skin — 30% less damage this level!'; break;
     case 'maxHp1':    player.maxHp += 10; player.hp = Math.min(player.maxHp, player.hp + 20); msg.textContent = '+10 Max HP, +20 HP healed!'; break;

@@ -51,6 +51,7 @@ export function applyClassMod(modId) {
   // Determine rarity of current weapon
   const currentRarity = player.weapon === 'sword' ? player.swordRarity :
                         player.weapon === 'bow' ? player.bowRarity :
+                        player.weapon === 'crossbow' ? player.crossbowRarity :
                         player.staffRarity;
   setPreModWeaponRarity(currentRarity);
   
@@ -60,6 +61,7 @@ export function applyClassMod(modId) {
     // Apply the saved rarity to the new weapon
     if (mod.weaponOverride === 'sword') player.swordRarity = currentRarity;
     else if (mod.weaponOverride === 'bow') player.bowRarity = currentRarity;
+    else if (mod.weaponOverride === 'crossbow') player.crossbowRarity = currentRarity;
     else if (mod.weaponOverride === 'staff') player.staffRarity = currentRarity;
   }
   
@@ -79,6 +81,7 @@ export function removeClassMod() {
     player.weapon = preModWeapon;
     if (preModWeapon === 'sword') player.swordRarity = preModWeaponRarity;
     else if (preModWeapon === 'bow') player.bowRarity = preModWeaponRarity;
+    else if (preModWeapon === 'crossbow') player.crossbowRarity = preModWeaponRarity;
     else if (preModWeapon === 'staff') player.staffRarity = preModWeaponRarity;
   }
   setPreModWeapon(null);
@@ -1178,6 +1181,7 @@ export function drawPlayer() {
   // Weapon drawing
   if (player.weapon === 'sword') drawSword(sx);
   else if (player.weapon === 'bow') drawBow(sx);
+  else if (player.weapon === 'crossbow') drawCrossbow(sx);
   else if (player.weapon === 'staff') drawStaff(sx);
 
   // Warrior block crescent
@@ -1318,6 +1322,113 @@ function drawBow(sx) {
   ctx.restore();
 }
 
+function drawCrossbow(sx) {
+  const cx    = sx + player.w / 2;
+  const cy    = player.y + player.h / 2 - 5;
+  const angle = getAimAngle();
+  const CrossbowRarityColor = RARITY[player.crossbowRarity].color;
+  
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+  
+  // Heavy wooden stock (main rectangular body) - thicker and darker than bow
+  ctx.fillStyle = '#6b4423';
+  ctx.shadowColor = CrossbowRarityColor;
+  ctx.shadowBlur = 8;
+  ctx.fillRect(-6, -4, 32, 8);  // Main stock body
+  ctx.shadowBlur = 0;
+  
+  // Stock highlight/wood grain
+  ctx.fillStyle = '#8b5a2b';
+  ctx.fillRect(-5, -3, 30, 3);
+  
+  // Left limb (curved wood piece pulling the bowstring)
+  ctx.strokeStyle = '#5a3a1a';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = CrossbowRarityColor;
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(0, -4);
+  ctx.quadraticCurveTo(-8, -10, -10, -12);  // Left limb curves outward and down
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  
+  // Right limb (mirror of left)
+  ctx.beginPath();
+  ctx.moveTo(0, 4);
+  ctx.quadraticCurveTo(-8, 10, -10, 12);  // Right limb curves outward and up
+  ctx.stroke();
+  
+  // Crossbow trigger mechanism (metal)
+  ctx.fillStyle = '#888888';
+  ctx.shadowColor = CrossbowRarityColor;
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.moveTo(8, -1);
+  ctx.lineTo(12, -2);
+  ctx.lineTo(12, 2);
+  ctx.lineTo(8, 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  
+  // Bowstring (taut and ready, drawn from back of limbs to front)
+  ctx.strokeStyle = '#e6c8a0';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-10, -12);
+  ctx.lineTo(20, 0);  // String goes to front
+  ctx.lineTo(-10, 12);
+  ctx.stroke();
+  
+  // Bowstring center (where bolt sits)
+  ctx.strokeStyle = '#d4b896';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-10, -12);
+  ctx.lineTo(-10, 12);
+  ctx.stroke();
+  
+  // Crossbow bolt (nocked and ready to fire on the string)
+  // Bolt shaft
+  ctx.strokeStyle = '#a0673d';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-12, 0);
+  ctx.lineTo(18, 0);
+  ctx.stroke();
+  
+  // Bolt head (pointed tip)
+  ctx.fillStyle = '#666666';
+  ctx.beginPath();
+  ctx.moveTo(18, 0);
+  ctx.lineTo(22, -2.5);
+  ctx.lineTo(22, 2.5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Bolt feathering (fletching at back)
+  ctx.fillStyle = '#8b3a1f';
+  ctx.beginPath();
+  ctx.moveTo(-12, 0);
+  ctx.lineTo(-15, -3);
+  ctx.lineTo(-15, 3);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Bolt feather highlight
+  ctx.fillStyle = '#a84d2a';
+  ctx.beginPath();
+  ctx.moveTo(-12, -1);
+  ctx.lineTo(-14, -2);
+  ctx.lineTo(-14, 0);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.restore();
+}
+
 function drawStaff(sx) {
   const cx    = sx + player.w / 2;
   const cy    = player.y + player.h / 2 - 5;
@@ -1402,7 +1513,7 @@ export function drawSwordSwing() {
 
 export function drawAimIndicator() {
   if (player.dead) return;
-  const isRanged = player.weapon === 'bow' || player.weapon === 'staff';
+  const isRanged = player.weapon === 'bow' || player.weapon === 'crossbow' || player.weapon === 'staff';
   if (!isRanged) return;
   const isStaff  = player.weapon === 'staff';
   const cx       = (player.x + player.w / 2) - cameraX;
