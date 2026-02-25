@@ -116,8 +116,10 @@ export function updateEnemies(dt) {
   function findNearestHostileTarget(friendlyEnemy) {
     let nearest = null;
     let nearestDist = Infinity;
-    for (const e of enemies) {
-      if (e === friendlyEnemy || e.friendly) continue;  // Skip self and other friendlies
+    const enemyCount = enemies.length;  // Cache length to avoid issues with array iteration
+    for (let ei = 0; ei < enemyCount; ei++) {
+      const e = enemies[ei];
+      if (!e || e === friendlyEnemy || e.friendly) continue;  // Skip self and other friendlies
       const dx = e.x - friendlyEnemy.x;
       const dy = e.y - friendlyEnemy.y;
       const dist = Math.hypot(dx, dy);
@@ -190,8 +192,10 @@ export function updateEnemies(dt) {
             // Hostile skulls try to damage summons first, then player
             let summonHit = false;
             // Check for nearby summons to attack (forward iteration to avoid nested backward loop issues)
-            for (let si = 0; si < enemies.length; si++) {
+            const enemyCountForSkullAttack = enemies.length;  // Cache length
+            for (let si = 0; si < enemyCountForSkullAttack; si++) {
               if (si === i) continue;  // Skip self
+              if (si >= enemies.length) continue;  // Safeguard
               const summon = enemies[si];
               if (summon && summon.friendly) {
                 const sx = summon.x + summon.w / 2, sy = summon.y + summon.h / 2;
@@ -218,6 +222,13 @@ export function updateEnemies(dt) {
       if (e.attackTimer > 0) e.attackTimer -= dt;
       if (e.burnTimer > 0) {
         e.burnTimer -= dt; e.hp -= e.burnDps * dt;
+        if (e.hp <= 0) { killEntity(e, enemies, i); continue; }
+      }
+      if (e.bleedTimer > 0) {
+        e.bleedTimer -= dt;
+        const isMoving = Math.hypot(e.vx, e.vy) > 0.1;
+        const bleedDam = e.bleedDps * dt * (isMoving ? 2 : 1);
+        e.hp -= bleedDam;
         if (e.hp <= 0) { killEntity(e, enemies, i); continue; }
       }
       e.x += e.vx * dt; e.y += e.vy * dt;
@@ -257,8 +268,10 @@ export function updateEnemies(dt) {
       // For hostile enemies: target nearest summon if in range, otherwise target player
       let nearestSummon = null;
       let nearestSummonDist = Infinity;
-      for (const ally of enemies) {
-        if (ally.friendly) {
+      const enemyCount = enemies.length;  // Cache length before iteration
+      for (let ei = 0; ei < enemyCount; ei++) {
+        const ally = enemies[ei];
+        if (ally && ally.friendly) {
           const summonDx = ally.x - e.x;
           const summonDy = ally.y - e.y;
           const summonDist = Math.hypot(summonDx, summonDy);
@@ -289,8 +302,10 @@ export function updateEnemies(dt) {
     // Friendly units aggro to nearest hostile target if in range; hostile units aggro if player is visible OR a summon is nearby
     let hasSummonNearby = false;
     if (!e.friendly) {
-      for (const ally of enemies) {
-        if (ally.friendly) {
+      const enemyCountForAggro = enemies.length;  // Cache length
+      for (let ei = 0; ei < enemyCountForAggro; ei++) {
+        const ally = enemies[ei];
+        if (ally && ally.friendly) {
           const allyDx = ally.x - e.x;
           const allyDy = ally.y - e.y;
           const allyDist = Math.hypot(allyDx, allyDy);
@@ -335,8 +350,6 @@ export function updateEnemies(dt) {
             const currentDx = targetX - e.x;
             const currentMoveDir = currentDx > 0 ? 1 : -1;
             const deadlyWallAhead = deadlyHazardAhead(e, currentMoveDir);
-            const onGroundPlatform = platforms.some(p => p.type === 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
-            const onFloatingPlatform = platforms.some(p => p.type !== 'ground' && e.x + e.w > p.x && e.x < p.x + p.w && Math.abs((e.y + e.h) - p.y) < 6);
             
             // During aggro, pursue fearlessly toward target unless blocked by deadly hazards (spikes/lava)
             // Pit avoidance is for patrol mode only, not during aggressive pursuit
@@ -364,8 +377,10 @@ export function updateEnemies(dt) {
                 // Hostile orcs try to damage summons first, then player
                 let summonHit = false;
                 // Use forward iteration to safely handle array access (avoid nested backward loop)
-                for (let si = 0; si < enemies.length; si++) {
+                const enemyCountForOrcAttack = enemies.length;  // Cache length
+                for (let si = 0; si < enemyCountForOrcAttack; si++) {
                   if (si === i) continue;  // Skip self
+                  if (si >= enemies.length) continue;  // Safeguard in case array was modified
                   const summon = enemies[si];
                   if (summon && summon.friendly) {
                     const sx = summon.x + summon.w / 2, sy = summon.y + summon.h / 2;
@@ -412,6 +427,13 @@ export function updateEnemies(dt) {
       e.burnTimer -= dt; e.hp -= e.burnDps * dt;
       if (e.hp <= 0) { killEntity(e, enemies, i); continue; }
     }
+    if (e.bleedTimer > 0) {
+      e.bleedTimer -= dt;
+      const isMoving = Math.hypot(e.vx, e.vy) > 0.1;
+      const bleedDam = e.bleedDps * dt * (isMoving ? 2 : 1);
+      e.hp -= bleedDam;
+      if (e.hp <= 0) { killEntity(e, enemies, i); continue; }
+    }
     e.x += e.vx * dt; e.y += e.vy * dt;
     resolvePlayerPlatforms(e);
     
@@ -423,7 +445,7 @@ export function updateEnemies(dt) {
         if (j >= enemies.length) break;  // Safeguard in case array was modified
         const other = enemies[j];
         // Only separate if the other is a friendly summon; hostile enemies pass through each other
-        if (other.friendly && rectOverlap(e, other)) {
+        if (other && other.friendly && rectOverlap(e, other)) {
           const dx = (e.x + e.w / 2) - (other.x + other.w / 2);
           const dy = (e.y + e.h / 2) - (other.y + other.h / 2);
           const dist = Math.hypot(dx, dy) || 1;
@@ -468,7 +490,14 @@ export function updateEnemies(dt) {
       const distToPlayer = Math.hypot(p.x - playerCx, p.y - playerCy);
       if (distToPlayer < 60) {
         let target = null, bestDist = Infinity;
-        for (const e of enemies) { const d = Math.hypot((e.x+e.w/2) - playerCx, (e.y+e.h/2) - playerCy); if (d < bestDist) { bestDist = d; target = e; } }
+        const enemyCountForReflect = enemies.length;  // Cache length
+        for (let ei = 0; ei < enemyCountForReflect; ei++) {
+          const e = enemies[ei];
+          if (e) {
+            const d = Math.hypot((e.x+e.w/2) - playerCx, (e.y+e.h/2) - playerCy);
+            if (d < bestDist) { bestDist = d; target = e; }
+          }
+        }
         const REFLECT_SPEED = 7;
         if (target) { const tx = target.x+target.w/2, ty = target.y+target.h/2, mag = Math.hypot(tx-p.x, ty-p.y)||1; p.vx = (tx-p.x)/mag*REFLECT_SPEED; p.vy = (ty-p.y)/mag*REFLECT_SPEED; }
         else { p.vx = -p.vx * 1.5; p.vy = -p.vy * 1.5; }
@@ -481,7 +510,7 @@ export function updateEnemies(dt) {
     if (p.reflected) {
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
-        if (rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
+        if (e && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
           e.hp -= 18; spawnBloodParticles(p.x, p.y);
           if (e.hp <= 0) { killEntity(e, enemies, j); }
           enemyProjectiles.splice(i, 1); break;
@@ -493,7 +522,7 @@ export function updateEnemies(dt) {
     if (p.friendly) {
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
-        if (!e.friendly && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
+        if (e && !e.friendly && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
           const dmg = Math.round(rarityDamage(18, player.staffRarity) * player.summonDamageMult);
           e.hp -= dmg;
           spawnBloodParticles(p.x, p.y);
@@ -507,7 +536,7 @@ export function updateEnemies(dt) {
     if (!p.friendly) {
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
-        if (e.friendly && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
+        if (e && e.friendly && rectOverlap({x:p.x-p.r,y:p.y-p.r,w:p.r*2,h:p.r*2}, e)) {
           const dmg = Math.round(18 * Math.pow(1.2, difficultyLevel - 1));
           e.hp -= dmg;
           spawnBloodParticles(p.x, p.y);
@@ -670,6 +699,17 @@ export function drawEnemies() {
       burnGrad.addColorStop(0, '#ff2200'); burnGrad.addColorStop(0.5, '#880000'); burnGrad.addColorStop(1, '#000000');
       ctx.fillStyle = burnGrad; ctx.fillRect(sx, e.y, e.w, e.h);
       if (Math.random() < 0.25) spawnParticles(e.x + Math.random() * e.w, e.y + Math.random() * e.h * 0.5, Math.random() < 0.5 ? '#ff4400' : '#ff8800', 1);
+      ctx.restore();
+    }
+
+    // Bleed overlay
+    if (e.bleedTimer > 0) {
+      const t = Date.now() * 0.006, pulse = 0.4 + Math.sin(t * 2.5) * 0.15;
+      ctx.save(); ctx.globalAlpha = pulse;
+      const bleedGrad = ctx.createLinearGradient(sx, e.y, sx, e.y + e.h);
+      bleedGrad.addColorStop(0, '#dd0000'); bleedGrad.addColorStop(0.5, '#660000'); bleedGrad.addColorStop(1, '#220000');
+      ctx.fillStyle = bleedGrad; ctx.fillRect(sx, e.y, e.w, e.h);
+      if (Math.random() < 0.15) spawnParticles(e.x + Math.random() * e.w, e.y + e.h + Math.random() * 4, '#8B0000', 1);
       ctx.restore();
     }
 

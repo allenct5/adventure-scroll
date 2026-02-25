@@ -15,7 +15,7 @@ import {
 import { createPlayer, updatePlayer, drawPlayer, drawSwordSwing, drawAimIndicator, killPlayer, registerRespawnFn, registerCheckpointFn, applyClassMod, removeClassMod } from '../entities/player.js';
 import { populateEnemies, updateEnemies, drawEnemies } from '../entities/enemies.js';
 import { drawNpcMerlin, drawNpcTaliesin, npcTaliesin } from '../entities/npc.js';
-import { updateArrows, updatePlayerOrbs, updateFireballs, updateBombs, drawProjectiles } from '../utils/projectiles.js';
+import { updateArrows, updateCrossbowBolts, updatePlayerOrbs, updateFireballs, updateBombs, drawProjectiles } from '../utils/projectiles.js';
 import { updatePowerups, drawPowerups } from '../utils/powerups.js';
 import { updateCoins, drawCoins } from '../utils/coins.js';
 import { updateParticles, drawParticles } from '../utils/particles.js';
@@ -204,6 +204,7 @@ function gameLoop(timestamp = 0) {
   if (gameState === 'playing') {
     updateEnemies(dt);
     updateArrows(dt);
+    updateCrossbowBolts(dt);
     updateBombs(dt);
     updatePlayerOrbs(dt);
     updateFireballs(dt);

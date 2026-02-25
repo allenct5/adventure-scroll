@@ -1,13 +1,13 @@
 // projectiles.js — Update and draw all projectile types.
 
 import {
-  BASE_ARROW_DAMAGE, BASE_ORB_DAMAGE, BASE_FIREBALL_DAMAGE,
+  BASE_ARROW_DAMAGE, BASE_CROSSBOW_DAMAGE, BASE_ORB_DAMAGE, BASE_FIREBALL_DAMAGE,
   BOMB_GRAVITY, BOMB_EXPLODE_RADIUS, rarityDamage, W,
 } from '../core/constants.js';
 import { platforms } from '../scenes/level.js';
 import {
   player, playerClass, cameraX,
-  arrows, fireballsPlayer, playerOrbs, playerBombs, enemyProjectiles, enemies,
+  arrows, crossbowBolts, fireballsPlayer, playerOrbs, playerBombs, enemyProjectiles, enemies,
 } from '../core/state.js';
 import { rectOverlap } from './collision.js';
 import { spawnParticles, spawnBloodParticles, spawnSparkParticles } from './particles.js';
@@ -45,6 +45,34 @@ export function updateArrows(dt) {
       if (!remove && rectOverlap({x: a.x, y: a.y, w: 4, h: 4}, p)) { remove = true; spawnSparkParticles(a.x, a.y); }
     }
     if (remove) arrows.splice(i, 1);
+  }
+}
+
+// --- CROSSBOW BOLTS ---
+export function updateCrossbowBolts(dt) {
+  for (let i = crossbowBolts.length - 1; i >= 0; i--) {
+    const b = crossbowBolts[i];
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    b.vy += 0.06 * dt;
+    b.angle = Math.atan2(b.vy, b.vx);
+    b.life -= dt;
+    let remove = b.life <= 0;
+    for (let j = enemies.length - 1; j >= 0; j--) {
+      const e = enemies[j];
+      if (!remove && rectOverlap({x: b.x - 5, y: b.y - 5, w: 10, h: 10}, e)) {
+        // Skip friendly allies
+        if (e.friendly) continue;
+        
+        e.hp -= rarityDamage(BASE_CROSSBOW_DAMAGE, player.crossbowRarity) * player.damageMult;
+        spawnBloodParticles(b.x, b.y); playSfx('sword_attack'); remove = true;
+        if (e.hp <= 0) { killEntity(e, enemies, j); }
+        break;
+      }
+    }
+    for (const p of platforms) {
+      if (!remove && rectOverlap({x: b.x - 5, y: b.y - 5, w: 10, h: 10}, p)) { remove = true; spawnSparkParticles(b.x, b.y); }
+    }
+    if (remove) crossbowBolts.splice(i, 1);
   }
 }
 
@@ -215,6 +243,17 @@ export function drawProjectiles() {
     ctx.fillRect(-12, -2, 24, 4);
     ctx.fillStyle = '#ff8800';
     ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(6, -4); ctx.lineTo(6, 4); ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0; ctx.restore();
+  }
+
+  // Crossbow bolts
+  for (const b of crossbowBolts) {
+    const sx = b.x - cameraX;
+    ctx.save(); ctx.translate(sx, b.y); ctx.rotate(Math.atan2(b.vy, b.vx));
+    ctx.fillStyle = '#cc5533'; ctx.shadowColor = '#ff8833'; ctx.shadowBlur = 10;
+    ctx.fillRect(-14, -2.5, 28, 5);
+    ctx.fillStyle = '#332200';
+    ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(6, -3); ctx.lineTo(6, 3); ctx.closePath(); ctx.fill();
     ctx.shadowBlur = 0; ctx.restore();
   }
 

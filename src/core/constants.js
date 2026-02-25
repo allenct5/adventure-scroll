@@ -13,6 +13,8 @@ export const SWORD_RANGE       = 60;
 export const SWORD_COOLDOWN    = 720;
 export const ARROW_SPEED       = 10;
 export const ARROW_COOLDOWN    = 720;
+export const CROSSBOW_SPEED    = 11;
+export const CROSSBOW_COOLDOWN = 1000;
 export const FIREBALL_SPEED    = 5.408;
 export const FIREBALL_COOLDOWN = 1100;
 export const STAFF_ORB_COOLDOWN = 600;
@@ -22,6 +24,7 @@ export const SKULL_SUMMON_COOLDOWN = 1200;  // 1.2 seconds
 
 export const BASE_SWORD_DAMAGE    = 40;
 export const BASE_ARROW_DAMAGE    = 30;
+export const BASE_CROSSBOW_DAMAGE = 40;
 export const BASE_FIREBALL_DAMAGE = 35;
 export const BASE_ORB_DAMAGE      = 18;
 

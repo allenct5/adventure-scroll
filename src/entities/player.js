@@ -2,9 +2,9 @@
 
 import {
   GRAVITY, PLAYER_SPEED, JUMP_FORCE, SWORD_RANGE, SWORD_COOLDOWN,
-  ARROW_SPEED, ARROW_COOLDOWN, FIREBALL_SPEED, FIREBALL_COOLDOWN,
+  ARROW_SPEED, ARROW_COOLDOWN, CROSSBOW_SPEED, CROSSBOW_COOLDOWN, FIREBALL_SPEED, FIREBALL_COOLDOWN,
   STAFF_ORB_COOLDOWN, LIGHTNING_BOLT_COOLDOWN, ORC_SUMMON_COOLDOWN, SKULL_SUMMON_COOLDOWN,
-  BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_FIREBALL_DAMAGE, BASE_ORB_DAMAGE, BOMB_GRAVITY, BOMB_EXPLODE_RADIUS,
+  BASE_SWORD_DAMAGE, BASE_ARROW_DAMAGE, BASE_CROSSBOW_DAMAGE, BASE_FIREBALL_DAMAGE, BASE_ORB_DAMAGE, BOMB_GRAVITY, BOMB_EXPLODE_RADIUS,
   RARITY, rarityDamage, W, H, LEVEL_WIDTH,
 } from '../core/constants.js';
 import { platforms, spikes, lavaZones, checkpoint } from '../scenes/level.js';
@@ -12,7 +12,7 @@ import {
   player, setPlayer, playerClass, activeClassMod, cameraX, setCameraX,
   preModWeapon, preModWeaponRarity, setPreModWeapon, setPreModWeaponRarity,
   keys, mouseDown, mouseRightDown, mousePos,
-  arrows, fireballsPlayer, playerOrbs, playerBombs, enemies, playerAllies,
+  arrows, crossbowBolts, fireballsPlayer, playerOrbs, playerBombs, enemies, playerAllies,
   playerGroundHistory, clearGroundHistory, godMode, difficultyLevel,
   setGameState, setMouseRightDown, setActiveClassMod,
 } from '../core/state.js';
@@ -104,7 +104,7 @@ export function createPlayer() {
     weaponVariant: null,  // e.g., 'cloudshaper' for tinted staff variants
     ammo: 30,
     mana: 20,
-    swordTimer: 0, arrowTimer: 0, staffTimer: 0, staffOrbTimer: 0,
+    swordTimer: 0, arrowTimer: 0, crossbowTimer: 0, staffTimer: 0, staffOrbTimer: 0,
     lightningBoltTimer: 0,
     swingActive: false, swingTimer: 0, swingDuration: 0,
     invincible: 0,
@@ -112,7 +112,7 @@ export function createPlayer() {
     jumpCooldown: 0, jumpHeld: false,
     attackSpeedTimer: 0, attackSpeedTimerMax: 0,
     speedBoostTimer: 0,  speedBoostTimerMax: 0,
-    swordRarity: 1, bowRarity: 1, staffRarity: 1,
+    swordRarity: 1, bowRarity: 1, crossbowRarity: 1, staffRarity: 1,
     droppingThrough: false,
     coins: 0,
     fortified: false, blocking: false,
@@ -146,6 +146,7 @@ export function updatePlayer(dt) {
   if (player.soulBindHalo > 0) player.soulBindHalo = Math.max(0, player.soulBindHalo - dt);
   player.swordTimer    = Math.max(0, player.swordTimer    - 16 * dt);
   player.arrowTimer    = Math.max(0, player.arrowTimer    - 16 * dt);
+  player.crossbowTimer = Math.max(0, player.crossbowTimer - 16 * dt);
   player.staffTimer    = Math.max(0, player.staffTimer    - 16 * dt);
   player.staffOrbTimer = Math.max(0, player.staffOrbTimer - 16 * dt);
   player.lightningBoltTimer = Math.max(0, player.lightningBoltTimer - 16 * dt);
@@ -205,6 +206,9 @@ export function updatePlayer(dt) {
     } else if (player.weapon === 'bow' && player.arrowTimer <= 0) {
       player.arrowTimer = applyCooldown(ARROW_COOLDOWN);
       shootArrow();
+    } else if (player.weapon === 'crossbow' && player.crossbowTimer <= 0) {
+      player.crossbowTimer = applyCooldown(CROSSBOW_COOLDOWN);
+      shootCrossbowBolt();
     } else if (player.weapon === 'staff' && player.staffOrbTimer <= 0) {
       player.staffOrbTimer = applyCooldown(STAFF_ORB_COOLDOWN);
       const classMod = getActiveClassMod();
@@ -363,6 +367,15 @@ export function shootArrow() {
   spawnParticles(cx, cy, '#ffcc44', 4);
 }
 
+export function shootCrossbowBolt() {
+  playSfx('bow_attack');
+  const cx = player.x + player.w / 2;
+  const cy = player.y + player.h / 2 - 5;
+  const angle = getAimAngle();
+  crossbowBolts.push({ x: cx, y: cy, vx: Math.cos(angle) * CROSSBOW_SPEED, vy: Math.sin(angle) * CROSSBOW_SPEED, angle, life: 160, hit: false });
+  spawnParticles(cx, cy, '#ff8833', 3);
+}
+
 // --- STAFF ---
 export function shootStaffOrb() {
   playSfx('orb_spell');
@@ -469,8 +482,10 @@ export function shootLightningBolt() {
 export function summonWanderingOrc() {
   // First, check if there's an existing friendly Orc alive
   let existingOrc = null;
-  for (const ally of playerAllies) {
-    if (isOrc(ally.type) && ally.friendly && ally.hp > 0) {
+  const alliesCount = playerAllies.length;
+  for (let a = 0; a < alliesCount; a++) {
+    const ally = playerAllies[a];
+    if (ally && isOrc(ally.type) && ally.friendly && ally.hp > 0) {
       existingOrc = ally;
       break;
     }
@@ -491,8 +506,10 @@ export function summonWanderingOrc() {
   }
   
   // Find ground below target point (keep orc above platforms)
-  for (const platform of platforms) {
-    if (platform.y >= targetY && platform.x < targetX + 30 && platform.x + platform.w > targetX - 30) {
+  const platCount = platforms.length;
+  for (let p = 0; p < platCount; p++) {
+    const platform = platforms[p];
+    if (platform && platform.y >= targetY && platform.x < targetX + 30 && platform.x + platform.w > targetX - 30) {
       targetY = Math.min(targetY, platform.y - 44);  // Position just above platform
     }
   }
@@ -539,8 +556,10 @@ export function summonWanderingOrc() {
 export function summonRaisedSkull() {
   // First, check if there's an existing friendly Skull alive
   let existingSkull = null;
-  for (const ally of playerAllies) {
-    if (isSkull(ally.type) && ally.friendly && ally.hp > 0) {
+  const alliesCountSkull = playerAllies.length;
+  for (let a = 0; a < alliesCountSkull; a++) {
+    const ally = playerAllies[a];
+    if (ally && isSkull(ally.type) && ally.friendly && ally.hp > 0) {
       existingSkull = ally;
       break;
     }
@@ -561,8 +580,10 @@ export function summonRaisedSkull() {
   }
   
   // Find ground below target point (keep skull above platforms)
-  for (const platform of platforms) {
-    if (platform.y >= targetY && platform.x < targetX + 28 && platform.x + platform.w > targetX - 28) {
+  const platCountSkull = platforms.length;
+  for (let p = 0; p < platCountSkull; p++) {
+    const platform = platforms[p];
+    if (platform && platform.y >= targetY && platform.x < targetX + 28 && platform.x + platform.w > targetX - 28) {
       targetY = Math.min(targetY, platform.y - 28);  // Position just above platform
     }
   }
