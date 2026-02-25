@@ -63,7 +63,17 @@ export function updateCrossbowBolts(dt) {
         // Skip friendly allies
         if (e.friendly) continue;
         
-        e.hp -= rarityDamage(BASE_CROSSBOW_DAMAGE, player.crossbowRarity) * player.damageMult;
+        // Use custom damage if provided by class mod, otherwise use default
+        const damage = b.damage !== undefined ? b.damage : rarityDamage(BASE_CROSSBOW_DAMAGE, player.crossbowRarity);
+        e.hp -= damage * player.damageMult;
+        
+        // Apply bleed effect if this bolt has a bleed chance (scales with weapon rarity)
+        if (b.bleedChance !== undefined && Math.random() < b.bleedChance) {
+          e.bleedTimer = 300;  // 5 seconds of bleed duration
+          // Bleed DPS scales with weapon rarity: 10 + (rarity - 1) * 2
+          e.bleedDps = 10 + (player.bowRarity - 1) * 2;
+        }
+        
         spawnBloodParticles(b.x, b.y); playSfx('sword_attack'); remove = true;
         if (e.hp <= 0) { killEntity(e, enemies, j); }
         break;

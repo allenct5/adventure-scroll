@@ -80,10 +80,22 @@ export const classMod_Summoner = {
   },
 };
 
+export const classMod_ManAtArms = {
+  id: 'classMod_ManAtArms',
+  displayName: 'Man-at-Arms',
+  classRequired: 'archer',
+  description: 'Stick them, prick them, fill them full of holes.',
+  weaponOverride: null,  // Keeps bow weapon
+  spellOverrides: {
+    leftClick: null,   // Will be set by initializeClassMods()
+    rightClick: null,  // Will be set by initializeClassMods()
+  },
+};
+
 // All available class mods, organized by class
 export const CLASS_MODS = {
   mage: [classMod_Cloudshaper, classMod_Summoner],
-  archer: [],
+  archer: [classMod_ManAtArms],
   warrior: [],
 };
 
@@ -121,10 +133,13 @@ export function getClassModsForClass(classType) {
  * Initialize class mod spell overrides (must be called after player functions are loaded)
  * This avoids circular import issues by setting up spell function references after both modules are loaded.
  */
-export function initializeClassModSpellOverrides(shootLightningSpark, shootLightningBolt, summonWanderingOrc, summonRaisedSkull) {
+export function initializeClassModSpellOverrides(shootLightningSpark, shootLightningBolt, summonWanderingOrc, summonRaisedSkull, shootRapidFireBolts, shootKineticBolt) {
   classMod_Cloudshaper.spellOverrides.leftClick = shootLightningSpark;
   classMod_Cloudshaper.spellOverrides.rightClick = shootLightningBolt;
   
   classMod_Summoner.spellOverrides.leftClick = summonWanderingOrc;
   classMod_Summoner.spellOverrides.rightClick = summonRaisedSkull;
+  
+  classMod_ManAtArms.spellOverrides.leftClick = shootRapidFireBolts;
+  classMod_ManAtArms.spellOverrides.rightClick = shootKineticBolt;
 }

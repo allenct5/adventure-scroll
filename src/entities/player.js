@@ -205,7 +205,12 @@ export function updatePlayer(dt) {
       swordAttack();
     } else if (player.weapon === 'bow' && player.arrowTimer <= 0) {
       player.arrowTimer = applyCooldown(ARROW_COOLDOWN);
-      shootArrow();
+      const classMod = getActiveClassMod();
+      if (classMod && classMod.spellOverrides?.leftClick) {
+        classMod.spellOverrides.leftClick();
+      } else {
+        shootArrow();
+      }
     } else if (player.weapon === 'crossbow' && player.crossbowTimer <= 0) {
       player.crossbowTimer = applyCooldown(CROSSBOW_COOLDOWN);
       shootCrossbowBolt();
@@ -231,6 +236,14 @@ export function updatePlayer(dt) {
       } else {
         shootStaffOrb();
       }
+    }
+  }
+
+  if (player.weapon === 'bow' && mouseRightDown && player.arrowTimer <= 0) {
+    const classMod = getActiveClassMod();
+    if (classMod && classMod.spellOverrides?.rightClick) {
+      player.arrowTimer = applyCooldown(ARROW_COOLDOWN);
+      classMod.spellOverrides.rightClick();
     }
   }
 
@@ -625,6 +638,89 @@ export function summonRaisedSkull() {
   spawnParticles(targetX, targetY, '#ffcc00', 12);
   spawnParticles(targetX, targetY, '#ff9900', 8);
   return true;
+}
+
+// --- ARCHER CLASS MOD SPELLS ---
+
+// Rapid Fire (Man-at-Arms left-click)
+// Fires three crossbow bolts in quick succession
+export function shootRapidFireBolts() {
+  playSfx('bow_attack');
+  const cx = player.x + player.w / 2;
+  const cy = player.y + player.h / 2 - 5;
+  const angle = getAimAngle();
+  const BOLT_DAMAGE = rarityDamage(20, player.bowRarity);
+  const BLEED_CHANCE = 0.40;  // 40% chance to apply bleed
+  
+  // Fire three bolts with a slight spread
+  for (let i = 0; i < 3; i++) {
+    const angleSpread = (i - 1) * 0.08;  // -0.08, 0, +0.08 radians
+    const spreadAngle = angle + angleSpread;
+    const bolt = {
+      x: cx,
+      y: cy,
+      vx: Math.cos(spreadAngle) * CROSSBOW_SPEED,
+      vy: Math.sin(spreadAngle) * CROSSBOW_SPEED,
+      angle: spreadAngle,
+      life: 160,
+      hit: false,
+      damage: BOLT_DAMAGE,
+      bleedChance: BLEED_CHANCE,
+      isRapidFireBolt: true,
+    };
+    crossbowBolts.push(bolt);
+  }
+  
+  spawnParticles(cx, cy, '#ff8833', 5);
+}
+
+// Kinetic Bolt (Man-at-Arms right-click)
+// Knocks back all enemies within 400px radius
+export function shootKineticBolt() {
+  playSfx('bow_attack');
+  const cx = player.x + player.w / 2;
+  const cy = player.y + player.h / 2;
+  const RADIUS = 400;
+  const DAMAGE = rarityDamage(30, player.bowRarity);
+  const KNOCKBACK_FORCE = 12;
+  
+  spawnParticles(cx, cy, '#ffff00', 15);
+  spawnParticles(cx, cy, '#ffaa00', 10);
+  
+  // Find and damage all enemies within radius
+  for (let i = 0; i < enemies.length; i++) {
+    const e = enemies[i];
+    if (!e || e.friendly) continue;  // Skip friendly allies
+    
+    const dx = e.x + e.w / 2 - cx;
+    const dy = e.y + e.h / 2 - cy;
+    const dist = Math.hypot(dx, dy);
+    
+    if (dist <= RADIUS) {
+      // Apply damage
+      e.hp -= DAMAGE * player.damageMult;
+      
+      // Apply knockback
+      if (dist > 0) {
+        const knockbackAngle = Math.atan2(dy, dx);
+        e.vx = Math.cos(knockbackAngle) * KNOCKBACK_FORCE;
+        e.vy = Math.sin(knockbackAngle) * KNOCKBACK_FORCE * 0.5;  // Less vertical knockback
+        e.knockbackTimer = 12;
+      }
+      
+      // Spawn particles at hit location
+      spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
+      
+      // Check if enemy died
+      if (e.hp <= 0) {
+        spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
+        tryDropPowerup(e.x + e.w / 2, e.y);
+        dropCoin(e.x + e.w / 2, e.y);
+        enemies.splice(i, 1);
+        i--;
+      }
+    }
+  }
 }
 
 // --- BOMB ---
