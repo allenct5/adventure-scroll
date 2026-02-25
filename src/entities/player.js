@@ -216,7 +216,12 @@ export function updatePlayer(dt) {
       }
     } else if (player.weapon === 'crossbow' && player.crossbowTimer <= 0) {
       player.crossbowTimer = applyCooldown(CROSSBOW_COOLDOWN);
-      shootCrossbowBolt();
+      const classMod = getActiveClassMod();
+      if (classMod && classMod.spellOverrides?.leftClick) {
+        classMod.spellOverrides.leftClick();
+      } else {
+        shootCrossbowBolt();
+      }
     } else if (player.weapon === 'staff' && player.staffOrbTimer <= 0) {
       player.staffOrbTimer = applyCooldown(STAFF_ORB_COOLDOWN);
       const classMod = getActiveClassMod();
@@ -250,6 +255,14 @@ export function updatePlayer(dt) {
     }
   }
 
+  if (player.weapon === 'crossbow' && mouseRightDown && player.crossbowTimer <= 0) {
+    const classMod = getActiveClassMod();
+    if (classMod && classMod.spellOverrides?.rightClick) {
+      player.crossbowTimer = applyCooldown(CROSSBOW_COOLDOWN);
+      classMod.spellOverrides.rightClick();
+    }
+  }
+
   if (player.weapon === 'staff' && mouseRightDown && player.staffTimer <= 0) {
     const classMod = getActiveClassMod();
     const manaCost = classMod?.id === 'classMod_Cloudshaper' ? 8 : classMod?.id === 'classMod_Summoner' ? 5 : 5;
@@ -274,6 +287,11 @@ export function updatePlayer(dt) {
     }
   }
   if (player.weapon === 'bow' && mouseRightDown && player.bombs > 0) {
+    throwBomb();
+    setMouseRightDown(false);
+  }
+
+  if (player.weapon === 'crossbow' && mouseRightDown && player.bombs > 0 && !getActiveClassMod()) {
     throwBomb();
     setMouseRightDown(false);
   }
@@ -646,7 +664,7 @@ export function summonRaisedSkull() {
 // --- ARCHER CLASS MOD SPELLS ---
 
 // Rapid Fire (Man-at-Arms left-click)
-// Fires three crossbow bolts in quick succession
+// Fires three crossbow bolts in quick succession (100ms between each)
 export function shootRapidFireBolts() {
   playSfx('bow_attack');
   const cx = player.x + player.w / 2;
@@ -655,21 +673,20 @@ export function shootRapidFireBolts() {
   const BOLT_DAMAGE = rarityDamage(20, player.bowRarity);
   const BLEED_CHANCE = 0.40;  // 40% chance to apply bleed
   
-  // Fire three bolts with a slight spread
+  // Fire three bolts in quick succession, no spread
   for (let i = 0; i < 3; i++) {
-    const angleSpread = (i - 1) * 0.08;  // -0.08, 0, +0.08 radians
-    const spreadAngle = angle + angleSpread;
     const bolt = {
       x: cx,
       y: cy,
-      vx: Math.cos(spreadAngle) * CROSSBOW_SPEED,
-      vy: Math.sin(spreadAngle) * CROSSBOW_SPEED,
-      angle: spreadAngle,
+      vx: Math.cos(angle) * CROSSBOW_SPEED,
+      vy: Math.sin(angle) * CROSSBOW_SPEED,
+      angle: angle,
       life: 160,
       hit: false,
       damage: BOLT_DAMAGE,
       bleedChance: BLEED_CHANCE,
       isRapidFireBolt: true,
+      delayTimer: i * 100,  // 0ms, 100ms, 200ms delay before launch
     };
     crossbowBolts.push(bolt);
   }

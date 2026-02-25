@@ -52,6 +52,16 @@ export function updateArrows(dt) {
 export function updateCrossbowBolts(dt) {
   for (let i = crossbowBolts.length - 1; i >= 0; i--) {
     const b = crossbowBolts[i];
+    
+    // Handle launch delay for rapid fire bolts
+    if (b.delayTimer !== undefined && b.delayTimer > 0) {
+      b.delayTimer -= dt;
+      b.life -= dt;
+      let remove = b.life <= 0;
+      if (remove) crossbowBolts.splice(i, 1);
+      continue;  // Skip movement and collision checks while delayed
+    }
+    
     b.x += b.vx * dt; b.y += b.vy * dt;
     b.vy += 0.06 * dt;
     b.angle = Math.atan2(b.vy, b.vx);
