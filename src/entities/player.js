@@ -23,7 +23,7 @@ import { playDeathMusic, playSfx } from '../utils/audio.js';
 import { tryDropPowerup } from '../utils/powerups.js';
 import { dropCoin } from '../utils/coins.js';
 import { ENEMY_DISPLAY_NAMES, spawnEnemy, isOrc } from './enemies.js';
-import { getClassModById } from '../utils/classMods.js';
+import { getClassModById, applyColorOverride } from '../utils/classMods.js';
 
 import { ctx } from '../canvas.js';
 import { getSprite } from '../utils/sprites.js';
@@ -780,14 +780,18 @@ export function drawPlayer() {
   // Leg animation: use game-time-independent value so it pauses correctly
   const legAnim = player.vx !== 0 && player.onGround ? Math.sin(player.x * 0.15) * 4 : 0;
 
+  // Get active class mod color override if available
+  const activeMod = getActiveClassMod();
+  const colorOverride = activeMod?.colorOverride || null;
+
   // Body
   if (playerClass === 'mage') {
 
     // === ROBE BODY ===
     const robeGrad = ctx.createLinearGradient(0, 12, 0, player.h);
-    robeGrad.addColorStop(0, '#5500aa');
-    robeGrad.addColorStop(0.55, '#3a0078');
-    robeGrad.addColorStop(1, '#1a0038');
+    robeGrad.addColorStop(0, applyColorOverride('#5500aa', colorOverride));
+    robeGrad.addColorStop(0.55, applyColorOverride('#3a0078', colorOverride));
+    robeGrad.addColorStop(1, applyColorOverride('#1a0038', colorOverride));
     ctx.fillStyle = robeGrad;
     ctx.beginPath();
     ctx.moveTo(4, 12);
@@ -808,7 +812,7 @@ export function drawPlayer() {
     ctx.fill();
 
     // Hem trim
-    ctx.fillStyle = '#7722bb';
+    ctx.fillStyle = applyColorOverride('#7722bb', colorOverride);
     ctx.fillRect(-4, player.h - 4, player.w + 8, 3);
 
     // === ARMS / HANDS (drawn before face so face is on top) ===
@@ -861,15 +865,15 @@ export function drawPlayer() {
 
     // === WIZARD HAT ===
     // Brim (drawn first, cone sits on top)
-    ctx.fillStyle = '#2d0055';
+    ctx.fillStyle = applyColorOverride('#2d0055', colorOverride);
     ctx.beginPath();
     ctx.ellipse(14, 3, 13, 3, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Cone
     const hatGrad = ctx.createLinearGradient(14, -22, 14, 3);
-    hatGrad.addColorStop(0, '#1e0040');
-    hatGrad.addColorStop(1, '#5500aa');
+    hatGrad.addColorStop(0, applyColorOverride('#1e0040', colorOverride));
+    hatGrad.addColorStop(1, applyColorOverride('#5500aa', colorOverride));
     ctx.fillStyle = hatGrad;
     ctx.beginPath();
     ctx.moveTo(5, 3);
