@@ -633,7 +633,7 @@ export function shootRapidFireBolts() {
   const cx = player.x + player.w / 2;
   const cy = player.y + player.h / 2 - 5;
   const angle = getAimAngle();
-  const BOLT_DAMAGE = rarityDamage(15, player.bowRarity);
+  const BOLT_DAMAGE = rarityDamage(10, player.bowRarity);
   const BLEED_CHANCE = 0.40;  // 40% chance to apply bleed
   
   // Fire three bolts in quick succession, no spread
