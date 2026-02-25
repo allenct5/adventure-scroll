@@ -669,23 +669,26 @@ export function shootKineticBolt() {
   const aimAngle = getAimAngle();
   const CONE_SPREAD = Math.PI / 6;  // ±30 degrees for the cone
   
-  // Spawn cone of fiery gunpowder particles radiating outward
-  const CONE_DISTANCES = [100, 200, 300, 350];  // Create depth/distance effect
-  CONE_DISTANCES.forEach(distance => {
-    // Spray particles across the cone at this distance
-    for (let i = 0; i < 6; i++) {
-      const coneAngle = aimAngle + (Math.random() - 0.5) * CONE_SPREAD * 2;
+  // Spawn cone of explosive cannon blast particles radiating outward
+  const CONE_DISTANCES = [120, 220, 300];  // Create depth/distance effect
+  CONE_DISTANCES.forEach((distance, wave) => {
+    // More particles nearer to origin for denser effect
+    const particleCount = wave === 0 ? 10 : wave === 1 ? 8 : 6;
+    
+    // Spray particles tightly within the cone
+    for (let i = 0; i < particleCount; i++) {
+      const coneAngle = aimAngle + (Math.random() - 0.5) * CONE_SPREAD;
       const px = cx + Math.cos(coneAngle) * distance;
       const py = cy + Math.sin(coneAngle) * distance;
-      const colors = ['#ff6633', '#ff8833', '#ffaa00', '#ffdd00'];
+      const colors = ['#ff4400', '#ff6633', '#ff8833', '#ffaa00'];
       const color = colors[Math.floor(Math.random() * colors.length)];
-      spawnParticles(px, py, color, 3);
+      spawnParticles(px, py, color, 2);
     }
   });
   
   // Center burst particles
-  spawnParticles(cx, cy, '#ffff00', 15);
-  spawnParticles(cx, cy, '#ffaa00', 10);
+  spawnParticles(cx, cy, '#ffff00', 10);
+  spawnParticles(cx, cy, '#ff8800', 8);
   
   // Find and damage all enemies within radius and cone angle
   for (let i = 0; i < enemies.length; i++) {
