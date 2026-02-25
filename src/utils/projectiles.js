@@ -84,9 +84,14 @@ export function updateCrossbowBolts(dt) {
     b.angle = Math.atan2(b.vy, b.vx);
     b.life -= dt;
     let remove = b.life <= 0;
+    
+    // Determine collision box size (kinetic bolts are 3x larger)
+    const collisionSize = b.isKineticBolt ? (b.size || 15) : 5;
+    
+    // Check enemy collisions
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
-      if (!remove && rectOverlap({x: b.x - 5, y: b.y - 5, w: 10, h: 10}, e)) {
+      if (!remove && rectOverlap({x: b.x - collisionSize, y: b.y - collisionSize, w: collisionSize * 2, h: collisionSize * 2}, e)) {
         // Skip friendly allies
         if (e.friendly) continue;
         
@@ -101,14 +106,26 @@ export function updateCrossbowBolts(dt) {
           e.bleedDps = 10 + (player.bowRarity - 1) * 2;
         }
         
-        spawnBloodParticles(b.x, b.y); playSfx('sword_attack'); remove = true;
+        spawnBloodParticles(b.x, b.y); playSfx('sword_attack');
+        
+        // Kinetic bolts pass through enemies without being removed
+        if (!b.isKineticBolt) {
+          remove = true;
+        }
+        
         if (e.hp <= 0) { killEntity(e, enemies, j); }
         break;
       }
     }
+    
+    // Check terrain collision (all bolts collide with terrain)
     for (const p of platforms) {
-      if (!remove && rectOverlap({x: b.x - 5, y: b.y - 5, w: 10, h: 10}, p)) { remove = true; spawnSparkParticles(b.x, b.y); }
+      if (!remove && rectOverlap({x: b.x - collisionSize, y: b.y - collisionSize, w: collisionSize * 2, h: collisionSize * 2}, p)) { 
+        remove = true; 
+        spawnSparkParticles(b.x, b.y); 
+      }
     }
+    
     if (remove) {
       // Phase 3b: Return bolt to pool for reuse
       const removed = crossbowBolts.splice(i, 1);
@@ -321,10 +338,31 @@ export function drawProjectiles() {
   for (const b of crossbowBolts) {
     const sx = b.x - cameraX;
     ctx.save(); ctx.translate(sx, b.y); ctx.rotate(Math.atan2(b.vy, b.vx));
-    ctx.fillStyle = '#cc5533'; ctx.shadowColor = '#ff8833'; ctx.shadowBlur = 10;
-    ctx.fillRect(-14, -2.5, 28, 5);
-    ctx.fillStyle = '#332200';
-    ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(6, -3); ctx.lineTo(6, 3); ctx.closePath(); ctx.fill();
+    
+    if (b.isKineticBolt) {
+      // Large kinetic bolt - 3x normal size with glowing effect
+      ctx.fillStyle = '#ff6644'; ctx.shadowColor = '#ff3300'; ctx.shadowBlur = 20;
+      ctx.fillRect(-21, -3.75, 42, 7.5);  // 1.5x dimensions (3x area)
+      
+      // Glowing core
+      ctx.fillStyle = '#ffaa55'; 
+      ctx.fillRect(-20, -3, 40, 6);
+      
+      // Arrow tip (larger)
+      ctx.fillStyle = '#661100';
+      ctx.beginPath(); ctx.moveTo(21, 0); ctx.lineTo(9, -4.5); ctx.lineTo(9, 4.5); ctx.closePath(); ctx.fill();
+      
+      // Glow effect
+      ctx.strokeStyle = 'rgba(255, 150, 0, 0.4)'; ctx.lineWidth = 3;
+      ctx.strokeRect(-20, -3.5, 40, 7);
+    } else {
+      // Normal crossbow bolt
+      ctx.fillStyle = '#cc5533'; ctx.shadowColor = '#ff8833'; ctx.shadowBlur = 10;
+      ctx.fillRect(-14, -2.5, 28, 5);
+      ctx.fillStyle = '#332200';
+      ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(6, -3); ctx.lineTo(6, 3); ctx.closePath(); ctx.fill();
+    }
+    
     ctx.shadowBlur = 0; ctx.restore();
   }
 

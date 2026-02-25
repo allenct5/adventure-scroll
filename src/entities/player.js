@@ -658,80 +658,57 @@ export function shootRapidFireBolts() {
 }
 
 // Kinetic Bolt (Man-at-Arms right-click)
-// Knocks back all enemies within 400px radius
+// Cannon blast erupts from crossbow, then a large piercing bolt flies out
 export function shootKineticBolt() {
   playSfx('bow_attack');
-  const cx = player.x + player.w / 2;
-  const cy = player.y + player.h / 2;
-  const RADIUS = 300;
-  const DAMAGE = rarityDamage(30, player.bowRarity);
-  const KNOCKBACK_FORCE = 12;
+  const playerCx = player.x + player.w / 2;
+  const playerCy = player.y + player.h / 2;
   const aimAngle = getAimAngle();
-  const CONE_SPREAD = Math.PI / 6;  // ±30 degrees for the cone
+  const CROSSBOW_TIP_DIST = 25;  // Distance from player center to crossbow tip
   
-  // Spawn cone of explosive cannon blast particles radiating outward
-  const CONE_DISTANCES = [120, 220, 300];  // Create depth/distance effect
-  CONE_DISTANCES.forEach((distance, wave) => {
-    // More particles nearer to origin for denser effect
-    const particleCount = wave === 0 ? 10 : wave === 1 ? 8 : 6;
-    
-    // Spray particles tightly within the cone
-    for (let i = 0; i < particleCount; i++) {
-      const coneAngle = aimAngle + (Math.random() - 0.5) * CONE_SPREAD;
-      const px = cx + Math.cos(coneAngle) * distance;
-      const py = cy + Math.sin(coneAngle) * distance;
-      const colors = ['#ff4400', '#ff6633', '#ff8833', '#ffaa00'];
+  // Origin point: at the end of the crossbow
+  const cx = playerCx + Math.cos(aimAngle) * CROSSBOW_TIP_DIST;
+  const cy = playerCy + Math.sin(aimAngle) * CROSSBOW_TIP_DIST;
+  
+  // --- CANNON BLAST EFFECT (40px range) ---
+  const BLAST_RANGE = 40;
+  const BLAST_CONE_SPREAD = (35 * Math.PI) / 180;  // 35 degree cone
+  
+  // Spawn cannon blast particles in concentric rings
+  for (let ringDist = 15; ringDist <= BLAST_RANGE; ringDist += 12) {
+    const particlesPerRing = Math.ceil(ringDist / 8);
+    for (let i = 0; i < particlesPerRing; i++) {
+      const spreadAngle = (Math.random() - 0.5) * BLAST_CONE_SPREAD;
+      const angle = aimAngle + spreadAngle;
+      const px = cx + Math.cos(angle) * ringDist;
+      const py = cy + Math.sin(angle) * ringDist;
+      const colors = ['#ff4400', '#ff6633', '#ff8833', '#ffaa00', '#ffff00'];
       const color = colors[Math.floor(Math.random() * colors.length)];
-      spawnParticles(px, py, color, 2);
-    }
-  });
-  
-  // Center burst particles
-  spawnParticles(cx, cy, '#ffff00', 10);
-  spawnParticles(cx, cy, '#ff8800', 8);
-  
-  // Find and damage all enemies within radius and cone angle
-  for (let i = 0; i < enemies.length; i++) {
-    const e = enemies[i];
-    if (!e || e.friendly) continue;  // Skip friendly allies
-    
-    const dx = e.x + e.w / 2 - cx;
-    const dy = e.y + e.h / 2 - cy;
-    const dist = Math.hypot(dx, dy);
-    
-    if (dist <= RADIUS) {
-      // Check if enemy is within the cone angle
-      const enemyAngle = Math.atan2(dy, dx);
-      const angleDiff = Math.abs(aimAngle - enemyAngle);
-      // Handle angle wraparound (angles are circular)
-      const normalizedDiff = Math.min(angleDiff, Math.PI * 2 - angleDiff);
-      
-      if (normalizedDiff <= CONE_SPREAD) {
-        // Apply damage
-        e.hp -= DAMAGE * player.damageMult;
-        
-        // Apply knockback
-        if (dist > 0) {
-          const knockbackAngle = Math.atan2(dy, dx);
-          e.vx = Math.cos(knockbackAngle) * KNOCKBACK_FORCE;
-          e.vy = Math.sin(knockbackAngle) * KNOCKBACK_FORCE * 0.5;  // Less vertical knockback
-          e.knockbackTimer = 12;
-        }
-        
-        // Spawn particles at hit location
-        spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
-        
-        // Check if enemy died
-        if (e.hp <= 0) {
-          spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2);
-          tryDropPowerup(e.x + e.w / 2, e.y);
-          dropCoin(e.x + e.w / 2, e.y);
-          enemies.splice(i, 1);
-          i--;
-        }
-      }
+      spawnParticles(px, py, color, 1);
     }
   }
+  
+  // Center burst of bright yellow/white particles
+  spawnParticles(cx, cy, '#ffff00', 12);
+  spawnParticles(cx, cy, '#ffffff', 6);
+  
+  // --- LARGE KINETIC BOLT (3x normal size, pierces enemies) ---
+  const BOLT_SIZE = 15;  // 3x normal bolt radius (normal is ~5px)
+  const BOLT_DAMAGE = rarityDamage(45, player.bowRarity);
+  
+  const kineticBolt = {
+    x: cx,
+    y: cy,
+    vx: Math.cos(aimAngle) * CROSSBOW_SPEED * 1.1,  // Slightly faster than normal bolts
+    vy: Math.sin(aimAngle) * CROSSBOW_SPEED * 1.1,
+    angle: aimAngle,
+    life: 200,  // Longer lifetime than normal bolts
+    hit: false,
+    damage: BOLT_DAMAGE,
+    isKineticBolt: true,  // Flag for special collision behavior
+    size: BOLT_SIZE,
+  };
+  crossbowBolts.push(kineticBolt);
 }
 
 // --- BOMB ---
