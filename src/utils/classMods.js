@@ -82,9 +82,6 @@ export const CLASS_MODS = {
 };
 
 /**
- 
-
-/**
  * Apply color tinting from a color override map
  * Maps canvas fillStyle colors to new colors based on the override map
  */
@@ -93,7 +90,10 @@ export function applyColorOverride(originalColor, colorOverride) {
     return originalColor;
   }
   return colorOverride[originalColor];
-}* Get a class mod by ID
+}
+
+/**
+ * Get a class mod by ID
  */
 export function getClassModById(id) {
   for (const classKey in CLASS_MODS) {
