@@ -537,7 +537,49 @@ export function summonWanderingOrc() {
 
 // Summon Raised Skull (Summoner right-click)
 export function summonRaisedSkull() {
-  // Check if we've hit the summon limit
+  // First, check if there's an existing friendly Skull alive
+  let existingSkull = null;
+  for (const ally of playerAllies) {
+    if (isSkull(ally.type) && ally.friendly && ally.hp > 0) {
+      existingSkull = ally;
+      break;
+    }
+  }
+  
+  playSfx('fireball_spell');
+  
+  // Get target position (cursor location)
+  let targetX = mousePos.x + cameraX;
+  let targetY = mousePos.y - 30;  // Spawn 30 pixels above cursor in screen space
+  
+  // Bounds checking - prevent teleport/spawn way outside the level
+  if (targetX < -100 || targetX > LEVEL_WIDTH + 100) {
+    return false;  // Cursor is too far outside horizontal bounds
+  }
+  if (targetY < -200 || targetY > H + 200) {
+    return false;  // Cursor is too far outside vertical bounds
+  }
+  
+  // Find ground below target point (keep skull above platforms)
+  for (const platform of platforms) {
+    if (platform.y >= targetY && platform.x < targetX + 28 && platform.x + platform.w > targetX - 28) {
+      targetY = Math.min(targetY, platform.y - 28);  // Position just above platform
+    }
+  }
+  
+  // If an existing Skull is alive, teleport it instead of creating a new one
+  if (existingSkull) {
+    existingSkull.x = targetX;
+    existingSkull.y = targetY;
+    existingSkull.vx = 0;  // Clear velocity on teleport
+    existingSkull.vy = 0;
+    existingSkull.state = 'idle';  // Reset to idle state
+    spawnParticles(targetX, targetY, '#ffcc00', 12);
+    spawnParticles(targetX, targetY, '#ff9900', 8);
+    return true;
+  }
+  
+  // No existing Skull, so create a new one (if under summon limit)
   if (playerAllies.length >= player.summonLimit) {
     // Show message only if 3+ seconds have passed since last message
     const now = Date.now();
@@ -548,39 +590,18 @@ export function summonRaisedSkull() {
     return false;
   }
   
-  playSfx('fireball_spell');
-  
-  // Spawn at cursor position (convert from screen space to world space)
-  let summonX = mousePos.x + cameraX;
-  let summonY = mousePos.y - 30;  // Spawn 30 pixels above cursor in screen space
-  
-  // Bounds checking - prevent spawning way outside the level
-  if (summonX < -100 || summonX > LEVEL_WIDTH + 100) {
-    return false;  // Cursor is too far outside horizontal bounds
-  }
-  if (summonY < -200 || summonY > H + 200) {
-    return false;  // Cursor is too far outside vertical bounds
-  }
-  
-  // Find ground below summoning point (keep skull above platforms)
-  for (const platform of platforms) {
-    if (platform.y >= summonY && platform.x < summonX + 28 && platform.x + platform.w > summonX - 28) {
-      summonY = Math.min(summonY, platform.y - 28);  // Position just above platform
-    }
-  }
-  
   // Create friendly skull
-  const ally = spawnEnemy('castleSkull', summonX, summonY, player.staffRarity);
+  const ally = spawnEnemy('castleSkull', targetX, targetY, player.staffRarity);
   ally.friendly = true;
   ally.state = 'idle';
-  ally.spawnX = summonX;
-  ally.spawnY = summonY;
+  ally.spawnX = targetX;
+  ally.spawnY = targetY;
   ally.aggroRange = 280;
   playerAllies.push(ally);
   enemies.push(ally);  // Add to enemies array so it gets updated and drawn
   
-  spawnParticles(summonX, summonY, '#ffcc00', 12);
-  spawnParticles(summonX, summonY, '#ff9900', 8);
+  spawnParticles(targetX, targetY, '#ffcc00', 12);
+  spawnParticles(targetX, targetY, '#ff9900', 8);
   return true;
 }
 
